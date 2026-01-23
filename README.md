@@ -179,37 +179,6 @@ npm run dev
 Frontend will start at: http://localhost:5173
 
 ---
-
-## 📖 Documentation
-
-All comprehensive documentation is in the [`.agent/`](.agent/) folder:
-
-- **[Start Here](.agent/README.md)**: Documentation overview
-- **[Database Schema](.agent/database/schema.md)**: Complete database design
-- **[GraphQL Schema](.agent/graphql/schema.graphql)**: API definition
-- **[Backend Architecture](.agent/backend/architecture.md)**: Spring Boot guide
-- **[Frontend Architecture](.agent/frontend/architecture.md)**: React + Radix guide
-- **[Implementation Plan](.agent/implementation-plan.md)**: Phase-by-phase roadmap
-- **[Learning Guide](.agent/learning/comprehensive-guide.md)**: Technology tutorials
-- **[Quick Reference](.agent/quick-reference.md)**: Commands & snippets
-
----
-
-## 🎯 Implementation Roadmap
-
-The project follows a **12-week implementation plan** divided into 8 phases:
-
-1. **Phase 0: Setup & Configuration** (Week 1)
-2. **Phase 1: Authentication System** (Week 1-2)
-3. **Phase 2: Core Course Management** (Week 3-4)
-4. **Phase 3: Enrollment & Progress** (Week 5)
-5. **Phase 4: Engagement Features** (Week 6-7)
-6. **Phase 5: Search & Discovery** (Week 8)
-7. **Phase 6: Gamification** (Week 9)
-8. **Phase 7-8: Polish & Deployment** (Week 10-12)
-
-See [`.agent/implementation-plan.md`](.agent/implementation-plan.md) for detailed tasks.
-
 ---
 
 ## 🧪 Testing
@@ -247,19 +216,6 @@ npm run build
 ```
 
 ---
-
-## 📚 Learning Resources
-
-This project is designed for learning. Check out:
-
-- **[Comprehensive Learning Guide](.agent/learning/comprehensive-guide.md)**: Week-by-week curriculum covering GraphQL, Spring Boot, and React
-- **Technology Docs**:
-  - [GraphQL Official Docs](https://graphql.org/learn/)
-  - [Spring Boot Docs](https://docs.spring.io/spring-boot/)
-  - [Apollo Client Docs](https://www.apollographql.com/docs/react/)
-  - [Radix UI Docs](https://www.radix-ui.com/primitives)
-  - [Tailwind CSS Docs](https://tailwindcss.com/docs)
-
 ---
 
 ## 🤝 Contributing
@@ -286,10 +242,6 @@ This is a learning project. Contributions, issues, and feature requests are welc
 
 ---
 
-## 🐛 Troubleshooting
-
-Common issues and solutions are documented in [`.agent/quick-reference.md`](.agent/quick-reference.md#common-issues--solutions).
-
 Quick fixes:
 ```bash
 # Backend: Port already in use
@@ -305,41 +257,6 @@ psql -U postgres
 DROP DATABASE sociallearning;
 CREATE DATABASE sociallearning;
 ```
-
----
-
-## 📊 Project Status
-
-**Current Phase**: Phase 0 - Setup & Configuration
-
-**Completed**:
-- ✅ Complete architecture documentation
-- ✅ Database schema design
-- ✅ GraphQL API design
-- ✅ Implementation roadmap
-- ✅ Learning resources
-
-**In Progress**:
-- 🔄 Backend initialization
-- 🔄 Frontend dependency setup
-
-**Next Steps**:
-- Initialize Spring Boot project
-- Set up Tailwind CSS
-- Create base UI components
-- Implement authentication
-
----
-
-## 📝 License
-
-This project is created for educational purposes.
-
----
-
-## 👥 Team
-
-This project is built with AI assistance (Claude Sonnet 4.5) as a learning platform.
 
 ---
 
@@ -361,5 +278,3 @@ For questions or feedback about this project, please open an issue on GitHub.
 ---
 
 **Happy Learning! 🚀**
-
-For a guided start, head to [`.agent/README.md`](.agent/README.md) and follow the documentation!
