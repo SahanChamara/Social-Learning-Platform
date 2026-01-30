@@ -43,11 +43,11 @@ spring:
       name: admin
       password: admin
 
-# Application Configuration
-app:
-  jwt:
-    secret: your-256-bit-secret-key-here-change-this-in-production
-    expiration: 86400000 # 24 hours in milliseconds
+# JWT Configuration
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: 86400000  # 24 hours in milliseconds (1 day)
+  refresh-expiration: 604800000  # 7 days in milliseconds
 
 # Server Configuration
 server:
