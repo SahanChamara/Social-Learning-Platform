@@ -30,7 +30,7 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@ToString(exclude = {"passwordHash", "createdCourses", "enrollments", "comments", "likes", "ratings", "bookmarks", "followers", "following", "achievements", "notifications"})
+@ToString(exclude = {"passwordHash"})
 @EqualsAndHashCode(of = "id")
 public class User {
 
@@ -109,58 +109,12 @@ public class User {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    // Relationships (Mapped later in Phase 2+)
+    // NOTE: Relationships will be added in later phases when the related entities are created
+    // Phase 2: Course, Module, Lesson entities
+    // Phase 3: Enrollment, Progress entities
+    // Phase 4: Comment, Like, Rating, Bookmark entities
+    // Phase 6: Achievement, LearningStreak, Notification entities
     
-    // Courses created by this user (as creator)
-    @OneToMany(mappedBy = "creator", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private Set<Course> createdCourses = new HashSet<>();
-
-    // Course enrollments
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private Set<Enrollment> enrollments = new HashSet<>();
-
-    // Comments by this user
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private Set<Comment> comments = new HashSet<>();
-
-    // Likes by this user
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private Set<Like> likes = new HashSet<>();
-
-    // Ratings by this user
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private Set<Rating> ratings = new HashSet<>();
-
-    // Bookmarks by this user
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private Set<Bookmark> bookmarks = new HashSet<>();
-
-    // Users following this user
-    @OneToMany(mappedBy = "following", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private Set<Follow> followers = new HashSet<>();
-
-    // Users this user is following
-    @OneToMany(mappedBy = "follower", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private Set<Follow> following = new HashSet<>();
-
-    // User achievements
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private Set<UserAchievement> achievements = new HashSet<>();
-
-    // Notifications for this user
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private Set<Notification> notifications = new HashSet<>();
-
     /**
      * User roles in the system
      */
