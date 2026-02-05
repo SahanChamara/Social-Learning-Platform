@@ -59,9 +59,12 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 // Public endpoints - no authentication required
                 .requestMatchers(
-                    "/graphql",           // GraphQL endpoint for auth mutations
-                    "/graphiql/**",       // GraphiQL playground
-                    "/graphql-ws/**",     // WebSocket endpoint
+                    "/graphql",           // GraphQL endpoint
+                    "/graphql/**",        // GraphQL resources
+                    "/graphiql",          // GraphiQL UI
+                    "/graphiql/**",       // GraphiQL resources
+                    "/graphql-ws",        // WebSocket endpoint
+                    "/graphql-ws/**",     // WebSocket resources
                     "/actuator/**",       // Health check endpoints
                     "/error"              // Error endpoint
                 ).permitAll()

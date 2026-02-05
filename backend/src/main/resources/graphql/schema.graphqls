@@ -1,0 +1,134 @@
+# GraphQL Schema for Social Learning Platform
+
+# ============================================
+# Authentication Types
+# ============================================
+
+"""
+Input for user login
+"""
+input LoginInput {
+    """Email or username"""
+    emailOrUsername: String!
+    """User password"""
+    password: String!
+}
+
+"""
+Input for user registration
+"""
+input RegisterInput {
+    """Unique username (3-50 characters)"""
+    username: String!
+    """Valid email address"""
+    email: String!
+    """Password (minimum 8 characters)"""
+    password: String!
+    """User's full name"""
+    fullName: String!
+}
+
+"""
+Authentication response payload
+"""
+type AuthPayload {
+    """JWT access token"""
+    token: String!
+    """JWT refresh token"""
+    refreshToken: String!
+    """Authenticated user information"""
+    user: User!
+}
+
+# ============================================
+# User Type
+# ============================================
+
+"""
+User entity representing a platform user
+"""
+type User {
+    """Unique user identifier"""
+    id: ID!
+    """Unique username"""
+    username: String!
+    """Email address"""
+    email: String!
+    """Full name"""
+    fullName: String!
+    """User biography"""
+    bio: String
+    """Avatar image URL"""
+    avatarUrl: String
+    """User role (LEARNER, CREATOR, ADMIN)"""
+    role: UserRole!
+    """Areas of expertise"""
+    expertise: String
+    """Personal website URL"""
+    websiteUrl: String
+    """GitHub profile URL"""
+    githubUrl: String
+    """LinkedIn profile URL"""
+    linkedinUrl: String
+    """Twitter profile URL"""
+    twitterUrl: String
+    """Whether the user is verified"""
+    isVerified: Boolean!
+    """Whether the user account is active"""
+    isActive: Boolean!
+    """Last login timestamp"""
+    lastLoginAt: String
+    """Account creation timestamp"""
+    createdAt: String!
+    """Last update timestamp"""
+    updatedAt: String!
+}
+
+"""
+User role enumeration
+"""
+enum UserRole {
+    """Learner - can enroll in courses"""
+    LEARNER
+    """Creator - can create and publish courses"""
+    CREATOR
+    """Admin - platform administrator"""
+    ADMIN
+}
+
+# ============================================
+# Mutations
+# ============================================
+
+type Mutation {
+    """
+    Register a new user account
+    """
+    register(input: RegisterInput!): AuthPayload!
+    
+    """
+    Login with email/username and password
+    """
+    login(input: LoginInput!): AuthPayload!
+    
+    """
+    Refresh access token using refresh token
+    """
+    refreshToken(refreshToken: String!): AuthPayload!
+}
+
+# ============================================
+# Queries
+# ============================================
+
+type Query {
+    """
+    Get currently authenticated user
+    """
+    me: User
+    
+    """
+    Get user by ID
+    """
+    user(id: ID!): User
+}
