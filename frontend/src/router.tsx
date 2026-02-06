@@ -4,6 +4,7 @@ import Login from '@/pages/auth/Login';
 import Register from '@/pages/auth/Register';
 import Discover from '@/pages/Discover';
 import NotFound from '@/pages/NotFound';
+import ComponentsDemo from '@/pages/ComponentsDemo';
 
 // Router configuration
 const router = createBrowserRouter([
@@ -18,6 +19,10 @@ const router = createBrowserRouter([
       {
         path: 'discover',
         element: <Discover />,
+      },
+      {
+        path: 'components-demo',
+        element: <ComponentsDemo />,
       },
       {
         path: 'auth',
