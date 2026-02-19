@@ -5,6 +5,7 @@ import Register from '@/pages/auth/Register';
 import Discover from '@/pages/Discover';
 import NotFound from '@/pages/NotFound';
 import ComponentsDemo from '@/pages/ComponentsDemo';
+import AuthDemo from '@/pages/AuthDemo';
 
 // Router configuration
 const router = createBrowserRouter([
@@ -23,6 +24,10 @@ const router = createBrowserRouter([
       {
         path: 'components-demo',
         element: <ComponentsDemo />,
+      },
+      {
+        path: 'auth-demo',
+        element: <AuthDemo />,
       },
       {
         path: 'auth',

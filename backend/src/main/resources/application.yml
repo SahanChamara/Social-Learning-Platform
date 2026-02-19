@@ -12,6 +12,10 @@ spring:
       maximum-pool-size: 10
       minimum-idle: 5
       connection-timeout: 30000
+
+  output:
+    ansi: enabled
+
   
   # JPA Configuration
   jpa:
