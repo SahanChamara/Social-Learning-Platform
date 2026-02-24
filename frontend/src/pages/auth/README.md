@@ -137,14 +137,216 @@ This triggers:
 
 ## Register Page (`Register.tsx`)
 
-**Status:** 🚧 Placeholder (Task 1.9 - Next)
+**Status:** ✅ Complete (Task 1.9)
 
-The register page will be implemented in Task 1.9 with similar features to the login page, plus:
-- Additional fields: username, email, fullName, password
-- Password confirmation validation
-- Terms of Service acceptance
-- Email uniqueness validation
-- Username availability checking
+### Features
+
+- **React Hook Form Integration**: Comprehensive form state management
+- **Advanced Zod Validation**: Password strength, email format, username pattern, password confirmation
+- **Authentication**: Integration with `useAuth` hook from AuthContext
+- **Error Handling**: Toast notifications for success/failure
+- **Loading States**: Disabled inputs and spinner during submission
+- **Terms Acceptance**: Required checkbox for Terms of Service and Privacy Policy
+- **Password Matching**: Client-side validation for password confirmation
+- **Responsive Design**: Mobile-first with purple-blue gradient background
+- **Accessibility**: Proper labels, ARIA attributes, required field indicators
+
+### Validation Rules
+
+- **Username**: 
+  - Required
+  - 3-50 characters
+  - Letters, numbers, and underscores only (no spaces)
+  - Trimmed automatically
+- **Email**: 
+  - Required
+  - Valid email format
+  - Converted to lowercase
+  - Trimmed automatically
+- **Full Name**: 
+  - Required
+  - Minimum 2 characters
+  - Maximum 100 characters
+  - Trimmed automatically
+- **Password**: 
+  - Required
+  - Minimum 8 characters
+  - Must contain at least one uppercase letter
+  - Must contain at least one lowercase letter
+  - Must contain at least one number
+- **Confirm Password**: 
+  - Required
+  - Must match the password field exactly
+- **Accept Terms**: 
+  - Must be checked to submit
+
+### Form Fields
+
+1. **Username** (`username`)
+   - Unique identifier for the user
+   - Pattern: alphanumeric with underscores
+   - Example: `johndoe`, `jane_smith123`
+
+2. **Email Address** (`email`)
+   - Primary contact and login method
+   - Must be valid email format
+   - Example: `john@example.com`
+
+3. **Full Name** (`fullName`)
+   - User's display name
+   - Example: `John Doe`
+
+4. **Password** (`password`)
+   - Secure password with complexity requirements
+   - Not shown in plain text
+
+5. **Confirm Password** (`confirmPassword`)
+   - Must match the password field
+   - Client-side validation
+
+6. **Accept Terms** (`acceptTerms`)
+   - Required checkbox
+   - Links to Terms of Service and Privacy Policy
+
+### Navigation Links
+
+- **Sign in**: `/auth/login` (Task 1.8)
+- **Terms of Service**: `/terms` (future)
+- **Privacy Policy**: `/privacy` (future)
+- **Back to Home**: `/` (Home page)
+
+### Usage Example
+
+```tsx
+// Register a new user
+const handleRegister = async () => {
+  await register({
+    username: 'johndoe',
+    email: 'john@example.com',
+    fullName: 'John Doe',
+    password: 'SecurePass123',
+  });
+  // User is automatically logged in after registration
+  // Redirected to home page
+};
+```
+
+### Developer Notes
+
+#### Password Strength Requirements
+
+The password must meet all of the following criteria:
+- Minimum 8 characters long
+- At least one uppercase letter (A-Z)
+- At least one lowercase letter (a-z)
+- At least one number (0-9)
+
+This ensures reasonable password security while not being overly restrictive.
+
+#### Username Validation
+
+Usernames are validated with a regex pattern: `/^\w+$/` (word characters only)
+- Allows: letters (a-z, A-Z), numbers (0-9), underscores (_)
+- Disallows: spaces, special characters, emojis
+
+#### Benefits Section (Dev Only)
+
+In development mode, a benefits section is displayed showing:
+- Access to thousands of free courses
+- Track your learning progress
+- Earn achievements and badges
+- Join a community of learners
+
+This section is hidden in production builds.
+
+#### Redirect After Registration
+
+After successful registration, users are:
+1. Automatically logged in
+2. Redirected to the home page (/)
+3. Can be changed to redirect to `/onboarding` or `/dashboard` if needed
+
+```tsx
+navigate('/', { replace: true });
+```
+
+### Toast Notifications
+
+Success and error messages:
+- **Success**: "Account created successfully! Welcome to Social Learning Platform. Let's get started!"
+- **Error**: Displays specific error from backend (e.g., "Email already exists", "Username is taken")
+
+### Integration with AuthContext
+
+The register page uses the `register` function from `useAuth()`:
+
+```tsx
+const { register: registerUser, isLoading } = useAuth();
+
+await registerUser({
+  username: data.username,
+  email: data.email,
+  fullName: data.fullName,
+  password: data.password,
+});
+```
+
+This triggers:
+1. REGISTER_MUTATION GraphQL call
+2. Token storage in localStorage (user is logged in automatically)
+3. User state update in AuthContext
+4. Apollo cache update
+
+### Testing
+
+To test the register page:
+
+1. **Navigate to the page**: http://localhost:5173/auth/register
+2. **Try validation errors**:
+   - Submit empty form → All fields show "required" errors
+   - Enter username with spaces → "can only contain letters, numbers, and underscores"
+   - Enter short password (< 8 chars) → "must be at least 8 characters"
+   - Enter weak password (no uppercase/lowercase/number) → "must contain at least one uppercase letter..."
+   - Enter mismatched passwords → "Passwords don't match" on confirm field
+   - Submit without accepting terms → "You must accept the Terms of Service..."
+3. **Try valid registration**:
+   - Fill all fields correctly
+   - Accept terms
+   - Should show loading spinner
+   - Should display success toast
+   - Should redirect to home page
+   - Should be logged in automatically
+
+### Expected Behaviors
+
+- **Valid submission**: Loading spinner → Toast → Auto-login → Redirect
+- **Duplicate email**: Error toast "Email already exists"
+- **Duplicate username**: Error toast "Username is already taken"
+- **Network error**: Error toast with connection message
+- **Form validation**: Inline error messages below each field
+
+### Error Handling
+
+The register page handles various error scenarios:
+- **Validation errors**: Shown inline below fields with red text
+- **Network errors**: "Failed to connect to server"
+- **Duplicate email**: "Email already exists"
+- **Duplicate username**: "Username is already taken"
+- **Backend errors**: Displays specific error message from server
+- **Terms not accepted**: "You must accept the Terms of Service and Privacy Policy"
+
+### Future Enhancements
+
+- [ ] Add username availability checker (real-time)
+- [ ] Add email availability checker (real-time)
+- [ ] Add password strength indicator with visual meter
+- [ ] Add password visibility toggle (eye icon)
+- [ ] Implement email verification flow
+- [ ] Add social registration (Google, GitHub)
+- [ ] Add CAPTCHA for bot prevention
+- [ ] Add profile picture upload during registration
+- [ ] Multi-step registration wizard
+- [ ] Onboarding flow after registration
 
 ---
 
@@ -206,4 +408,4 @@ The login page handles various error scenarios:
 
 ---
 
-Last updated: Task 1.8 completion (February 2026)
+Last updated: Task 1.9 completion (February 2026)
