@@ -6,6 +6,9 @@ import Discover from '@/pages/Discover';
 import NotFound from '@/pages/NotFound';
 import ComponentsDemo from '@/pages/ComponentsDemo';
 import AuthDemo from '@/pages/AuthDemo';
+import Dashboard from '@/pages/Dashboard';
+import Profile from '@/pages/Profile';
+import { ProtectedRoute } from '@/components/auth';
 
 // Router configuration
 const router = createBrowserRouter([
@@ -41,6 +44,23 @@ const router = createBrowserRouter([
             element: <Register />,
           },
         ],
+      },
+      // Protected Routes - Require Authentication
+      {
+        path: 'dashboard',
+        element: (
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'profile',
+        element: (
+          <ProtectedRoute>
+            <Profile />
+          </ProtectedRoute>
+        ),
       },
     ],
   },

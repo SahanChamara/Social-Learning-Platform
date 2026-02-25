@@ -386,6 +386,258 @@ The login page handles various error scenarios:
 
 ---
 
+## ProtectedRoute Component (`../../components/auth/ProtectedRoute.tsx`)
+
+**Status:** ✅ Complete (Task 1.10)
+
+### Overview
+
+The `ProtectedRoute` component is a route guard that ensures only authenticated and authorized users can access protected routes. It integrates seamlessly with the authentication system and provides loading states, smart redirects, and role-based access control.
+
+### Features
+
+- **Authentication Check**: Verifies user is logged in before rendering content
+- **Loading State**: Shows spinner while verifying authentication
+- **Smart Redirects**: Preserves intended destination for post-login navigation
+- **Role-Based Access Control**: Optional restrictions by user role(s)
+- **Graceful Error Handling**: User-friendly "Access Denied" page
+- **Flexible Authorization**: Single required role or multiple allowed roles
+- **TypeScript Integration**: Fully typed with proper interfaces
+
+### Props
+
+| Prop | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| `children` | `ReactNode` | ✅ Yes | - | The component(s) to render if authorized |
+| `requiredRole` | `UserRole` | ❌ No | `undefined` | Single role required for access |
+| `allowedRoles` | `UserRole[]` | ❌ No | `undefined` | Array of roles allowed access |
+| `redirectTo` | `string` | ❌ No | `'/auth/login'` | Path to redirect unauthenticated users |
+
+### Usage Examples
+
+#### Basic Authentication Guard
+
+Require authentication but allow any role:
+
+```tsx
+import { ProtectedRoute } from '@/components/auth';
+import Dashboard from '@/pages/Dashboard';
+
+// In router configuration
+{
+  path: 'dashboard',
+  element: (
+    <ProtectedRoute>
+      <Dashboard />
+    </ProtectedRoute>
+  ),
+}
+```
+
+#### Single Required Role
+
+Restrict to a specific role:
+
+```tsx
+import { ProtectedRoute } from '@/components/auth';
+import { UserRole } from '@/types/auth';
+import AdminPanel from '@/pages/AdminPanel';
+
+// In router configuration
+{
+  path: 'admin',
+  element: (
+    <ProtectedRoute requiredRole={UserRole.ADMIN}>
+      <AdminPanel />
+    </ProtectedRoute>
+  ),
+}
+```
+
+#### Multiple Allowed Roles
+
+Allow access for multiple roles:
+
+```tsx
+import { ProtectedRoute } from '@/components/auth';
+import { UserRole } from '@/types/auth';
+import CreatorDashboard from '@/pages/CreatorDashboard';
+
+// In router configuration
+{
+  path: 'create',
+  element: (
+    <ProtectedRoute allowedRoles={[UserRole.CREATOR, UserRole.ADMIN]}>
+      <CreatorDashboard />
+    </ProtectedRoute>
+  ),
+}
+```
+
+#### Custom Redirect Path
+
+Specify a different redirect location:
+
+```tsx
+import { ProtectedRoute } from '@/components/auth';
+import Settings from '@/pages/Settings';
+
+// In router configuration
+{
+  path: 'settings',
+  element: (
+    <ProtectedRoute redirectTo="/auth/register">
+      <Settings />
+    </ProtectedRoute>
+  ),
+}
+```
+
+### Implementation Details
+
+#### Three States Handled
+
+1. **Loading State**
+   - Shows while `isLoading` is true
+   - Displays centered spinner with "Loading..." message
+   - Prevents flash of incorrect content
+
+2. **Not Authenticated**
+   - Redirects to `redirectTo` (default: `/auth/login`)
+   - Preserves intended destination in `location.state.from`
+   - After login, user is automatically redirected back
+
+3. **Authenticated**
+   - If `requiredRole` specified: checks exact role match
+   - If `allowedRoles` specified: checks role is in array
+   - If authorized: renders `children`
+   - If unauthorized: shows "Access Denied" page
+
+#### Access Denied Page
+
+When a user is authenticated but lacks required role:
+
+- 🚫 Red emoji indicator
+- Clear "Access Denied" heading
+- Explanation of permission issue
+- Shows required vs actual role
+- "Go Back" button (uses `globalThis.history.back()`)
+- Fallback redirect to home page
+
+### How It Works
+
+```tsx
+// 1. Component checks authentication status
+const { user, isAuthenticated, isLoading } = useAuth();
+
+// 2. While loading, show spinner
+if (isLoading) return <LoadingSpinner />;
+
+// 3. Not authenticated? Redirect to login
+if (!isAuthenticated) {
+  return <Navigate to="/auth/login" state={{ from: location.pathname }} />;
+}
+
+// 4. Check role requirements
+if (requiredRole && user?.role !== requiredRole) {
+  return <AccessDenied />;
+}
+
+// 5. All checks passed? Render children
+return <>{children}</>;
+```
+
+### Integration with Router
+
+See [router.tsx](../../router.tsx) for complete integration:
+
+```tsx
+import { ProtectedRoute } from '@/components/auth';
+import Dashboard from '@/pages/Dashboard';
+import Profile from '@/pages/Profile';
+
+const router = createBrowserRouter([
+  {
+    path: '/',
+    children: [
+      // ... public routes ...
+      
+      // Protected routes
+      {
+        path: 'dashboard',
+        element: (
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'profile',
+        element: (
+          <ProtectedRoute>
+            <Profile />
+          </ProtectedRoute>
+        ),
+      },
+    ],
+  },
+]);
+```
+
+### Testing Scenarios
+
+1. **Unauthenticated Access**
+   - Visit `/dashboard` while logged out
+   - Should redirect to `/auth/login`
+   - After login, should redirect back to `/dashboard`
+
+2. **Authenticated Access**
+   - Login as any user
+   - Visit `/dashboard`
+   - Should render Dashboard component
+
+3. **Role-Based Restriction**
+   - Login as LEARNER role
+   - Visit `/admin` (requires ADMIN role)
+   - Should show "Access Denied" page with role mismatch
+
+4. **Loading State**
+   - Refresh page while on protected route
+   - Should briefly show loading spinner
+   - Then render content or redirect
+
+5. **Multiple Allowed Roles**
+   - Set `allowedRoles={[UserRole.CREATOR, UserRole.ADMIN]}`
+   - Login as CREATOR → should have access
+   - Login as LEARNER → should see "Access Denied"
+
+### Security Considerations
+
+1. **Frontend Protection Only**: This component prevents UI rendering but does NOT secure your API
+2. **Always Validate Backend**: Server must validate authentication and authorization
+3. **Token Verification**: AuthContext handles token validation
+4. **Role Checks**: User role from JWT is trusted (backend must ensure integrity)
+5. **Navigation Guards**: React Router's `<Navigate>` with `replace` prevents back-button issues
+
+### Related Files
+
+- [`../../contexts/AuthContext.tsx`](../../contexts/AuthContext.tsx) - Provides authentication state
+- [`../../hooks/useAuth.ts`](../../hooks/useAuth.ts) - Hook used by ProtectedRoute
+- [`../../types/auth.ts`](../../types/auth.ts) - UserRole definition
+- [`../../router.tsx`](../../router.tsx) - Router configuration with protected routes
+
+### Future Enhancements
+
+- Add transition animations for Access Denied page
+- Create breadcrumbs showing navigation path
+- Add "Request Access" functionality
+- Extract UnauthorizedPage as separate component
+- Add analytics for denied access attempts
+- Support permission-based checks (in addition to roles)
+- Add unit tests for all authorization scenarios
+
+---
+
 ## Best Practices
 
 1. **Always validate on the frontend**: Provides immediate feedback
@@ -408,4 +660,4 @@ The login page handles various error scenarios:
 
 ---
 
-Last updated: Task 1.9 completion (February 2026)
+Last updated: Task 1.10 completion (February 2026)
