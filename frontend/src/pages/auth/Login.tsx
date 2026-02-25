@@ -39,7 +39,7 @@ export default function Login() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Get the redirect path from location state (for protected routes)
-  const from = (location.state as { from?: string })?.from || '/';
+  const from = (location.state as { from?: string })?.from || '/dashboard';
 
   const {
     register,

@@ -99,8 +99,8 @@ export default function Register() {
         description: 'Welcome to Social Learning Platform. Let\'s get started!',
       });
 
-      // Redirect to home or dashboard
-      navigate('/', { replace: true });
+      // Redirect to dashboard after successful registration
+      navigate('/dashboard', { replace: true });
     } catch (error) {
       const errorMessage =
         error instanceof Error
