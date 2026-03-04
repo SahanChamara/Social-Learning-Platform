@@ -1,5 +1,6 @@
 package com.sociallearning.entity;
 
+import com.sociallearning.enums.LessonType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
@@ -244,13 +245,3 @@ public class Lesson {
     }
 }
 
-/**
- * Enum for Lesson Content Types
- */
-enum LessonType {
-    VIDEO,       // Video lesson with video player
-    TEXT,        // Text/article lesson with rich content
-    QUIZ,        // Quiz/assessment lesson
-    ASSIGNMENT,  // Assignment that requires submission
-    RESOURCE     // Downloadable resource or external link
-}

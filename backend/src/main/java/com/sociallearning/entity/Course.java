@@ -1,5 +1,6 @@
 package com.sociallearning.entity;
 
+import com.sociallearning.enums.CourseDifficulty;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
@@ -280,14 +281,4 @@ public class Course {
     public void incrementViewCount() {
         this.viewCount++;
     }
-}
-
-/**
- * Enum for Course Difficulty Levels
- */
-enum CourseDifficulty {
-    BEGINNER,
-    INTERMEDIATE,
-    ADVANCED,
-    EXPERT
 }
