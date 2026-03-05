@@ -2,8 +2,8 @@ package com.sociallearning.repository;
 
 import com.sociallearning.entity.Category;
 import com.sociallearning.entity.Course;
-import com.sociallearning.entity.CourseDifficulty;
 import com.sociallearning.entity.User;
+import com.sociallearning.enums.CourseDifficulty;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -27,6 +27,8 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
      * @return Optional course
      */
     Optional<Course> findBySlug(String slug);
+
+    Optional<Course> findCourseById(Long Id);
 
     /**
      * Check if a course with the given slug exists
@@ -114,7 +116,7 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
      * @return Page of courses
      */
     @Query("SELECT c FROM Course c WHERE c.difficulty = :difficulty AND c.published = true ORDER BY c.averageRating DESC")
-    Page<Course> findByDifficulty(@Param("difficulty") CourseDifficulty difficulty, Pageable pageable);
+    Page<Course> findByDifficulty(@Param("difficulty") com.sociallearning.enums.CourseDifficulty difficulty, Pageable pageable);
 
     /**
      * Find courses by language

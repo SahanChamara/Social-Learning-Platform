@@ -118,4 +118,12 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
      */
     @Query("SELECT c FROM Category c WHERE c.active = true ORDER BY c.courseCount DESC")
     List<Category> findAllByOrderByCourseCountDesc();
+    
+    /**
+     * Find all active categories ordered by name.
+     * Used for displaying categories in alphabetical order.
+     * 
+     * @return List of active categories ordered by name
+     */
+    List<Category> findAllByIsActiveTrueOrderByNameAsc();
 }

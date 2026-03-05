@@ -153,4 +153,12 @@ public interface TagRepository extends JpaRepository<Tag, Long> {
      */
     @Query("SELECT t.usageCount as count, COUNT(t) as tagCount FROM Tag t GROUP BY t.usageCount ORDER BY t.usageCount DESC")
     List<Object[]> getUsageStatistics();
+    
+    /**
+     * Find all tags ordered by usage count (most used first).
+     * Used for displaying popular tags.
+     * 
+     * @return List of tags ordered by usage count descending
+     */
+    List<Tag> findAllByOrderByUsageCountDesc();
 }
