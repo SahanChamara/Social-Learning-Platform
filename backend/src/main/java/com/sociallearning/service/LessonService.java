@@ -1,8 +1,8 @@
 package com.sociallearning.service;
 
 import com.sociallearning.entity.Lesson;
-import com.sociallearning.entity.LessonType;
 import com.sociallearning.entity.Module;
+import com.sociallearning.enums.LessonType;
 import com.sociallearning.repository.LessonRepository;
 import com.sociallearning.repository.ModuleRepository;
 import lombok.RequiredArgsConstructor;

@@ -1,6 +1,7 @@
 package com.sociallearning.service;
 
 import com.sociallearning.entity.*;
+import com.sociallearning.enums.CourseDifficulty;
 import com.sociallearning.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -55,7 +56,7 @@ public class CourseService {
      * @throws IllegalArgumentException if creator or category not found
      */
     @Transactional
-    public Course createCourse(String title, String description, Long creatorId, 
+    public Course createCourse(String title, String description, Long creatorId,
                                Long categoryId, CourseDifficulty difficulty, String language) {
         log.info("Creating course: {} by user ID: {}", title, creatorId);
         
@@ -396,6 +397,12 @@ public class CourseService {
     public Course findCourseBySlug(String slug) {
         return courseRepository.findBySlug(slug)
                 .orElseThrow(() -> new IllegalArgumentException("Course not found with slug: " + slug));
+    }
+
+    @Transactional(readOnly = true)
+    public Course findCourseById(Long id){
+        return courseRepository.findCourseById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Course Not Found in This Id "+ id));
     }
 
     /**
