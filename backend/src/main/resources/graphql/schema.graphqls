@@ -97,10 +97,346 @@ enum UserRole {
 }
 
 # ============================================
+# Category & Tag Types
+# ============================================
+
+"""
+Course category for organization
+"""
+type Category {
+    """Unique category identifier"""
+    id: ID!
+    """Category name"""
+    name: String!
+    """Category description"""
+    description: String
+    """URL-friendly slug"""
+    slug: String!
+    """Parent category (for nested categories)"""
+    parent: Category
+    """Number of courses in this category"""
+    courseCount: Int!
+    """Whether category is active"""
+    isActive: Boolean!
+    """Creation timestamp"""
+    createdAt: String!
+}
+
+"""
+Tag for course classification
+"""
+type Tag {
+    """Unique tag identifier"""
+    id: ID!
+    """Tag name"""
+    name: String!
+    """Number of times tag is used"""
+    usageCount: Int!
+    """Creation timestamp"""
+    createdAt: String!
+}
+
+# ============================================
+# Course Types
+# ============================================
+
+"""
+Course difficulty level
+"""
+enum CourseDifficulty {
+    BEGINNER
+    INTERMEDIATE
+    ADVANCED
+    EXPERT
+}
+
+"""
+Lesson content type
+"""
+enum LessonType {
+    VIDEO
+    TEXT
+    QUIZ
+    ASSIGNMENT
+    RESOURCE
+}
+
+"""
+Lesson entity
+"""
+type Lesson {
+    """Unique lesson identifier"""
+    id: ID!
+    """Lesson title"""
+    title: String!
+    """Lesson description"""
+    description: String
+    """Content type (VIDEO, TEXT, QUIZ, etc.)"""
+    type: LessonType!
+    """Order index within module"""
+    orderIndex: Int!
+    """Duration in minutes"""
+    durationMinutes: Int
+    """Video URL (for VIDEO type)"""
+    videoUrl: String
+    """Video thumbnail URL"""
+    videoThumbnailUrl: String
+    """Text content (for TEXT type)"""
+    textContent: String
+    """Quiz data in JSON (for QUIZ type)"""
+    quizData: String
+    """Assignment instructions (for ASSIGNMENT type)"""
+    assignmentInstructions: String
+    """Maximum points for assignment"""
+    assignmentMaxPoints: Int
+    """Resource URL (for RESOURCE type)"""
+    resourceUrl: String
+    """Additional resources in JSON array"""
+    additionalResources: String
+    """Video transcript"""
+    transcript: String
+    """Whether lesson is published"""
+    isPublished: Boolean!
+    """Whether lesson is free preview"""
+    isFree: Boolean!
+    """Whether lesson content is downloadable"""
+    isDownloadable: Boolean!
+    """View count"""
+    viewCount: Int!
+    """Completion count"""
+    completionCount: Int!
+    """Module this lesson belongs to"""
+    module: Module!
+    """Creation timestamp"""
+    createdAt: String!
+    """Update timestamp"""
+    updatedAt: String!
+}
+
+"""
+Module entity
+"""
+type Module {
+    """Unique module identifier"""
+    id: ID!
+    """Module title"""
+    title: String!
+    """Module description"""
+    description: String
+    """Order index within course"""
+    orderIndex: Int!
+    """Total duration in minutes"""
+    durationMinutes: Int!
+    """Whether module is published"""
+    isPublished: Boolean!
+    """Course this module belongs to"""
+    course: Course!
+    """Lessons in this module"""
+    lessons: [Lesson!]!
+    """Creation timestamp"""
+    createdAt: String!
+    """Update timestamp"""
+    updatedAt: String!
+}
+
+"""
+Course entity
+"""
+type Course {
+    """Unique course identifier"""
+    id: ID!
+    """Course title"""
+    title: String!
+    """Course description"""
+    description: String
+    """URL-friendly slug"""
+    slug: String!
+    """Thumbnail image URL"""
+    thumbnailUrl: String
+    """Course difficulty level"""
+    difficulty: CourseDifficulty!
+    """Course language"""
+    language: String!
+    """Course requirements"""
+    requirements: String
+    """Learning outcomes"""
+    learningOutcomes: String
+    """Price in cents (0 for free)"""
+    priceInCents: Int!
+    """Total duration in minutes"""
+    durationMinutes: Int!
+    """Whether course is published"""
+    isPublished: Boolean!
+    """Whether course is draft"""
+    isDraft: Boolean!
+    """Whether course is archived"""
+    isArchived: Boolean!
+    """Whether course is featured"""
+    isFeatured: Boolean!
+    """Average rating (0-5)"""
+    averageRating: Float!
+    """Total number of ratings"""
+    ratingCount: Int!
+    """Number of enrollments"""
+    enrollmentCount: Int!
+    """Number of views"""
+    viewCount: Int!
+    """Publication timestamp"""
+    publishedAt: String
+    """Course creator"""
+    creator: User!
+    """Course category"""
+    category: Category!
+    """Course tags"""
+    tags: [Tag!]!
+    """Course modules"""
+    modules: [Module!]!
+    """Creation timestamp"""
+    createdAt: String!
+    """Update timestamp"""
+    updatedAt: String!
+}
+
+"""
+Paginated course results
+"""
+type CoursePage {
+    """List of courses"""
+    content: [Course!]!
+    """Total number of courses"""
+    totalElements: Int!
+    """Total number of pages"""
+    totalPages: Int!
+    """Current page number (0-indexed)"""
+    pageNumber: Int!
+    """Page size"""
+    pageSize: Int!
+    """Whether there is a next page"""
+    hasNext: Boolean!
+    """Whether there is a previous page"""
+    hasPrevious: Boolean!
+}
+
+# ============================================
+# Course Input Types
+# ============================================
+
+"""
+Input for creating a course
+"""
+input CreateCourseInput {
+    """Course title"""
+    title: String!
+    """Course description"""
+    description: String!
+    """Category ID"""
+    categoryId: ID!
+    """Difficulty level"""
+    difficulty: CourseDifficulty!
+    """Course language"""
+    language: String!
+    """Thumbnail URL"""
+    thumbnailUrl: String
+    """Course requirements"""
+    requirements: String
+    """Learning outcomes"""
+    learningOutcomes: String
+    """Price in cents (0 for free)"""
+    priceInCents: Int
+}
+
+"""
+Input for updating a course
+"""
+input UpdateCourseInput {
+    """Course title"""
+    title: String
+    """Course description"""
+    description: String
+    """Category ID"""
+    categoryId: ID
+    """Difficulty level"""
+    difficulty: CourseDifficulty
+    """Course language"""
+    language: String
+    """Thumbnail URL"""
+    thumbnailUrl: String
+    """Course requirements"""
+    requirements: String
+    """Learning outcomes"""
+    learningOutcomes: String
+}
+
+"""
+Input for creating a module
+"""
+input CreateModuleInput {
+    """Module title"""
+    title: String!
+    """Module description"""
+    description: String
+}
+
+"""
+Input for updating a module
+"""
+input UpdateModuleInput {
+    """Module title"""
+    title: String
+    """Module description"""
+    description: String
+    """Whether module is published"""
+    isPublished: Boolean
+}
+
+"""
+Input for creating a lesson
+"""
+input CreateLessonInput {
+    """Lesson title"""
+    title: String!
+    """Lesson description"""
+    description: String
+    """Content type"""
+    type: LessonType!
+    """Duration in minutes"""
+    durationMinutes: Int
+    """Whether lesson is free preview"""
+    isFree: Boolean
+}
+
+"""
+Input for updating lesson content
+"""
+input UpdateLessonContentInput {
+    """Video URL (for VIDEO type)"""
+    videoUrl: String
+    """Video thumbnail URL"""
+    videoThumbnailUrl: String
+    """Text content (for TEXT type)"""
+    textContent: String
+    """Quiz data in JSON (for QUIZ type)"""
+    quizData: String
+    """Assignment instructions (for ASSIGNMENT type)"""
+    assignmentInstructions: String
+    """Maximum points for assignment"""
+    assignmentMaxPoints: Int
+    """Resource URL (for RESOURCE type)"""
+    resourceUrl: String
+    """Additional resources in JSON array"""
+    additionalResources: String
+    """Video transcript"""
+    transcript: String
+    """Whether content is downloadable"""
+    isDownloadable: Boolean
+}
+
+# ============================================
 # Mutations
 # ============================================
 
 type Mutation {
+    # Authentication
     """
     Register a new user account
     """
@@ -115,6 +451,94 @@ type Mutation {
     Refresh access token using refresh token
     """
     refreshToken(refreshToken: String!): AuthPayload!
+    
+    # Course Management
+    """
+    Create a new course
+    """
+    createCourse(input: CreateCourseInput!): Course!
+    
+    """
+    Update an existing course
+    """
+    updateCourse(id: ID!, input: UpdateCourseInput!): Course!
+    
+    """
+    Delete a course
+    """
+    deleteCourse(id: ID!): Boolean!
+    
+    """
+    Publish a course
+    """
+    publishCourse(id: ID!): Course!
+    
+    """
+    Unpublish a course
+    """
+    unpublishCourse(id: ID!): Course!
+    
+    """
+    Archive a course
+    """
+    archiveCourse(id: ID!): Course!
+    
+    """
+    Add tags to a course
+    """
+    addTagsToCourse(courseId: ID!, tagIds: [ID!]!): Course!
+    
+    """
+    Remove tags from a course
+    """
+    removeTagsFromCourse(courseId: ID!, tagIds: [ID!]!): Course!
+    
+    # Module Management
+    """
+    Create a new module in a course
+    """
+    createModule(courseId: ID!, input: CreateModuleInput!): Module!
+    
+    """
+    Update a module
+    """
+    updateModule(id: ID!, input: UpdateModuleInput!): Module!
+    
+    """
+    Delete a module
+    """
+    deleteModule(id: ID!): Boolean!
+    
+    """
+    Reorder modules in a course
+    """
+    reorderModules(courseId: ID!, moduleIds: [ID!]!): [Module!]!
+    
+    # Lesson Management
+    """
+    Create a new lesson in a module
+    """
+    createLesson(moduleId: ID!, input: CreateLessonInput!): Lesson!
+    
+    """
+    Update a lesson
+    """
+    updateLesson(id: ID!, input: CreateLessonInput!): Lesson!
+    
+    """
+    Update lesson content
+    """
+    updateLessonContent(id: ID!, input: UpdateLessonContentInput!): Lesson!
+    
+    """
+    Delete a lesson
+    """
+    deleteLesson(id: ID!): Boolean!
+    
+    """
+    Reorder lessons in a module
+    """
+    reorderLessons(moduleId: ID!, lessonIds: [ID!]!): [Lesson!]!
 }
 
 # ============================================
@@ -122,6 +546,7 @@ type Mutation {
 # ============================================
 
 type Query {
+    # User Queries
     """
     Get currently authenticated user
     """
@@ -131,4 +556,79 @@ type Query {
     Get user by ID
     """
     user(id: ID!): User
+    
+    # Course Queries
+    """
+    Get a single course by slug
+    """
+    course(slug: String!): Course
+    
+    """
+    Get a single course by ID
+    """
+    courseById(id: ID!): Course
+    
+    """
+    Search and filter courses with pagination
+    """
+    courses(
+        searchTerm: String
+        categoryId: ID
+        difficulty: CourseDifficulty
+        language: String
+        minRating: Float
+        page: Int
+        size: Int
+    ): CoursePage!
+    
+    """
+    Get courses created by a specific user
+    """
+    coursesByCreator(creatorId: ID!, publishedOnly: Boolean): [Course!]!
+    
+    """
+    Get trending courses
+    """
+    trendingCourses(limit: Int): [Course!]!
+    
+    """
+    Get popular courses
+    """
+    popularCourses(minEnrollments: Int, limit: Int): [Course!]!
+    
+    """
+    Get newly published courses
+    """
+    newCourses(limit: Int): [Course!]!
+    
+    """
+    Get featured courses
+    """
+    featuredCourses(limit: Int): [Course!]!
+    
+    """
+    Get recommended courses based on a course
+    """
+    recommendedCourses(courseId: ID!, limit: Int): [Course!]!
+    
+    # Category & Tag Queries
+    """
+    Get all categories
+    """
+    categories: [Category!]!
+    
+    """
+    Get a category by ID
+    """
+    category(id: ID!): Category
+    
+    """
+    Get all tags
+    """
+    tags: [Tag!]!
+    
+    """
+    Get a tag by ID
+    """
+    tag(id: ID!): Tag
 }
