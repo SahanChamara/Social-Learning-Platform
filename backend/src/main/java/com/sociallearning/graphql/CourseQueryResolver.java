@@ -266,7 +266,7 @@ public class CourseQueryResolver {
     @QueryMapping
     public List<Category> categories() {
         log.info("GraphQL query: categories()");
-        return categoryRepository.findAllByIsActiveTrueOrderByNameAsc();
+        return categoryRepository.findAllByActiveTrueOrderByNameAsc();
     }
 
     /**

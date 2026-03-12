@@ -125,5 +125,5 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
      * 
      * @return List of active categories ordered by name
      */
-    List<Category> findAllByIsActiveTrueOrderByNameAsc();
+    List<Category> findAllByActiveTrueOrderByNameAsc();
 }

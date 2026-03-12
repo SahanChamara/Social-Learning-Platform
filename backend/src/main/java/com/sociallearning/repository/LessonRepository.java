@@ -1,8 +1,8 @@
 package com.sociallearning.repository;
 
 import com.sociallearning.entity.Lesson;
-import com.sociallearning.entity.LessonType;
 import com.sociallearning.entity.Module;
+import com.sociallearning.enums.LessonType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
