@@ -1,21 +1,26 @@
 package com.sociallearning.graphql;
 
+import com.sociallearning.entity.Category;
 import com.sociallearning.entity.Course;
 import com.sociallearning.entity.Lesson;
 import com.sociallearning.entity.Module;
+import com.sociallearning.entity.User;
 import com.sociallearning.service.LessonService;
 import com.sociallearning.service.ModuleService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.dataloader.DataLoader;
 import org.springframework.graphql.data.method.annotation.SchemaMapping;
+import org.springframework.graphql.execution.BatchLoaderRegistry;
 import org.springframework.stereotype.Controller;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * GraphQL field resolver for nested course data.
  * Handles loading of related entities when they are requested in GraphQL queries.
- * These resolvers are called when nested fields are queried.
+ * Uses DataLoaders to prevent N+1 query problems by batching database queries.
  */
 
 @Slf4j
@@ -25,6 +30,40 @@ public class CourseFieldResolver {
 
     private final ModuleService moduleService;
     private final LessonService lessonService;
+
+    /**
+     * Resolve the creator field for a Course using DataLoader.
+     * 
+     * This prevents N+1 queries when loading courses with their creators.
+     * Multiple creator loads are batched into a single database query.
+     * 
+     * @param course The parent course entity
+     * @param userDataLoader DataLoader for batch-loading User entities
+     * @return CompletableFuture containing the creator User
+     */
+    @SchemaMapping(typeName = "Course", field = "creator")
+    public CompletableFuture<User> courseCreator(Course course, DataLoader<Long, User> userDataLoader) {
+        Long creatorId = course.getCreator().getId();
+        log.debug("Queuing creator load for course '{}': user ID {}", course.getTitle(), creatorId);
+        return userDataLoader.load(creatorId);
+    }
+
+    /**
+     * Resolve the category field for a Course using DataLoader.
+     * 
+     * This prevents N+1 queries when loading courses with their categories.
+     * Multiple category loads are batched into a single database query.
+     * 
+     * @param course The parent course entity
+     * @param categoryDataLoader DataLoader for batch-loading Category entities
+     * @return CompletableFuture containing the Category
+     */
+    @SchemaMapping(typeName = "Course", field = "category")
+    public CompletableFuture<Category> courseCategory(Course course, DataLoader<Long, Category> categoryDataLoader) {
+        Long categoryId = course.getCategory().getId();
+        log.debug("Queuing category load for course '{}': category ID {}", course.getTitle(), categoryId);
+        return categoryDataLoader.load(categoryId);
+    }
 
     /**
      * Resolve the modules field for a Course.
@@ -53,17 +92,4 @@ public class CourseFieldResolver {
         log.debug("Resolving lessons for module ID: {}", module.getId());
         return lessonService.getLessonsByModule(module.getId());
     }
-
-    /**
-     * Note: creator, category, and tags are already loaded via JPA relationships
-     * in the Course entity, so we don't need explicit field resolvers for them.
-     * 
-     * However, if we implement DataLoader for N+1 prevention (Task 2.6),
-     * we would add field resolvers here like:
-     * 
-     * @SchemaMapping(typeName = "Course", field = "creator")
-     * public CompletableFuture<User> courseCreator(Course course, DataLoader<Long, User> userDataLoader) {
-     *     return userDataLoader.load(course.getCreator().getId());
-     * }
-     */
 }
