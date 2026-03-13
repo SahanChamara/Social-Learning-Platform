@@ -10,7 +10,9 @@ import Dashboard from '@/pages/Dashboard';
 import Profile from '@/pages/Profile';
 import CoursesPage from '@/pages/CoursesPage';
 import CourseDetailPage from '@/pages/CourseDetailPage';
+import CreateCoursePage from '@/pages/CreateCoursePage';
 import { ProtectedRoute } from '@/components/auth';
+import { UserRole } from '@/types/auth';
 
 // Router configuration
 const router = createBrowserRouter([
@@ -29,6 +31,14 @@ const router = createBrowserRouter([
       {
         path: 'courses',
         element: <CoursesPage />,
+      },
+      {
+        path: 'courses/create',
+        element: (
+          <ProtectedRoute allowedRoles={[UserRole.CREATOR, UserRole.ADMIN]}>
+            <CreateCoursePage />
+          </ProtectedRoute>
+        ),
       },
       {
         path: 'courses/:slug',

@@ -1,8 +1,11 @@
 import { type FormEvent, useState } from 'react';
 import { useQuery } from '@apollo/client/react';
 import { AlertCircle, Loader2, Search } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { CourseCard } from '@/components';
 import { COURSES_QUERY } from '@/graphql';
+import { useAuth } from '@/hooks';
+import { UserRole } from '@/types/auth';
 import { CourseDifficulty, type CoursesQueryVariables, type CoursesResponse } from '@/types/courses';
 
 const PAGE_SIZE = 9;
@@ -22,10 +25,13 @@ function CourseCardSkeleton() {
 }
 
 export default function CoursesPage() {
+  const { user } = useAuth();
   const [searchInput, setSearchInput] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [difficulty, setDifficulty] = useState<CourseDifficulty | ''>('');
   const [page, setPage] = useState(0);
+
+  const canCreateCourses = user?.role === UserRole.CREATOR || user?.role === UserRole.ADMIN;
 
   const variables: CoursesQueryVariables = {
     searchTerm: searchTerm.trim() ? searchTerm.trim() : undefined,
@@ -118,11 +124,22 @@ export default function CoursesPage() {
   return (
     <div className="min-h-screen bg-slate-50">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <header className="mb-8 flex flex-col gap-3">
-          <h1 className="text-4xl font-bold tracking-tight text-slate-900">Explore Courses</h1>
-          <p className="max-w-2xl text-slate-600">
-            Browse curated learning experiences from creators across design, development, business, and more.
-          </p>
+        <header className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div className="space-y-3">
+            <h1 className="text-4xl font-bold tracking-tight text-slate-900">Explore Courses</h1>
+            <p className="max-w-2xl text-slate-600">
+              Browse curated learning experiences from creators across design, development, business, and more.
+            </p>
+          </div>
+
+          {canCreateCourses ? (
+            <Link
+              to="/courses/create"
+              className="inline-flex h-11 items-center justify-center rounded-lg bg-blue-600 px-4 text-sm font-semibold text-white transition hover:bg-blue-700"
+            >
+              Create Course
+            </Link>
+          ) : null}
         </header>
 
         <section className="mb-8 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
