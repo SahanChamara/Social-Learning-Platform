@@ -9,6 +9,7 @@ import AuthDemo from '@/pages/AuthDemo';
 import Dashboard from '@/pages/Dashboard';
 import Profile from '@/pages/Profile';
 import CoursesPage from '@/pages/CoursesPage';
+import CourseDetailPage from '@/pages/CourseDetailPage';
 import { ProtectedRoute } from '@/components/auth';
 
 // Router configuration
@@ -28,6 +29,10 @@ const router = createBrowserRouter([
       {
         path: 'courses',
         element: <CoursesPage />,
+      },
+      {
+        path: 'courses/:slug',
+        element: <CourseDetailPage />,
       },
       {
         path: 'components-demo',

@@ -183,7 +183,12 @@ export default function CoursesPage() {
         {courses.length > 0 ? (
           <section className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {courses.map((course) => (
-              <CourseCard key={course.id} course={course} className="h-full" />
+              <CourseCard
+                key={course.id}
+                course={course}
+                href={`/courses/${course.slug}`}
+                className="h-full"
+              />
             ))}
           </section>
         ) : (
