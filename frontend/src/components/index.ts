@@ -6,3 +6,6 @@ export { Toaster } from './Toaster';
 
 // Export Auth components
 export * from './auth';
+
+// Export Course components
+export * from './courses';
