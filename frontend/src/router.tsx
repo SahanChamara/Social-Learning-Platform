@@ -8,6 +8,7 @@ import ComponentsDemo from '@/pages/ComponentsDemo';
 import AuthDemo from '@/pages/AuthDemo';
 import Dashboard from '@/pages/Dashboard';
 import Profile from '@/pages/Profile';
+import CoursesPage from '@/pages/CoursesPage';
 import { ProtectedRoute } from '@/components/auth';
 
 // Router configuration
@@ -23,6 +24,10 @@ const router = createBrowserRouter([
       {
         path: 'discover',
         element: <Discover />,
+      },
+      {
+        path: 'courses',
+        element: <CoursesPage />,
       },
       {
         path: 'components-demo',
