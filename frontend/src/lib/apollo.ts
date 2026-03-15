@@ -1,4 +1,11 @@
-import { ApolloClient, InMemoryCache, createHttpLink, split, from } from '@apollo/client';
+import {
+  ApolloClient,
+  CombinedGraphQLErrors,
+  InMemoryCache,
+  createHttpLink,
+  from,
+  split,
+} from '@apollo/client';
 import { setContext } from '@apollo/client/link/context';
 import { onError } from '@apollo/client/link/error';
 import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
@@ -36,24 +43,24 @@ const authLink = setContext((_, { headers }) => {
 });
 
 // Error handling link
-const errorLink = onError(({ graphQLErrors, networkError }) => {
-  if (graphQLErrors) {
-    graphQLErrors.forEach(({ message, locations, path }) => {
+const errorLink = onError(({ error }) => {
+  if (CombinedGraphQLErrors.is(error)) {
+    error.errors.forEach(({ message, locations, path }) => {
       console.error(
         `[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`
       );
-      
+
       // Handle authentication errors
       if (message.includes('Unauthorized') || message.includes('Authentication')) {
         localStorage.removeItem('authToken');
-        window.location.href = '/auth/login';
+        globalThis.location.href = '/auth/login';
       }
     });
+
+    return;
   }
 
-  if (networkError) {
-    console.error(`[Network error]: ${networkError}`);
-  }
+  console.error(`[Network error]: ${error.message}`);
 });
 
 // Split link - route queries/mutations to HTTP, subscriptions to WebSocket
@@ -152,5 +159,7 @@ export const apolloClient = new ApolloClient({
       errorPolicy: 'all',
     },
   },
-  connectToDevTools: import.meta.env.DEV,
+  devtools: {
+    enabled: import.meta.env.DEV,
+  },
 });
