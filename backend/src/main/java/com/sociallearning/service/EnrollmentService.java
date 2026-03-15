@@ -5,6 +5,7 @@ import com.sociallearning.entity.Enrollment;
 import com.sociallearning.entity.Lesson;
 import com.sociallearning.entity.Progress;
 import com.sociallearning.entity.User;
+import com.sociallearning.enums.EnrollmentStatus;
 import com.sociallearning.repository.CourseRepository;
 import com.sociallearning.repository.EnrollmentRepository;
 import com.sociallearning.repository.LessonRepository;
@@ -147,6 +148,48 @@ public class EnrollmentService {
         return enrollmentRepository.findByUserIdAndCourseId(userId, courseId)
                 .orElseThrow(() -> new IllegalArgumentException(
                         "Enrollment not found for user " + userId + " and course " + courseId));
+    }
+
+    /**
+     * Get learner enrollments filtered by status.
+     *
+     * @param userId Learner ID
+     * @param status Enrollment status
+     * @return Filtered enrollment list
+     */
+    @Transactional(readOnly = true)
+    public List<Enrollment> getUserEnrollments(Long userId, EnrollmentStatus status) {
+        if (status == null) {
+            return getUserEnrollments(userId);
+        }
+
+        return enrollmentRepository.findByUserIdAndStatusOrderByEnrolledAtDesc(userId, status);
+    }
+
+    /**
+     * Unenroll a learner from a course.
+     *
+     * @param userId Learner ID
+     * @param courseId Course ID
+     * @throws IllegalArgumentException if enrollment is not found
+     */
+    @Transactional
+    public void unenrollCourse(Long userId, Long courseId) {
+        log.info("Unenrolling user ID: {} from course ID: {}", userId, courseId);
+
+        Enrollment enrollment = enrollmentRepository.findByUserIdAndCourseId(userId, courseId)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Enrollment not found for user " + userId + " and course " + courseId));
+
+        Course course = enrollment.getCourse();
+
+        progressRepository.deleteByEnrollmentId(enrollment.getId());
+        enrollmentRepository.delete(enrollment);
+
+        course.decrementEnrollmentCount();
+        courseRepository.save(course);
+
+        log.info("Unenrollment completed for user ID: {} and course ID: {}", userId, courseId);
     }
 
     private List<Progress> createInitialProgressRecords(Enrollment enrollment, List<Lesson> lessons) {

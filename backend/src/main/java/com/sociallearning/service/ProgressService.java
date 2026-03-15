@@ -11,6 +11,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 /**
  * Service for handling learner lesson progress operations.
  *
@@ -81,6 +83,17 @@ public class ProgressService {
                 updatedEnrollment.getProgressPercentage());
 
         return progress;
+    }
+
+    /**
+     * Get all lesson progress records for an enrollment.
+     *
+     * @param enrollmentId Enrollment ID
+     * @return Ordered progress records with lesson details
+     */
+    @Transactional(readOnly = true)
+    public List<Progress> getEnrollmentProgress(Long enrollmentId) {
+        return progressRepository.findByEnrollmentIdWithLessonDetails(enrollmentId);
     }
 
     private Progress getOrCreateProgressRecord(Enrollment enrollment, Lesson lesson) {
