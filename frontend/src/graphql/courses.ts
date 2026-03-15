@@ -128,6 +128,56 @@ export const COURSE_DETAIL_FRAGMENT = gql`
   }
 `;
 
+/**
+ * Lesson progress information for an enrollment
+ */
+export const PROGRESS_FRAGMENT = gql`
+  ${LESSON_FRAGMENT}
+  fragment ProgressFields on Progress {
+    id
+    completed
+    startedAt
+    completedAt
+    lastAccessedAt
+    watchTimeSeconds
+    attemptCount
+    scorePercentage
+    lesson {
+      ...LessonFields
+    }
+    createdAt
+    updatedAt
+  }
+`;
+
+/**
+ * Enrollment information with associated course and progress records
+ */
+export const ENROLLMENT_FRAGMENT = gql`
+  ${COURSE_BASIC_FRAGMENT}
+  ${PROGRESS_FRAGMENT}
+  fragment EnrollmentFields on Enrollment {
+    id
+    status
+    progressPercentage
+    completedLessons
+    totalLessons
+    enrolledAt
+    startedAt
+    completedAt
+    lastAccessedAt
+    timeSpentMinutes
+    course {
+      ...CourseBasicFields
+    }
+    progressRecords {
+      ...ProgressFields
+    }
+    createdAt
+    updatedAt
+  }
+`;
+
 // ============================================
 // GraphQL Queries
 // ============================================
@@ -152,6 +202,18 @@ export const COURSE_BY_ID_QUERY = gql`
   query CourseById($id: ID!) {
     courseById(id: $id) {
       ...CourseDetailFields
+    }
+  }
+`;
+
+/**
+ * Get enrollments for the current learner
+ */
+export const MY_ENROLLMENTS_QUERY = gql`
+  ${ENROLLMENT_FRAGMENT}
+  query MyEnrollments($status: EnrollmentStatus) {
+    myEnrollments(status: $status) {
+      ...EnrollmentFields
     }
   }
 `;
@@ -312,6 +374,30 @@ export const CREATE_COURSE_MUTATION = gql`
   mutation CreateCourse($input: CreateCourseInput!) {
     createCourse(input: $input) {
       ...CourseDetailFields
+    }
+  }
+`;
+
+/**
+ * Enroll the current learner in a course
+ */
+export const ENROLL_COURSE_MUTATION = gql`
+  ${ENROLLMENT_FRAGMENT}
+  mutation EnrollCourse($courseId: ID!) {
+    enrollCourse(courseId: $courseId) {
+      ...EnrollmentFields
+    }
+  }
+`;
+
+/**
+ * Mark a lesson complete for the current learner
+ */
+export const MARK_LESSON_COMPLETE_MUTATION = gql`
+  ${PROGRESS_FRAGMENT}
+  mutation MarkLessonComplete($lessonId: ID!) {
+    markLessonComplete(lessonId: $lessonId) {
+      ...ProgressFields
     }
   }
 `;
