@@ -337,6 +337,25 @@ export interface MyEnrollmentsQueryVariables {
   status?: EnrollmentStatus;
 }
 
+/**
+ * Variables for enrollment status query (check if enrolled in a specific course)
+ */
+export interface EnrollmentStatusQueryVariables {
+  courseId: string;
+}
+
+/**
+ * Lightweight enrollment status for a specific course
+ */
+export interface EnrollmentStatusInfo {
+  id: string;
+  status: EnrollmentStatus;
+  progressPercentage: number;
+  completedLessons: number;
+  totalLessons: number;
+  enrolledAt: string;
+}
+
 // ============================================
 // Mutation Variables Types
 // ============================================
@@ -548,6 +567,13 @@ export interface TagsResponse {
  */
 export interface MyEnrollmentsResponse {
   myEnrollments: Enrollment[];
+}
+
+/**
+ * Response for enrollment status query
+ */
+export interface EnrollmentStatusResponse {
+  enrollmentStatus: EnrollmentStatusInfo | null;
 }
 
 /**

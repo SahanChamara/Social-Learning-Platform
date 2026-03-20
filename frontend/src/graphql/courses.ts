@@ -219,6 +219,22 @@ export const MY_ENROLLMENTS_QUERY = gql`
 `;
 
 /**
+ * Check if the current learner is enrolled in a course (lightweight query)
+ */
+export const ENROLLMENT_STATUS_QUERY = gql`
+  query EnrollmentStatus($courseId: ID!) {
+    enrollmentStatus(courseId: $courseId) {
+      id
+      status
+      progressPercentage
+      completedLessons
+      totalLessons
+      enrolledAt
+    }
+  }
+`;
+
+/**
  * Search and filter courses with pagination
  */
 export const COURSES_QUERY = gql`
