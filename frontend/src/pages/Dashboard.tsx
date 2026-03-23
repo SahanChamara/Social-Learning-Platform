@@ -2,14 +2,15 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
-import { 
-  BookOpen, 
-  TrendingUp, 
-  Award, 
+import {
+  BookOpen,
+  TrendingUp,
+  Award,
   Clock,
   User,
   Settings,
-  LogOut
+  LogOut,
+  GraduationCap
 } from 'lucide-react';
 
 export default function Dashboard() {
@@ -39,6 +40,12 @@ export default function Dashboard() {
               </p>
             </div>
             <div className="flex items-center gap-3">
+              <Link to="/my-learning">
+                <Button variant="outline" size="sm">
+                  <GraduationCap className="h-4 w-4" />
+                  My Learning
+                </Button>
+              </Link>
               <Link to="/profile">
                 <Button variant="outline" size="sm">
                   <User className="h-4 w-4" />

@@ -7,6 +7,7 @@ import NotFound from '@/pages/NotFound';
 import ComponentsDemo from '@/pages/ComponentsDemo';
 import AuthDemo from '@/pages/AuthDemo';
 import Dashboard from '@/pages/Dashboard';
+import LearnerDashboard from '@/pages/LearnerDashboard';
 import Profile from '@/pages/Profile';
 import CoursesPage from '@/pages/CoursesPage';
 import CourseDetailPage from '@/pages/CourseDetailPage';
@@ -71,6 +72,14 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <Dashboard />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'my-learning',
+        element: (
+          <ProtectedRoute>
+            <LearnerDashboard />
           </ProtectedRoute>
         ),
       },
