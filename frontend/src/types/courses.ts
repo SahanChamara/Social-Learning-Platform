@@ -356,6 +356,20 @@ export interface EnrollmentStatusInfo {
   enrolledAt: string;
 }
 
+/**
+ * Variables for course enrollment query
+ */
+export interface CourseEnrollmentQueryVariables {
+  courseId: string;
+}
+
+/**
+ * Response for course enrollment query
+ */
+export interface CourseEnrollmentResponse {
+  courseEnrollment: Enrollment | null;
+}
+
 // ============================================
 // Mutation Variables Types
 // ============================================

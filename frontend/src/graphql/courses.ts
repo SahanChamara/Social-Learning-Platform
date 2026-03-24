@@ -235,6 +235,18 @@ export const ENROLLMENT_STATUS_QUERY = gql`
 `;
 
 /**
+ * Get the current user's enrollment with progress records for a course
+ */
+export const COURSE_ENROLLMENT_QUERY = gql`
+  ${ENROLLMENT_FRAGMENT}
+  query CourseEnrollment($courseId: ID!) {
+    courseEnrollment(courseId: $courseId) {
+      ...EnrollmentFields
+    }
+  }
+`;
+
+/**
  * Search and filter courses with pagination
  */
 export const COURSES_QUERY = gql`

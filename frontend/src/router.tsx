@@ -8,6 +8,7 @@ import ComponentsDemo from '@/pages/ComponentsDemo';
 import AuthDemo from '@/pages/AuthDemo';
 import Dashboard from '@/pages/Dashboard';
 import LearnerDashboard from '@/pages/LearnerDashboard';
+import LessonPage from '@/pages/LessonPage';
 import Profile from '@/pages/Profile';
 import CoursesPage from '@/pages/CoursesPage';
 import CourseDetailPage from '@/pages/CourseDetailPage';
@@ -44,6 +45,14 @@ const router = createBrowserRouter([
       {
         path: 'courses/:slug',
         element: <CourseDetailPage />,
+      },
+      {
+        path: 'courses/:slug/learn/:lessonId',
+        element: (
+          <ProtectedRoute>
+            <LessonPage />
+          </ProtectedRoute>
+        ),
       },
       {
         path: 'components-demo',
