@@ -29,6 +29,17 @@ export const LessonType = {
 
 export type LessonType = typeof LessonType[keyof typeof LessonType];
 
+/**
+ * Enrollment lifecycle status
+ */
+export const EnrollmentStatus = {
+  ENROLLED: 'ENROLLED',
+  COMPLETED: 'COMPLETED',
+  DROPPED: 'DROPPED',
+} as const;
+
+export type EnrollmentStatus = typeof EnrollmentStatus[keyof typeof EnrollmentStatus];
+
 // ============================================
 // Entity Types
 // ============================================
@@ -96,6 +107,43 @@ export interface Module {
   durationMinutes: number;
   isPublished: boolean;
   lessons: Lesson[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Lesson-level progress for a learner enrollment
+ */
+export interface LessonProgress {
+  id: string;
+  completed: boolean;
+  startedAt?: string;
+  completedAt?: string;
+  lastAccessedAt?: string;
+  watchTimeSeconds: number;
+  attemptCount: number;
+  scorePercentage?: number;
+  lesson: Lesson;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Learner enrollment in a course
+ */
+export interface Enrollment {
+  id: string;
+  status: EnrollmentStatus;
+  progressPercentage: number;
+  completedLessons: number;
+  totalLessons: number;
+  enrolledAt: string;
+  startedAt?: string;
+  completedAt?: string;
+  lastAccessedAt?: string;
+  timeSpentMinutes: number;
+  course: Course;
+  progressRecords: LessonProgress[];
   createdAt: string;
   updatedAt: string;
 }
@@ -282,6 +330,46 @@ export interface RecommendedCoursesQueryVariables {
   limit?: number;
 }
 
+/**
+ * Variables for my enrollments query
+ */
+export interface MyEnrollmentsQueryVariables {
+  status?: EnrollmentStatus;
+}
+
+/**
+ * Variables for enrollment status query (check if enrolled in a specific course)
+ */
+export interface EnrollmentStatusQueryVariables {
+  courseId: string;
+}
+
+/**
+ * Lightweight enrollment status for a specific course
+ */
+export interface EnrollmentStatusInfo {
+  id: string;
+  status: EnrollmentStatus;
+  progressPercentage: number;
+  completedLessons: number;
+  totalLessons: number;
+  enrolledAt: string;
+}
+
+/**
+ * Variables for course enrollment query
+ */
+export interface CourseEnrollmentQueryVariables {
+  courseId: string;
+}
+
+/**
+ * Response for course enrollment query
+ */
+export interface CourseEnrollmentResponse {
+  courseEnrollment: Enrollment | null;
+}
+
 // ============================================
 // Mutation Variables Types
 // ============================================
@@ -386,6 +474,20 @@ export interface ReorderLessonsMutationVariables {
   lessonIds: string[];
 }
 
+/**
+ * Variables for enroll course mutation
+ */
+export interface EnrollCourseMutationVariables {
+  courseId: string;
+}
+
+/**
+ * Variables for mark lesson complete mutation
+ */
+export interface MarkLessonCompleteMutationVariables {
+  lessonId: string;
+}
+
 // ============================================
 // Response Types
 // ============================================
@@ -475,6 +577,20 @@ export interface TagsResponse {
 }
 
 /**
+ * Response for my enrollments query
+ */
+export interface MyEnrollmentsResponse {
+  myEnrollments: Enrollment[];
+}
+
+/**
+ * Response for enrollment status query
+ */
+export interface EnrollmentStatusResponse {
+  enrollmentStatus: EnrollmentStatusInfo | null;
+}
+
+/**
  * Response for create/update course mutations
  */
 export interface CourseMutationResponse {
@@ -525,6 +641,20 @@ export interface LessonMutationResponse {
  */
 export interface DeleteLessonMutationResponse {
   deleteLesson: boolean;
+}
+
+/**
+ * Response for enroll course mutation
+ */
+export interface EnrollCourseMutationResponse {
+  enrollCourse: Enrollment;
+}
+
+/**
+ * Response for mark lesson complete mutation
+ */
+export interface MarkLessonCompleteMutationResponse {
+  markLessonComplete: LessonProgress;
 }
 
 // ============================================

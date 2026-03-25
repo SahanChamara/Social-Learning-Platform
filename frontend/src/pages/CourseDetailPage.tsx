@@ -17,6 +17,7 @@ import {
   Users,
 } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
+import { EnrollButton } from '@/components/courses';
 import { COURSE_QUERY } from '@/graphql';
 import type {
   CourseQueryVariables,
@@ -289,15 +290,12 @@ export default function CourseDetailPage() {
                 Created by <span className="font-medium text-slate-900">{course.creator.fullName}</span>
               </p>
 
-              <button
-                type="button"
-                disabled
-                className="mt-5 inline-flex h-12 w-full items-center justify-center rounded-lg bg-blue-600 px-4 text-sm font-semibold text-white opacity-60"
-                aria-disabled="true"
-              >
-                Enroll (Coming in Phase 3)
-              </button>
-              <p className="mt-2 text-xs text-slate-500">Enrollment flow will be added in Task 3.6.</p>
+              <EnrollButton
+                courseId={course.id}
+                courseTitle={course.title}
+                courseSlug={course.slug}
+                priceInCents={course.priceInCents}
+              />
 
               <div className="mt-6 space-y-3 border-t border-slate-200 pt-4 text-sm text-slate-700">
                 <p className="inline-flex items-center gap-2">

@@ -72,6 +72,8 @@ export default function Home() {
               <code className="px-3 py-1 bg-white rounded text-sm">/</code>
               <code className="px-3 py-1 bg-white rounded text-sm">/auth/login</code>
               <code className="px-3 py-1 bg-white rounded text-sm">/auth/register</code>
+              <code className="px-3 py-1 bg-white rounded text-sm">/courses</code>
+              <code className="px-3 py-1 bg-white rounded text-sm">/my-learning</code>
               <code className="px-3 py-1 bg-white rounded text-sm">/discover</code>
             </div>
           </div>
