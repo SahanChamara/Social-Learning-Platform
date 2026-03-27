@@ -3,6 +3,7 @@ package com.sociallearning.graphql;
 import com.sociallearning.enums.LikeableType;
 import com.sociallearning.security.SecurityUtils;
 import com.sociallearning.service.LikeService;
+import com.sociallearning.service.SubscriptionPublisher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.graphql.data.method.annotation.Argument;
@@ -19,6 +20,7 @@ import java.util.Map;
  * Handles:
  * - Toggle like on courses, lessons, and comments
  * - Query like status and counts
+ * - Publishing subscription events
  */
 @Slf4j
 @Controller
@@ -26,6 +28,7 @@ import java.util.Map;
 public class LikeResolver {
 
     private final LikeService likeService;
+    private final SubscriptionPublisher subscriptionPublisher;
 
     // ============================================
     // Mutations
@@ -34,6 +37,7 @@ public class LikeResolver {
     /**
      * Toggle like on a course, lesson, or comment.
      * If already liked, removes the like. If not liked, adds a like.
+     * Publishes a subscription event when like is toggled.
      * 
      * GraphQL Mutation:
      * mutation ToggleLike($targetType: LikeableType!, $targetId: ID!) {
@@ -56,6 +60,9 @@ public class LikeResolver {
         LikeableType type = LikeableType.valueOf(targetType);
         boolean isLiked = likeService.toggleLike(userId, type, targetId);
         long likeCount = likeService.getLikeCount(type, targetId);
+        
+        // Publish subscription event
+        subscriptionPublisher.publishLikeToggled(targetType, targetId, userId, isLiked, likeCount);
         
         Map<String, Object> result = new HashMap<>();
         result.put("liked", isLiked);

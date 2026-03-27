@@ -5,6 +5,7 @@ import com.sociallearning.enums.CommentableType;
 import com.sociallearning.security.SecurityUtils;
 import com.sociallearning.service.CommentService;
 import com.sociallearning.service.LikeService;
+import com.sociallearning.service.SubscriptionPublisher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -28,6 +29,7 @@ import java.util.Map;
  * - Updating and deleting comments
  * - Fetching comments with pagination
  * - Pinning comments (admin/creator)
+ * - Publishing subscription events
  */
 @Slf4j
 @Controller
@@ -36,6 +38,7 @@ public class CommentResolver {
 
     private final CommentService commentService;
     private final LikeService likeService;
+    private final SubscriptionPublisher subscriptionPublisher;
 
     // ============================================
     // Mutations
@@ -43,6 +46,7 @@ public class CommentResolver {
 
     /**
      * Add a comment to a course, lesson, or as a reply to another comment.
+     * Publishes a subscription event when comment is added.
      * 
      * GraphQL Mutation:
      * mutation AddComment($input: AddCommentInput!) {
@@ -63,19 +67,26 @@ public class CommentResolver {
         
         CommentableType targetType = CommentableType.valueOf(input.targetType());
         Long parentId = input.parentCommentId() != null ? Long.parseLong(input.parentCommentId()) : null;
+        Long targetId = Long.parseLong(input.targetId());
         
-        return commentService.addComment(
+        Comment comment = commentService.addComment(
                 userId,
                 targetType,
-                Long.parseLong(input.targetId()),
+                targetId,
                 input.content(),
                 parentId
         );
+        
+        // Publish subscription event
+        subscriptionPublisher.publishCommentAdded(comment, input.targetType(), targetId);
+        
+        return comment;
     }
 
     /**
      * Update a comment's content.
      * Authorization: Only the comment author can update.
+     * Publishes a subscription event when comment is updated.
      * 
      * GraphQL Mutation:
      * mutation UpdateComment($id: ID!, $input: UpdateCommentInput!) {
@@ -93,12 +104,18 @@ public class CommentResolver {
         
         log.info("GraphQL updateComment mutation: userId={}, commentId={}", userId, id);
         
-        return commentService.updateComment(userId, id, input.content());
+        Comment comment = commentService.updateComment(userId, id, input.content());
+        
+        // Publish subscription event
+        subscriptionPublisher.publishCommentUpdated(comment);
+        
+        return comment;
     }
 
     /**
      * Delete a comment (soft delete).
      * Authorization: Comment author or admin can delete.
+     * Publishes a subscription event when comment is deleted.
      * 
      * GraphQL Mutation:
      * mutation DeleteComment($id: ID!) {
@@ -113,7 +130,14 @@ public class CommentResolver {
         log.info("GraphQL deleteComment mutation: userId={}, commentId={}, isAdmin={}", 
                 userId, id, isAdmin);
         
+        // Get comment before deletion for the event
+        Comment comment = commentService.getComment(id);
+        
         commentService.deleteComment(userId, id, isAdmin);
+        
+        // Publish subscription event
+        subscriptionPublisher.publishCommentDeleted(comment);
+        
         return true;
     }
 

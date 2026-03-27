@@ -4,6 +4,7 @@ import com.sociallearning.entity.Rating;
 import com.sociallearning.security.SecurityUtils;
 import com.sociallearning.service.RatingService;
 import com.sociallearning.service.RatingService.RatingStats;
+import com.sociallearning.service.SubscriptionPublisher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -26,6 +27,7 @@ import java.util.Optional;
  * - Managing reviews
  * - Fetching ratings with pagination
  * - Rating statistics
+ * - Publishing subscription events
  */
 @Slf4j
 @Controller
@@ -33,6 +35,7 @@ import java.util.Optional;
 public class RatingResolver {
 
     private final RatingService ratingService;
+    private final SubscriptionPublisher subscriptionPublisher;
 
     // ============================================
     // Mutations
@@ -40,6 +43,7 @@ public class RatingResolver {
 
     /**
      * Rate a course (creates or updates existing rating).
+     * Publishes a subscription event when rating is added/updated.
      * 
      * GraphQL Mutation:
      * mutation RateCourse($input: RateCourseInput!) {
@@ -57,22 +61,32 @@ public class RatingResolver {
     @MutationMapping
     public Rating rateCourse(@Argument("input") RateCourseInput input) {
         Long userId = requireAuthentication();
+        Long courseId = Long.parseLong(input.courseId());
         
         log.info("GraphQL rateCourse mutation: userId={}, courseId={}, rating={}", 
-                userId, input.courseId(), input.ratingValue());
+                userId, courseId, input.ratingValue());
         
-        return ratingService.rateCourse(
+        // Check if this is a new rating or an update
+        boolean isNew = ratingService.getUserCourseRating(userId, courseId).isEmpty();
+        
+        Rating rating = ratingService.rateCourse(
                 userId,
-                Long.parseLong(input.courseId()),
+                courseId,
                 input.ratingValue(),
                 input.reviewTitle(),
                 input.reviewContent()
         );
+        
+        // Publish subscription event
+        subscriptionPublisher.publishRatingEvent(rating, isNew);
+        
+        return rating;
     }
 
     /**
      * Update an existing rating.
      * Authorization: Only the rating author can update.
+     * Publishes a subscription event when rating is updated.
      * 
      * GraphQL Mutation:
      * mutation UpdateRating($id: ID!, $input: UpdateRatingInput!) {
@@ -109,6 +123,9 @@ public class RatingResolver {
             return ratingService.getUserCourseRating(userId, id)
                     .orElseThrow(() -> new IllegalArgumentException("Rating not found"));
         }
+        
+        // Publish subscription event
+        subscriptionPublisher.publishRatingEvent(rating, false);
         
         return rating;
     }

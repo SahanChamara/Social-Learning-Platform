@@ -972,3 +972,110 @@ type Query {
     """
     likeCount(targetType: LikeableType!, targetId: ID!): Int!
 }
+
+# ============================================
+# Subscriptions
+# ============================================
+
+"""
+Comment event type for subscriptions
+"""
+enum CommentEventType {
+    ADDED
+    UPDATED
+    DELETED
+}
+
+"""
+Comment event payload for subscriptions
+"""
+type CommentEvent {
+    """Type of event"""
+    eventType: CommentEventType!
+    """The comment involved in the event"""
+    comment: Comment!
+    """Type of target entity"""
+    targetType: CommentableType!
+    """ID of the target entity"""
+    targetId: ID!
+}
+
+"""
+Like event payload for subscriptions
+"""
+type LikeEvent {
+    """Type of target entity"""
+    targetType: LikeableType!
+    """ID of the target entity"""
+    targetId: ID!
+    """User who toggled the like"""
+    userId: ID!
+    """Whether the entity is now liked"""
+    isLiked: Boolean!
+    """New total like count"""
+    likeCount: Int!
+}
+
+"""
+Rating event type for subscriptions
+"""
+enum RatingEventType {
+    ADDED
+    UPDATED
+}
+
+"""
+Rating event payload for subscriptions
+"""
+type RatingEvent {
+    """Type of event"""
+    eventType: RatingEventType!
+    """The rating that was added/updated"""
+    rating: Rating!
+    """ID of the course"""
+    courseId: ID!
+}
+
+type Subscription {
+    """
+    Subscribe to new comments on a course or lesson.
+    Receives events when comments are added, updated, or deleted.
+    """
+    commentAdded(
+        """Type of entity to watch (COURSE or LESSON)"""
+        targetType: CommentableType!
+        """ID of the entity to watch"""
+        targetId: ID!
+    ): CommentEvent!
+    
+    """
+    Subscribe to all comment events for a course or lesson.
+    Includes added, updated, and deleted events.
+    """
+    commentEvents(
+        """Type of entity to watch (COURSE or LESSON)"""
+        targetType: CommentableType!
+        """ID of the entity to watch"""
+        targetId: ID!
+    ): CommentEvent!
+    
+    """
+    Subscribe to like events on a specific entity.
+    Receives events when likes are toggled.
+    """
+    likeToggled(
+        """Type of entity to watch"""
+        targetType: LikeableType!
+        """ID of the entity to watch"""
+        targetId: ID!
+    ): LikeEvent!
+    
+    """
+    Subscribe to rating events for a course.
+    Receives events when ratings are added or updated.
+    """
+    ratingEvent(
+        """ID of the course to watch"""
+        courseId: ID!
+    ): RatingEvent!
+}
