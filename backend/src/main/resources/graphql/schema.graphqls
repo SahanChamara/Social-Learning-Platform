@@ -1,6 +1,230 @@
 # GraphQL Schema for Social Learning Platform
 
 # ============================================
+# Engagement Enums
+# ============================================
+
+"""
+Type of entity that can be commented on
+"""
+enum CommentableType {
+    COURSE
+    LESSON
+    COMMENT
+}
+
+"""
+Type of entity that can be liked
+"""
+enum LikeableType {
+    COURSE
+    LESSON
+    COMMENT
+}
+
+# ============================================
+# Engagement Types
+# ============================================
+
+"""
+Comment entity representing a user comment
+"""
+type Comment {
+    """Unique comment identifier"""
+    id: ID!
+    """Comment content"""
+    content: String!
+    """Type of entity this comment belongs to"""
+    commentableType: CommentableType!
+    """ID of the entity this comment belongs to"""
+    commentableId: ID!
+    """User who wrote the comment"""
+    user: User!
+    """Parent comment (for replies)"""
+    parent: Comment
+    """Depth level in thread (0 for root comments)"""
+    depthLevel: Int!
+    """Number of likes"""
+    likeCount: Int!
+    """Number of replies"""
+    replyCount: Int!
+    """Whether the comment has been edited"""
+    isEdited: Boolean!
+    """Whether the comment is deleted"""
+    isDeleted: Boolean!
+    """Whether the comment is pinned"""
+    isPinned: Boolean!
+    """Replies to this comment"""
+    replies: [Comment!]!
+    """Whether the current user has liked this comment"""
+    isLikedByMe: Boolean!
+    """Creation timestamp"""
+    createdAt: String!
+    """Update timestamp"""
+    updatedAt: String!
+    """Edit timestamp (if edited)"""
+    editedAt: String
+}
+
+"""
+Paginated comment results
+"""
+type CommentPage {
+    """List of comments"""
+    content: [Comment!]!
+    """Total number of comments"""
+    totalElements: Int!
+    """Total number of pages"""
+    totalPages: Int!
+    """Current page number (0-indexed)"""
+    pageNumber: Int!
+    """Page size"""
+    pageSize: Int!
+    """Whether there is a next page"""
+    hasNext: Boolean!
+    """Whether there is a previous page"""
+    hasPrevious: Boolean!
+}
+
+"""
+Rating/Review entity for course ratings
+"""
+type Rating {
+    """Unique rating identifier"""
+    id: ID!
+    """Rating value (1-5 stars)"""
+    ratingValue: Int!
+    """Optional review title"""
+    reviewTitle: String
+    """Optional review content"""
+    reviewContent: String
+    """Number of users who found this helpful"""
+    helpfulCount: Int!
+    """Whether the review has been edited"""
+    isEdited: Boolean!
+    """Whether this is from a verified enrollee"""
+    isVerifiedPurchase: Boolean!
+    """Whether the review is featured"""
+    isFeatured: Boolean!
+    """User who submitted the rating"""
+    user: User!
+    """Course being rated"""
+    course: Course!
+    """Admin response to the review"""
+    adminResponse: String
+    """When admin responded"""
+    adminRespondedAt: String
+    """Creation timestamp"""
+    createdAt: String!
+    """Update timestamp"""
+    updatedAt: String!
+    """Edit timestamp (if edited)"""
+    editedAt: String
+}
+
+"""
+Paginated rating results
+"""
+type RatingPage {
+    """List of ratings"""
+    content: [Rating!]!
+    """Total number of ratings"""
+    totalElements: Int!
+    """Total number of pages"""
+    totalPages: Int!
+    """Current page number (0-indexed)"""
+    pageNumber: Int!
+    """Page size"""
+    pageSize: Int!
+    """Whether there is a next page"""
+    hasNext: Boolean!
+    """Whether there is a previous page"""
+    hasPrevious: Boolean!
+}
+
+"""
+Rating statistics for a course
+"""
+type RatingStats {
+    """Average rating (0-5)"""
+    average: Float!
+    """Total number of ratings"""
+    totalCount: Int!
+    """Number of 5-star ratings"""
+    fiveStarCount: Int!
+    """Number of 4-star ratings"""
+    fourStarCount: Int!
+    """Number of 3-star ratings"""
+    threeStarCount: Int!
+    """Number of 2-star ratings"""
+    twoStarCount: Int!
+    """Number of 1-star ratings"""
+    oneStarCount: Int!
+}
+
+"""
+Result of a toggle like operation
+"""
+type ToggleLikeResult {
+    """Whether the entity is now liked"""
+    liked: Boolean!
+    """New like count"""
+    likeCount: Int!
+}
+
+# ============================================
+# Engagement Input Types
+# ============================================
+
+"""
+Input for adding a comment
+"""
+input AddCommentInput {
+    """Comment content"""
+    content: String!
+    """Type of entity to comment on"""
+    targetType: CommentableType!
+    """ID of the entity to comment on"""
+    targetId: ID!
+    """Optional parent comment ID for replies"""
+    parentCommentId: ID
+}
+
+"""
+Input for updating a comment
+"""
+input UpdateCommentInput {
+    """New comment content"""
+    content: String!
+}
+
+"""
+Input for rating a course
+"""
+input RateCourseInput {
+    """Course ID"""
+    courseId: ID!
+    """Rating value (1-5)"""
+    ratingValue: Int!
+    """Optional review title"""
+    reviewTitle: String
+    """Optional review content"""
+    reviewContent: String
+}
+
+"""
+Input for updating a rating
+"""
+input UpdateRatingInput {
+    """New rating value (1-5)"""
+    ratingValue: Int
+    """New review title"""
+    reviewTitle: String
+    """New review content"""
+    reviewContent: String
+}
+
+# ============================================
 # Authentication Types
 # ============================================
 
@@ -539,6 +763,58 @@ type Mutation {
     Reorder lessons in a module
     """
     reorderLessons(moduleId: ID!, lessonIds: [ID!]!): [Lesson!]!
+    
+    # ============================================
+    # Engagement Mutations
+    # ============================================
+    
+    # Comment Mutations
+    """
+    Add a comment to a course, lesson, or reply to another comment
+    """
+    addComment(input: AddCommentInput!): Comment!
+    
+    """
+    Update a comment (author only)
+    """
+    updateComment(id: ID!, input: UpdateCommentInput!): Comment!
+    
+    """
+    Delete a comment (author or admin)
+    """
+    deleteComment(id: ID!): Boolean!
+    
+    """
+    Pin a comment (admin/creator only)
+    """
+    pinComment(id: ID!, pinned: Boolean!): Comment!
+    
+    # Like Mutations
+    """
+    Toggle like on a course, lesson, or comment
+    """
+    toggleLike(targetType: LikeableType!, targetId: ID!): ToggleLikeResult!
+    
+    # Rating Mutations
+    """
+    Rate a course (creates or updates rating)
+    """
+    rateCourse(input: RateCourseInput!): Rating!
+    
+    """
+    Update a rating (author only)
+    """
+    updateRating(id: ID!, input: UpdateRatingInput!): Rating!
+    
+    """
+    Delete a rating (author only)
+    """
+    deleteRating(id: ID!): Boolean!
+    
+    """
+    Mark a review as helpful
+    """
+    markReviewHelpful(id: ID!): Rating!
 }
 
 # ============================================
@@ -631,4 +907,68 @@ type Query {
     Get a tag by ID
     """
     tag(id: ID!): Tag
+    
+    # ============================================
+    # Engagement Queries
+    # ============================================
+    
+    # Comment Queries
+    """
+    Get comments for a course or lesson with pagination
+    """
+    comments(
+        targetType: CommentableType!
+        targetId: ID!
+        page: Int
+        size: Int
+    ): CommentPage!
+    
+    """
+    Get replies to a comment
+    """
+    commentReplies(commentId: ID!): [Comment!]!
+    
+    """
+    Get a single comment by ID
+    """
+    comment(id: ID!): Comment
+    
+    # Rating Queries
+    """
+    Get ratings for a course with pagination
+    """
+    courseRatings(
+        courseId: ID!
+        page: Int
+        size: Int
+    ): RatingPage!
+    
+    """
+    Get reviews (ratings with content) for a course
+    """
+    courseReviews(
+        courseId: ID!
+        page: Int
+        size: Int
+    ): RatingPage!
+    
+    """
+    Get rating statistics for a course
+    """
+    courseRatingStats(courseId: ID!): RatingStats!
+    
+    """
+    Get the current user's rating for a course
+    """
+    myRating(courseId: ID!): Rating
+    
+    """
+    Check if current user has liked a target
+    """
+    hasLiked(targetType: LikeableType!, targetId: ID!): Boolean!
+    
+    """
+    Get like count for a target
+    """
+    likeCount(targetType: LikeableType!, targetId: ID!): Int!
 }
