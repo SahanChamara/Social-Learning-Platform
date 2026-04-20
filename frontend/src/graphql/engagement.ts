@@ -79,6 +79,55 @@ export const COMMENT_EVENT_FRAGMENT = gql`
   }
 `;
 
+/**
+ * Comment payload including nested replies (up to depth 5).
+ */
+export const COMMENT_THREAD_FRAGMENT = gql`
+  ${COMMENT_FRAGMENT}
+  fragment CommentThreadFields on Comment {
+    ...CommentFields
+    replies {
+      ...CommentFields
+      replies {
+        ...CommentFields
+        replies {
+          ...CommentFields
+          replies {
+            ...CommentFields
+            replies {
+              ...CommentFields
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+
+// ============================================
+// GraphQL Queries
+// ============================================
+
+/**
+ * Get root comments for a target with nested replies.
+ */
+export const COMMENTS_QUERY = gql`
+  ${COMMENT_THREAD_FRAGMENT}
+  query Comments($targetType: CommentableType!, $targetId: ID!, $page: Int, $size: Int) {
+    comments(targetType: $targetType, targetId: $targetId, page: $page, size: $size) {
+      content {
+        ...CommentThreadFields
+      }
+      totalElements
+      totalPages
+      pageNumber
+      pageSize
+      hasNext
+      hasPrevious
+    }
+  }
+`;
+
 // ============================================
 // GraphQL Mutations
 // ============================================

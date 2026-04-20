@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
 import { EnrollButton } from '@/components/courses';
+import { CommentList } from '@/components/engagement';
 import { COURSE_QUERY } from '@/graphql';
 import type {
   CourseQueryVariables,
@@ -430,13 +431,21 @@ export default function CourseDetailPage() {
           <Tabs.Content value="reviews" className="mt-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
             <h2 className="text-xl font-semibold text-slate-900">Reviews</h2>
             <p className="mt-2 text-slate-600">
-              Ratings and reviews UI will be implemented in Phase 4 engagement tasks.
+              Join the discussion with other learners and share feedback.
             </p>
             <div className="mt-6 rounded-xl border border-dashed border-slate-300 bg-slate-50 p-5">
               <p className="text-sm text-slate-600">
                 Current course rating: <span className="font-semibold text-slate-900">{course.averageRating.toFixed(1)}</span>{' '}
                 from <span className="font-semibold text-slate-900">{course.ratingCount}</span> ratings.
               </p>
+            </div>
+
+            <div className="mt-6">
+              <CommentList
+                targetType="COURSE"
+                targetId={course.id}
+                emptyMessage="No course comments yet. Be the first to ask a question or leave feedback."
+              />
             </div>
           </Tabs.Content>
         </Tabs.Root>
