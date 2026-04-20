@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
 import { EnrollButton } from '@/components/courses';
-import { CommentList } from '@/components/engagement';
+import { CommentForm, CommentList } from '@/components/engagement';
 import { COURSE_QUERY } from '@/graphql';
 import type {
   CourseQueryVariables,
@@ -438,6 +438,10 @@ export default function CourseDetailPage() {
                 Current course rating: <span className="font-semibold text-slate-900">{course.averageRating.toFixed(1)}</span>{' '}
                 from <span className="font-semibold text-slate-900">{course.ratingCount}</span> ratings.
               </p>
+            </div>
+
+            <div className="mt-6">
+              <CommentForm targetType="COURSE" targetId={course.id} />
             </div>
 
             <div className="mt-6">

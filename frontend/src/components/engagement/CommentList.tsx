@@ -3,52 +3,10 @@ import * as Collapsible from '@radix-ui/react-collapsible';
 import { formatDistanceToNow } from 'date-fns';
 import { ChevronDown, ChevronRight, MessageSquare } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { COMMENTS_QUERY, COMMENT_ADDED_SUBSCRIPTION } from '@/graphql';
-
-type CommentableType = 'COURSE' | 'LESSON';
-
-interface UserSummary {
-  id: string;
-  username: string;
-  fullName: string;
-  avatarUrl?: string | null;
-}
-
-interface CommentNode {
-  id: string;
-  content: string;
-  user: UserSummary;
-  parent?: { id: string } | null;
-  depthLevel: number;
-  likeCount: number;
-  replyCount: number;
-  isEdited: boolean;
-  isDeleted: boolean;
-  isPinned: boolean;
-  createdAt: string;
-  replies: CommentNode[];
-}
-
-interface CommentPageData {
-  content: CommentNode[];
-  totalElements: number;
-  totalPages: number;
-  pageNumber: number;
-  pageSize: number;
-  hasNext: boolean;
-  hasPrevious: boolean;
-}
-
-interface CommentsQueryResponse {
-  comments: CommentPageData;
-}
-
-interface CommentsQueryVariables {
-  targetType: CommentableType;
-  targetId: string;
-  page?: number;
-  size?: number;
-}
+import { COMMENT_ADDED_SUBSCRIPTION, COMMENTS_QUERY } from '@/graphql';
+import { CommentForm } from './CommentForm';
+import type { CommentNode, CommentableType, CommentsQueryResponse, CommentsQueryVariables } from './commentCache';
+import { insertCommentIntoPage } from './commentCache';
 
 interface CommentAddedSubscriptionResponse {
   commentAdded: {
@@ -86,50 +44,6 @@ function authorInitials(fullName: string): string {
     .join('');
 }
 
-function commentExists(comments: CommentNode[], commentId: string): boolean {
-  for (const comment of comments) {
-    if (comment.id === commentId) {
-      return true;
-    }
-    if (commentExists(comment.replies, commentId)) {
-      return true;
-    }
-  }
-  return false;
-}
-
-function appendReply(comments: CommentNode[], reply: CommentNode): { updated: CommentNode[]; inserted: boolean } {
-  let inserted = false;
-
-  const updated = comments.map((comment) => {
-    if (comment.id === reply.parent?.id) {
-      inserted = true;
-      return {
-        ...comment,
-        replyCount: comment.replyCount + 1,
-        replies: [reply, ...comment.replies],
-      };
-    }
-
-    if (comment.replies.length === 0) {
-      return comment;
-    }
-
-    const nested = appendReply(comment.replies, reply);
-    if (!nested.inserted) {
-      return comment;
-    }
-
-    inserted = true;
-    return {
-      ...comment,
-      replies: nested.updated,
-    };
-  });
-
-  return { updated, inserted };
-}
-
 function initialsOrFallback(fullName: string, username: string): string {
   const initials = authorInitials(fullName);
   if (initials.length > 0) {
@@ -138,17 +52,24 @@ function initialsOrFallback(fullName: string, username: string): string {
   return username.slice(0, 2).toUpperCase();
 }
 
-function CommentThread({
-  comments,
-  depth,
-}: Readonly<{ comments: CommentNode[]; depth: number }>) {
+interface CommentThreadProps {
+  comments: CommentNode[];
+  depth: number;
+  targetType: CommentableType;
+  targetId: string;
+  pageSize: number;
+}
+
+function CommentThread({ comments, depth, targetType, targetId, pageSize }: Readonly<CommentThreadProps>) {
   const [openState, setOpenState] = useState<Record<string, boolean>>({});
+  const [replyFormOpen, setReplyFormOpen] = useState<Record<string, boolean>>({});
 
   return (
     <div className={depth > 0 ? 'mt-3 border-l border-slate-200 pl-4 sm:pl-5' : 'space-y-4'}>
       {comments.map((comment) => {
         const repliesCount = comment.replies.length;
         const isOpen = openState[comment.id] ?? true;
+        const isReplyOpen = replyFormOpen[comment.id] ?? false;
 
         return (
           <article key={comment.id} className="rounded-lg border border-slate-200 bg-white p-4 shadow-xs">
@@ -181,6 +102,51 @@ function CommentThread({
               <span>{comment.replyCount} replies</span>
             </div>
 
+            {!comment.isDeleted && depth < 5 && (
+              <div className="mt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setReplyFormOpen((previous) => ({
+                      ...previous,
+                      [comment.id]: !isReplyOpen,
+                    }));
+                  }}
+                  className="text-xs font-semibold text-blue-700 transition hover:text-blue-800"
+                >
+                  {isReplyOpen ? 'Cancel reply' : 'Reply'}
+                </button>
+              </div>
+            )}
+
+            {isReplyOpen && (
+              <div className="mt-3">
+                <CommentForm
+                  targetType={targetType}
+                  targetId={targetId}
+                  parentCommentId={comment.id}
+                  pageSize={pageSize}
+                  submitLabel="Post reply"
+                  onCancel={() => {
+                    setReplyFormOpen((previous) => ({
+                      ...previous,
+                      [comment.id]: false,
+                    }));
+                  }}
+                  onSubmitted={() => {
+                    setReplyFormOpen((previous) => ({
+                      ...previous,
+                      [comment.id]: false,
+                    }));
+                    setOpenState((previous) => ({
+                      ...previous,
+                      [comment.id]: true,
+                    }));
+                  }}
+                />
+              </div>
+            )}
+
             {repliesCount > 0 && (
               <Collapsible.Root
                 open={isOpen}
@@ -197,7 +163,13 @@ function CommentThread({
                   {isOpen ? 'Hide replies' : 'Show replies'} ({repliesCount})
                 </Collapsible.Trigger>
                 <Collapsible.Content>
-                  <CommentThread comments={comment.replies} depth={depth + 1} />
+                  <CommentThread
+                    comments={comment.replies}
+                    depth={depth + 1}
+                    targetType={targetType}
+                    targetId={targetId}
+                    pageSize={pageSize}
+                  />
                 </Collapsible.Content>
               </Collapsible.Root>
             )}
@@ -226,74 +198,41 @@ export function CommentList({
     [pageSize, targetId, targetType],
   );
 
-  const { data, loading, error } = useQuery<CommentsQueryResponse, CommentsQueryVariables>(
-    COMMENTS_QUERY,
-    {
-      variables,
-      notifyOnNetworkStatusChange: true,
+  const { data, loading, error } = useQuery<CommentsQueryResponse, CommentsQueryVariables>(COMMENTS_QUERY, {
+    variables,
+    notifyOnNetworkStatusChange: true,
+  });
+
+  useSubscription<CommentAddedSubscriptionResponse, CommentAddedSubscriptionVariables>(COMMENT_ADDED_SUBSCRIPTION, {
+    variables: {
+      targetType,
+      targetId,
     },
-  );
+    onData: ({ data: subscriptionPayload }) => {
+      const incomingComment = subscriptionPayload.data?.commentAdded.comment;
+      if (!incomingComment) {
+        return;
+      }
 
-  useSubscription<CommentAddedSubscriptionResponse, CommentAddedSubscriptionVariables>(
-    COMMENT_ADDED_SUBSCRIPTION,
-    {
-      variables: {
-        targetType,
-        targetId,
-      },
-      onData: ({ data: subscriptionPayload }) => {
-        const incomingComment = subscriptionPayload.data?.commentAdded.comment;
-        if (!incomingComment) {
-          return;
-        }
+      const normalizedIncoming: CommentNode = {
+        ...incomingComment,
+        replies: [],
+      };
 
-        const normalizedIncoming: CommentNode = {
-          ...incomingComment,
-          replies: [],
-        };
-
-        client.cache.updateQuery<CommentsQueryResponse, CommentsQueryVariables>(
-          {
-            query: COMMENTS_QUERY,
-            variables,
-          },
-          (previous) => {
-            if (!previous?.comments) {
-              return previous;
-            }
-
-            if (commentExists(previous.comments.content, normalizedIncoming.id)) {
-              return previous;
-            }
-
-            if (normalizedIncoming.parent?.id) {
-              const appended = appendReply(previous.comments.content, normalizedIncoming);
-              if (!appended.inserted) {
-                return previous;
-              }
-
-              return {
-                ...previous,
-                comments: {
-                  ...previous.comments,
-                  content: appended.updated,
-                },
-              };
-            }
-
-            return {
-              ...previous,
-              comments: {
-                ...previous.comments,
-                content: [normalizedIncoming, ...previous.comments.content],
-                totalElements: previous.comments.totalElements + 1,
-              },
-            };
-          },
-        );
-      },
+      client.cache.updateQuery<CommentsQueryResponse, CommentsQueryVariables>(
+        {
+          query: COMMENTS_QUERY,
+          variables,
+        },
+        (previous) => {
+          if (!previous?.comments) {
+            return previous;
+          }
+          return insertCommentIntoPage(previous, normalizedIncoming);
+        },
+      );
     },
-  );
+  });
 
   if (loading && !data) {
     return (
@@ -331,7 +270,7 @@ export function CommentList({
 
   return (
     <section className={className}>
-      <CommentThread comments={comments} depth={0} />
+      <CommentThread comments={comments} depth={0} targetType={targetType} targetId={targetId} pageSize={pageSize} />
     </section>
   );
 }
