@@ -9,3 +9,6 @@ export * from './auth';
 
 // Export Course components
 export * from './courses';
+
+// Export Engagement components
+export * from './engagement';
