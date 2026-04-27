@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
 import { EnrollButton } from '@/components/courses';
-import { CommentForm, CommentList } from '@/components/engagement';
+import { CommentForm, CommentList, RatingStars } from '@/components/engagement';
 import { COURSE_QUERY } from '@/graphql';
 import type {
   CourseQueryVariables,
@@ -433,11 +433,12 @@ export default function CourseDetailPage() {
             <p className="mt-2 text-slate-600">
               Join the discussion with other learners and share feedback.
             </p>
-            <div className="mt-6 rounded-xl border border-dashed border-slate-300 bg-slate-50 p-5">
-              <p className="text-sm text-slate-600">
-                Current course rating: <span className="font-semibold text-slate-900">{course.averageRating.toFixed(1)}</span>{' '}
-                from <span className="font-semibold text-slate-900">{course.ratingCount}</span> ratings.
-              </p>
+            <div className="mt-6">
+              <RatingStars
+                courseId={course.id}
+                averageRating={course.averageRating}
+                ratingCount={course.ratingCount}
+              />
             </div>
 
             <div className="mt-6">

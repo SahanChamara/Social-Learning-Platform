@@ -128,6 +128,18 @@ export const COMMENTS_QUERY = gql`
   }
 `;
 
+/**
+ * Get the current user's rating for a course.
+ */
+export const MY_RATING_QUERY = gql`
+  ${RATING_FRAGMENT}
+  query MyRating($courseId: ID!) {
+    myRating(courseId: $courseId) {
+      ...RatingFields
+    }
+  }
+`;
+
 // ============================================
 // GraphQL Mutations
 // ============================================
