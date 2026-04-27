@@ -5,6 +5,7 @@ import { ChevronDown, ChevronRight, MessageSquare } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { COMMENT_ADDED_SUBSCRIPTION, COMMENTS_QUERY } from '@/graphql';
 import { CommentForm } from './CommentForm';
+import { LikeButton } from './LikeButton';
 import type { CommentNode, CommentableType, CommentsQueryResponse, CommentsQueryVariables } from './commentCache';
 import { insertCommentIntoPage } from './commentCache';
 
@@ -98,7 +99,17 @@ function CommentThread({ comments, depth, targetType, targetId, pageSize }: Read
             </p>
 
             <div className="mt-3 flex items-center gap-3 text-xs text-slate-500">
-              <span>{comment.likeCount} likes</span>
+              {!comment.isDeleted ? (
+                <LikeButton
+                  targetType="COMMENT"
+                  targetId={comment.id}
+                  initialLiked={comment.isLikedByMe ?? false}
+                  initialLikeCount={comment.likeCount}
+                  className="inline-flex"
+                />
+              ) : (
+                <span>{comment.likeCount} likes</span>
+              )}
               <span>{comment.replyCount} replies</span>
             </div>
 
