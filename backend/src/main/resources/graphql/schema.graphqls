@@ -375,6 +375,24 @@ enum CourseDifficulty {
 }
 
 """
+Course search sort options
+"""
+enum CourseSortBy {
+    RELEVANCE
+    RATING
+    ENROLLMENT
+    DATE
+}
+
+"""
+Sort direction
+"""
+enum SortDirection {
+    ASC
+    DESC
+}
+
+"""
 Lesson content type
 """
 enum LessonType {
@@ -853,6 +871,8 @@ type Query {
         difficulty: CourseDifficulty
         language: String
         minRating: Float
+        sortBy: CourseSortBy
+        sortDirection: SortDirection
         page: Int
         size: Int
     ): CoursePage!
