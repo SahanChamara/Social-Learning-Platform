@@ -1,7 +1,9 @@
 package com.sociallearning.service;
 
 import com.sociallearning.entity.*;
+import com.sociallearning.enums.CourseSortBy;
 import com.sociallearning.enums.CourseDifficulty;
+import com.sociallearning.enums.SortDirection;
 import com.sociallearning.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,6 +39,8 @@ public class CourseService {
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
     private final TagRepository tagRepository;
+    private final SearchService searchService;
+    private final RecommendationService recommendationService;
 
     private static final Pattern NON_LATIN = Pattern.compile("[^\\w-]");
     private static final Pattern WHITESPACE = Pattern.compile("[\\s]");
@@ -460,17 +464,40 @@ public class CourseService {
     @Transactional(readOnly = true)
     public Page<Course> searchCourses(String searchTerm, Long categoryId, CourseDifficulty difficulty,
                                       String language, Double minRating, Pageable pageable) {
-        if (searchTerm != null && !searchTerm.isEmpty()) {
-            return courseRepository.searchCourses(searchTerm, pageable);
-        } else {
-            return courseRepository.findCoursesWithFilters(
-                    categoryId, 
-                    difficulty, 
-                    language, 
-                    minRating != null ? minRating : 0.0, 
-                    pageable
-            );
-        }
+        return searchCourses(
+                searchTerm,
+                categoryId,
+                difficulty,
+                language,
+                minRating,
+                CourseSortBy.RELEVANCE,
+                SortDirection.DESC,
+                pageable
+        );
+    }
+
+    /**
+     * Search courses with filters, PostgreSQL full-text matching, and sorting.
+     */
+    @Transactional(readOnly = true)
+    public Page<Course> searchCourses(String searchTerm,
+                                      Long categoryId,
+                                      CourseDifficulty difficulty,
+                                      String language,
+                                      Double minRating,
+                                      CourseSortBy sortBy,
+                                      SortDirection sortDirection,
+                                      Pageable pageable) {
+        return searchService.searchCourses(
+                searchTerm,
+                categoryId,
+                difficulty,
+                language,
+                minRating,
+                sortBy,
+                sortDirection,
+                pageable
+        );
     }
 
     /**
@@ -537,14 +564,15 @@ public class CourseService {
      */
     @Transactional(readOnly = true)
     public List<Course> findRecommendedCourses(Long courseId, int limit) {
-        Course course = courseRepository.findById(courseId)
-                .orElseThrow(() -> new IllegalArgumentException(COURSE_NOT_FOUND_MSG + courseId));
-        
-        return courseRepository.findRecommendedCoursesByCategory(
-                course.getCategory().getId(), 
-                courseId, 
-                limit
-        );
+        return recommendationService.recommendBasedOnCourse(courseId, limit);
+    }
+
+    /**
+     * Get personalized course recommendations for a user.
+     */
+    @Transactional(readOnly = true)
+    public List<Course> findRecommendedCoursesForUser(Long userId, int limit) {
+        return recommendationService.recommendForUser(userId, limit);
     }
 
     /**
