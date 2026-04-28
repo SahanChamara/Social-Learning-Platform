@@ -3,6 +3,8 @@ package com.sociallearning.graphql;
 import com.sociallearning.entity.Category;
 import com.sociallearning.entity.Course;
 import com.sociallearning.enums.CourseDifficulty;
+import com.sociallearning.enums.CourseSortBy;
+import com.sociallearning.enums.SortDirection;
 import com.sociallearning.entity.Tag;
 import com.sociallearning.repository.CategoryRepository;
 import com.sociallearning.repository.TagRepository;
@@ -116,6 +118,8 @@ public class CourseQueryResolver {
      * @param difficulty Difficulty filter
      * @param language Language filter
      * @param minRating Minimum rating filter
+     * @param sortBy Sort strategy (RELEVANCE, RATING, ENROLLMENT, DATE)
+     * @param sortDirection Sort direction (ASC, DESC)
      * @param page Page number (0-indexed, default 0)
      * @param size Page size (default 20)
      * @return Paginated course results
@@ -127,11 +131,13 @@ public class CourseQueryResolver {
             @Argument CourseDifficulty difficulty,
             @Argument String language,
             @Argument Double minRating,
+            @Argument CourseSortBy sortBy,
+            @Argument SortDirection sortDirection,
             @Argument Integer page,
             @Argument Integer size) {
         
-        log.info("GraphQL query: courses(searchTerm={}, categoryId={}, difficulty={}, page={}, size={})",
-                searchTerm, categoryId, difficulty, page, size);
+        log.info("GraphQL query: courses(searchTerm={}, categoryId={}, difficulty={}, sortBy={}, sortDirection={}, page={}, size={})",
+                searchTerm, categoryId, difficulty, sortBy, sortDirection, page, size);
         
         // Default pagination parameters
         int pageNumber = (page != null) ? page : 0;
@@ -139,7 +145,7 @@ public class CourseQueryResolver {
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
         
         Page<Course> coursePage = courseService.searchCourses(
-                searchTerm, categoryId, difficulty, language, minRating, pageable);
+                searchTerm, categoryId, difficulty, language, minRating, sortBy, sortDirection, pageable);
         
         // Convert to GraphQL CoursePage type
         Map<String, Object> result = new HashMap<>();
