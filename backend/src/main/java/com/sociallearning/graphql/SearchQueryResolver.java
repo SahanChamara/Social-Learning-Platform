@@ -31,7 +31,7 @@ public class SearchQueryResolver {
     private final CourseService courseService;
 
     @QueryMapping
-    public SearchConnection search(@Argument String query,
+    public SearchResultPage search(@Argument String query,
                                    @Argument Integer first,
                                    @Argument String after) {
         int pageSize = normalizePageSize(first);
@@ -47,7 +47,7 @@ public class SearchQueryResolver {
         combined.addAll(results.categories());
         combined.addAll(results.tags());
 
-        return toSearchConnection(combined, startIndex, pageSize);
+        return toSearchResultPage(combined, startIndex, pageSize);
     }
 
     @QueryMapping
@@ -107,7 +107,7 @@ public class SearchQueryResolver {
         return Base64.getEncoder().encodeToString(raw.getBytes(StandardCharsets.UTF_8));
     }
 
-    private SearchConnection toSearchConnection(List<Object> nodes, int startIndex, int pageSize) {
+    private SearchResultPage toSearchResultPage(List<Object> nodes, int startIndex, int pageSize) {
         int total = nodes.size();
         int from = Math.min(Math.max(startIndex, 0), total);
         int to = Math.min(from + pageSize, total);
@@ -118,7 +118,7 @@ public class SearchQueryResolver {
         }
 
         PageInfo pageInfo = new PageInfo(to < total, edges.isEmpty() ? null : edges.get(edges.size() - 1).cursor());
-        return new SearchConnection(edges, pageInfo, total);
+        return new SearchResultPage(edges, pageInfo, total);
     }
 
     private CourseConnection toCourseConnection(List<Course> courses, int startIndex, int pageSize) {
@@ -139,7 +139,7 @@ public class SearchQueryResolver {
 
     public record SearchEdge(String cursor, Object node) {}
 
-    public record SearchConnection(List<SearchEdge> edges, PageInfo pageInfo, int totalCount) {}
+    public record SearchResultPage(List<SearchEdge> edges, PageInfo pageInfo, int totalCount) {}
 
     public record CourseEdge(String cursor, Course node) {}
 

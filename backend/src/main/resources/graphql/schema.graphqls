@@ -194,9 +194,9 @@ type SearchEdge {
 }
 
 """
-Cursor-based search connection
+Cursor-based search result page
 """
-type SearchConnection {
+type SearchResultPage {
     edges: [SearchEdge!]!
     pageInfo: PageInfo!
     totalCount: Int!
@@ -961,7 +961,7 @@ type Query {
         query: String!
         first: Int
         after: String
-    ): SearchConnection!
+    ): SearchResultPage!
 
     """
     Cursor-based trending courses feed.
