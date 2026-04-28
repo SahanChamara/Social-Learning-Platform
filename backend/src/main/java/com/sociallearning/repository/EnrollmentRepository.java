@@ -29,8 +29,34 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> {
     @Query("SELECT e FROM Enrollment e LEFT JOIN FETCH e.course WHERE e.user.id = :userId ORDER BY e.enrolledAt DESC")
     List<Enrollment> findByUserIdWithCourse(@Param("userId") Long userId);
 
+    @Query("SELECT e FROM Enrollment e " +
+           "LEFT JOIN FETCH e.course c " +
+           "LEFT JOIN FETCH c.category " +
+           "LEFT JOIN FETCH c.creator " +
+           "WHERE e.user.id = :userId " +
+           "ORDER BY e.enrolledAt DESC")
+    List<Enrollment> findByUserIdWithCourseDetails(@Param("userId") Long userId);
+
     @Query("SELECT e FROM Enrollment e LEFT JOIN FETCH e.progressRecords WHERE e.id = :id")
     Optional<Enrollment> findByIdWithProgress(@Param("id") Long id);
+
+    @Query(value = """
+            SELECT e2.course_id
+            FROM enrollments e1
+            JOIN enrollments e2 ON e1.user_id = e2.user_id
+            JOIN courses c2 ON c2.id = e2.course_id
+            WHERE e1.user_id <> :userId
+              AND e1.course_id IN (:seedCourseIds)
+              AND e2.course_id NOT IN (:seedCourseIds)
+              AND c2.published = true
+              AND c2.archived = false
+            GROUP BY e2.course_id
+            ORDER BY COUNT(*) DESC, MAX(c2.average_rating) DESC, MAX(c2.enrollment_count) DESC
+            LIMIT :limit
+            """, nativeQuery = true)
+    List<Long> findCollaborativeRecommendedCourseIds(@Param("userId") Long userId,
+                                                     @Param("seedCourseIds") List<Long> seedCourseIds,
+                                                     @Param("limit") int limit);
 
     long countByCourseId(Long courseId);
 

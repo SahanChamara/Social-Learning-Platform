@@ -72,6 +72,14 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
      */
     List<Course> findByCreatorId(Long creatorId);
 
+    @Query("SELECT c FROM Course c WHERE c.published = true AND c.archived = false " +
+           "AND c.creator.id IN :creatorIds " +
+           "AND c.id NOT IN :excludedCourseIds " +
+           "ORDER BY c.averageRating DESC, c.enrollmentCount DESC")
+    List<Course> findRecommendedByCreatorIds(@Param("creatorIds") List<Long> creatorIds,
+                                             @Param("excludedCourseIds") List<Long> excludedCourseIds,
+                                             Pageable pageable);
+
     /**
      * Find published courses by creator ID
      * @param creatorId The creator's user ID
@@ -85,6 +93,8 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
      * @return List of published courses
      */
     List<Course> findByPublishedTrue();
+
+    List<Course> findByPublishedTrueAndArchivedFalseOrderByEnrollmentCountDescAverageRatingDesc(Pageable pageable);
 
     /**
      * Find all published courses with pagination
@@ -108,6 +118,14 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
      */
     @Query("SELECT c FROM Course c WHERE c.category.id = :categoryId AND c.published = true ORDER BY c.createdAt DESC")
     Page<Course> findPublishedCoursesByCategoryId(@Param("categoryId") Long categoryId, Pageable pageable);
+
+    @Query("SELECT c FROM Course c WHERE c.published = true AND c.archived = false " +
+           "AND c.category.id IN :categoryIds " +
+           "AND c.id NOT IN :excludedCourseIds " +
+           "ORDER BY c.averageRating DESC, c.enrollmentCount DESC")
+    List<Course> findRecommendedByCategoryIds(@Param("categoryIds") List<Long> categoryIds,
+                                              @Param("excludedCourseIds") List<Long> excludedCourseIds,
+                                              Pageable pageable);
 
     /**
      * Find courses by difficulty level
@@ -308,6 +326,8 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
         @Param("excludeCourseId") Long excludeCourseId,
         @Param("limit") int limit
     );
+
+    List<Course> findByIdInAndPublishedTrueAndArchivedFalse(List<Long> ids);
 
     /**
      * Count total published courses

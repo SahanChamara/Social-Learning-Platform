@@ -40,6 +40,7 @@ public class CourseService {
     private final CategoryRepository categoryRepository;
     private final TagRepository tagRepository;
     private final SearchService searchService;
+    private final RecommendationService recommendationService;
 
     private static final Pattern NON_LATIN = Pattern.compile("[^\\w-]");
     private static final Pattern WHITESPACE = Pattern.compile("[\\s]");
@@ -563,14 +564,15 @@ public class CourseService {
      */
     @Transactional(readOnly = true)
     public List<Course> findRecommendedCourses(Long courseId, int limit) {
-        Course course = courseRepository.findById(courseId)
-                .orElseThrow(() -> new IllegalArgumentException(COURSE_NOT_FOUND_MSG + courseId));
-        
-        return courseRepository.findRecommendedCoursesByCategory(
-                course.getCategory().getId(), 
-                courseId, 
-                limit
-        );
+        return recommendationService.recommendBasedOnCourse(courseId, limit);
+    }
+
+    /**
+     * Get personalized course recommendations for a user.
+     */
+    @Transactional(readOnly = true)
+    public List<Course> findRecommendedCoursesForUser(Long userId, int limit) {
+        return recommendationService.recommendForUser(userId, limit);
     }
 
     /**
