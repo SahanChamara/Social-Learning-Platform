@@ -172,6 +172,53 @@ type ToggleLikeResult {
     likeCount: Int!
 }
 
+"""
+Common pagination metadata for cursor-based connections
+"""
+type PageInfo {
+    hasNextPage: Boolean!
+    endCursor: String
+}
+
+"""
+Union of searchable entities
+"""
+union SearchResult = Course | Category | Tag
+
+"""
+Search edge for cursor-based pagination
+"""
+type SearchEdge {
+    cursor: String!
+    node: SearchResult!
+}
+
+"""
+Cursor-based search connection
+"""
+type SearchConnection {
+    edges: [SearchEdge!]!
+    pageInfo: PageInfo!
+    totalCount: Int!
+}
+
+"""
+Course edge for cursor-based pagination
+"""
+type CourseEdge {
+    cursor: String!
+    node: Course!
+}
+
+"""
+Cursor-based course connection
+"""
+type CourseConnection {
+    edges: [CourseEdge!]!
+    pageInfo: PageInfo!
+    totalCount: Int!
+}
+
 # ============================================
 # Engagement Input Types
 # ============================================
@@ -906,6 +953,32 @@ type Query {
     Get recommended courses based on a course
     """
     recommendedCourses(courseId: ID!, limit: Int): [Course!]!
+
+    """
+    Search across courses, categories, and tags with cursor-based pagination.
+    """
+    search(
+        query: String!
+        first: Int
+        after: String
+    ): SearchConnection!
+
+    """
+    Cursor-based trending courses feed.
+    """
+    trendingCoursesConnection(
+        first: Int
+        after: String
+    ): CourseConnection!
+
+    """
+    Cursor-based recommended courses for a reference course.
+    """
+    recommendedCoursesConnection(
+        courseId: ID!
+        first: Int
+        after: String
+    ): CourseConnection!
     
     # Category & Tag Queries
     """
