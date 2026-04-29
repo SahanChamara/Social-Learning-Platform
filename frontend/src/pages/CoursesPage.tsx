@@ -1,8 +1,8 @@
-import { type FormEvent, useState } from 'react';
+import { useState } from 'react';
 import { useQuery } from '@apollo/client/react';
-import { AlertCircle, Loader2, Search } from 'lucide-react';
+import { AlertCircle, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { CourseCard } from '@/components';
+import { CourseCard, SearchBar } from '@/components';
 import { COURSES_QUERY } from '@/graphql';
 import { useAuth } from '@/hooks';
 import { UserRole } from '@/types/auth';
@@ -57,10 +57,9 @@ export default function CoursesPage() {
   const pageNumber = (coursePage?.pageNumber ?? page) + 1;
   const totalPages = coursePage?.totalPages ?? 1;
 
-  const handleSearchSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const handleSearchSubmit = (term: string) => {
     setPage(0);
-    setSearchTerm(searchInput);
+    setSearchTerm(term);
   };
 
   const handleDifficultyChange = (value: string) => {
@@ -144,23 +143,17 @@ export default function CoursesPage() {
 
         <section className="mb-8 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <form onSubmit={handleSearchSubmit} className="flex flex-1 items-center gap-2">
-              <div className="relative flex-1">
-                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                <input
-                  value={searchInput}
-                  onChange={(event) => setSearchInput(event.target.value)}
-                  placeholder="Search by title, keyword, or topic"
-                  className="h-11 w-full rounded-lg border border-slate-300 bg-white pl-10 pr-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                />
-              </div>
-              <button
-                type="submit"
-                className="inline-flex h-11 items-center justify-center rounded-lg bg-blue-600 px-4 text-sm font-semibold text-white transition hover:bg-blue-700"
-              >
-                Search
-              </button>
-            </form>
+            <SearchBar
+              value={searchInput}
+              onChange={setSearchInput}
+              onDebouncedChange={(term) => {
+                setPage(0);
+                setSearchTerm(term);
+              }}
+              onSearch={handleSearchSubmit}
+              navigateToOnSubmit={null}
+              className="flex flex-1 items-center gap-2"
+            />
 
             <select
               value={difficulty}
