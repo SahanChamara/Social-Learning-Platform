@@ -257,6 +257,8 @@ export const COURSES_QUERY = gql`
     $difficulty: CourseDifficulty
     $language: String
     $minRating: Float
+    $sortBy: CourseSortBy
+    $sortDirection: SortDirection
     $page: Int
     $size: Int
   ) {
@@ -266,6 +268,8 @@ export const COURSES_QUERY = gql`
       difficulty: $difficulty
       language: $language
       minRating: $minRating
+      sortBy: $sortBy
+      sortDirection: $sortDirection
       page: $page
       size: $size
     ) {
@@ -278,6 +282,39 @@ export const COURSES_QUERY = gql`
       pageSize
       hasNext
       hasPrevious
+    }
+  }
+`;
+
+/**
+ * Search across mixed entity types (course, category, tag)
+ */
+export const SEARCH_QUERY = gql`
+  ${COURSE_BASIC_FRAGMENT}
+  ${CATEGORY_FRAGMENT}
+  ${TAG_FRAGMENT}
+  query Search($query: String!, $first: Int, $after: String) {
+    search(query: $query, first: $first, after: $after) {
+      edges {
+        cursor
+        node {
+          __typename
+          ... on Course {
+            ...CourseBasicFields
+          }
+          ... on Category {
+            ...CategoryFields
+          }
+          ... on Tag {
+            ...TagFields
+          }
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+      totalCount
     }
   }
 `;

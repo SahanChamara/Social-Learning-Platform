@@ -40,6 +40,28 @@ export const EnrollmentStatus = {
 
 export type EnrollmentStatus = typeof EnrollmentStatus[keyof typeof EnrollmentStatus];
 
+/**
+ * GraphQL course sort fields
+ */
+export const GraphqlCourseSortBy = {
+  RELEVANCE: 'RELEVANCE',
+  RATING: 'RATING',
+  ENROLLMENT: 'ENROLLMENT',
+  DATE: 'DATE',
+} as const;
+
+export type GraphqlCourseSortBy = typeof GraphqlCourseSortBy[keyof typeof GraphqlCourseSortBy];
+
+/**
+ * GraphQL sort direction
+ */
+export const SortDirection = {
+  ASC: 'ASC',
+  DESC: 'DESC',
+} as const;
+
+export type SortDirection = typeof SortDirection[keyof typeof SortDirection];
+
 // ============================================
 // Entity Types
 // ============================================
@@ -289,6 +311,8 @@ export interface CoursesQueryVariables {
   difficulty?: CourseDifficulty;
   language?: string;
   minRating?: number;
+  sortBy?: GraphqlCourseSortBy;
+  sortDirection?: SortDirection;
   page?: number;
   size?: number;
 }
@@ -368,6 +392,15 @@ export interface CourseEnrollmentQueryVariables {
  */
 export interface CourseEnrollmentResponse {
   courseEnrollment: Enrollment | null;
+}
+
+/**
+ * Variables for search query
+ */
+export interface SearchQueryVariables {
+  query: string;
+  first?: number;
+  after?: string;
 }
 
 // ============================================
@@ -574,6 +607,31 @@ export interface CategoryResponse {
  */
 export interface TagsResponse {
   tags: Tag[];
+}
+
+export type SearchResultNode =
+  | ({ __typename: 'Course' } & Course)
+  | ({ __typename: 'Category' } & Category)
+  | ({ __typename: 'Tag' } & Tag);
+
+export interface SearchEdge {
+  cursor: string;
+  node: SearchResultNode;
+}
+
+export interface SearchPageInfo {
+  hasNextPage: boolean;
+  endCursor?: string | null;
+}
+
+export interface SearchResultPage {
+  edges: SearchEdge[];
+  pageInfo: SearchPageInfo;
+  totalCount: number;
+}
+
+export interface SearchResponse {
+  search: SearchResultPage;
 }
 
 /**

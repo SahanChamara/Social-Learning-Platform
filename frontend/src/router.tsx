@@ -11,6 +11,7 @@ import LearnerDashboard from '@/pages/LearnerDashboard';
 import LessonPage from '@/pages/LessonPage';
 import Profile from '@/pages/Profile';
 import CoursesPage from '@/pages/CoursesPage';
+import SearchPage from '@/pages/SearchPage';
 import CourseDetailPage from '@/pages/CourseDetailPage';
 import CreateCoursePage from '@/pages/CreateCoursePage';
 import { ProtectedRoute } from '@/components/auth';
@@ -33,6 +34,10 @@ const router = createBrowserRouter([
       {
         path: 'courses',
         element: <CoursesPage />,
+      },
+      {
+        path: 'search',
+        element: <SearchPage />,
       },
       {
         path: 'courses/create',
