@@ -24,7 +24,7 @@ export function SearchBar({
   placeholder = 'Search by title, keyword, or topic',
   submitLabel = 'Search',
   debounceMs = 300,
-  navigateToOnSubmit = '/courses',
+  navigateToOnSubmit = '/search',
   className,
   disabled = false,
 }: SearchBarProps) {
