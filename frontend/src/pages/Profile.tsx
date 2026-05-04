@@ -1,9 +1,13 @@
+import { useQuery } from '@apollo/client/react';
+import { Flame } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../hooks';
+import { AchievementBadge } from '../components';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Label } from '../components/ui/Label';
+import { MY_ACHIEVEMENTS_QUERY, LEARNING_STREAK_QUERY } from '../graphql';
+import { useAuth } from '../hooks';
 import { 
   ArrowLeft,
   User,
@@ -14,8 +18,41 @@ import {
   XCircle
 } from 'lucide-react';
 
+interface Achievement {
+  id: string;
+  name: string;
+  description?: string | null;
+  category?: string | null;
+  iconUrl?: string | null;
+  badgeColor?: string | null;
+  points?: number | null;
+}
+
+interface UserAchievementData {
+  id: string;
+  achievement: Achievement;
+  progressPercentage: number;
+  isUnlocked: boolean;
+  earnedAt?: string | null;
+  createdAt: string;
+}
+
+interface LearningStreakData {
+  currentStreakDays: number;
+  longestStreakDays: number;
+  totalActiveDays: number;
+}
+
 export default function Profile() {
   const { user } = useAuth();
+
+  const { data: achievementsData, loading: achievementsLoading } = useQuery<{
+    myAchievements: UserAchievementData[];
+  }>(MY_ACHIEVEMENTS_QUERY, { skip: !user });
+
+  const { data: streakData, loading: streakLoading } = useQuery<{
+    learningStreak: LearningStreakData;
+  }>(LEARNING_STREAK_QUERY, { skip: !user });
 
   if (!user) {
     return null;
@@ -37,6 +74,10 @@ export default function Profile() {
     },
   ];
 
+  const myAchievements = achievementsData?.myAchievements || [];
+  const unlockedCount = myAchievements.filter(a => a.isUnlocked).length;
+  const streak = streakData?.learningStreak;
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -51,7 +92,7 @@ export default function Profile() {
           </Link>
           <h1 className="text-2xl font-bold text-gray-900">My Profile</h1>
           <p className="text-gray-600 mt-1">
-            Manage your account settings and preferences
+            Manage your account settings and view your achievements
           </p>
         </div>
       </header>
@@ -151,6 +192,78 @@ export default function Profile() {
                   })}
                 </div>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Learning Streak Card */}
+          {!streakLoading && streak && (
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Learning Streak</CardTitle>
+                    <CardDescription>Your consistent learning progress</CardDescription>
+                  </div>
+                  <Flame className="h-6 w-6 text-orange-500" />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="rounded-lg bg-orange-50 p-4">
+                    <p className="text-sm text-orange-600 font-medium">Current Streak</p>
+                    <p className="text-3xl font-bold text-orange-700 mt-1">{streak.currentStreakDays}</p>
+                    <p className="text-xs text-orange-600 mt-1">days</p>
+                  </div>
+                  <div className="rounded-lg bg-amber-50 p-4">
+                    <p className="text-sm text-amber-600 font-medium">Longest Streak</p>
+                    <p className="text-3xl font-bold text-amber-700 mt-1">{streak.longestStreakDays}</p>
+                    <p className="text-xs text-amber-600 mt-1">days</p>
+                  </div>
+                  <div className="rounded-lg bg-blue-50 p-4">
+                    <p className="text-sm text-blue-600 font-medium">Total Active Days</p>
+                    <p className="text-3xl font-bold text-blue-700 mt-1">{streak.totalActiveDays}</p>
+                    <p className="text-xs text-blue-600 mt-1">days</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Achievements Card */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Achievements</CardTitle>
+                  <CardDescription>
+                    {achievementsLoading ? 'Loading achievements...' : `${unlockedCount} unlocked`}
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {achievementsLoading ? (
+                <div className="text-center py-8">
+                  <p className="text-gray-500">Loading achievements...</p>
+                </div>
+              ) : myAchievements.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-gray-500 mb-2">No achievements yet</p>
+                  <p className="text-sm text-gray-400">Start learning and unlocking achievements!</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                  {myAchievements.map((userAchievement) => (
+                    <AchievementBadge
+                      key={userAchievement.id}
+                      achievement={userAchievement.achievement}
+                      unlocked={userAchievement.isUnlocked}
+                      progressPercentage={userAchievement.progressPercentage}
+                      earnedAt={userAchievement.earnedAt}
+                    />
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
 
