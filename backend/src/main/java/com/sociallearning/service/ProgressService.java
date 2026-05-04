@@ -31,6 +31,7 @@ public class ProgressService {
     private final LessonRepository lessonRepository;
     private final UserRepository userRepository;
     private final EnrollmentService enrollmentService;
+    private final StreakService streakService;
     private final AchievementService achievementService;
 
     /**
@@ -72,6 +73,7 @@ public class ProgressService {
         Enrollment updatedEnrollment = enrollmentService.calculateProgress(enrollment.getId());
 
         if (!wasCompleted) {
+            streakService.recordDailyActivity(userId);
             achievementService.checkAchievements(userId, "LESSON_COMPLETED");
             if (updatedEnrollment.isCompleted()) {
                 achievementService.checkAchievements(userId, "COURSE_COMPLETED");
