@@ -93,6 +93,14 @@ public class AchievementService {
     }
 
     @Transactional(readOnly = true)
+    public List<Achievement> getActiveAchievements() {
+        return achievementRepository.findByIsActiveTrue()
+                .stream()
+                .filter(achievement -> !Boolean.TRUE.equals(achievement.getIsHidden()))
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
     public List<UserAchievement> getUserAchievements(Long userId) {
         return userAchievementRepository.findByUserIdOrderByCreatedAtDesc(userId);
     }
