@@ -31,6 +31,8 @@ public class ProgressService {
     private final LessonRepository lessonRepository;
     private final UserRepository userRepository;
     private final EnrollmentService enrollmentService;
+    private final StreakService streakService;
+    private final AchievementService achievementService;
 
     /**
      * Mark a lesson as completed for a learner.
@@ -71,7 +73,11 @@ public class ProgressService {
         Enrollment updatedEnrollment = enrollmentService.calculateProgress(enrollment.getId());
 
         if (!wasCompleted) {
-            triggerAchievementCheck(userId, updatedEnrollment);
+            streakService.recordDailyActivity(userId);
+            achievementService.checkAchievements(userId, "LESSON_COMPLETED");
+            if (updatedEnrollment.isCompleted()) {
+                achievementService.checkAchievements(userId, "COURSE_COMPLETED");
+            }
         }
 
         log.info("Lesson completion recorded: lessonId={}, userId={}, enrollmentId={}, progress={}%%",
@@ -91,17 +97,5 @@ public class ProgressService {
                         .lesson(lesson)
                         .completed(false)
                         .build());
-    }
-
-    private void triggerAchievementCheck(Long userId, Enrollment enrollment) {
-        // Placeholder for Phase 6 AchievementService integration.
-        if (enrollment.isCompleted()) {
-            log.info("Achievement hook: user {} completed course {}", userId, enrollment.getCourse().getId());
-        } else {
-            log.debug("Achievement hook: user {} progressed to {}%% in course {}",
-                    userId,
-                    enrollment.getProgressPercentage(),
-                    enrollment.getCourse().getId());
-        }
     }
 }

@@ -36,6 +36,8 @@ public class EnrollmentService {
     private final UserRepository userRepository;
     private final CourseRepository courseRepository;
     private final LessonRepository lessonRepository;
+    private final StreakService streakService;
+    private final AchievementService achievementService;
 
     private static final String ENROLLMENT_NOT_FOUND_MSG = "Enrollment not found with ID: ";
 
@@ -84,6 +86,9 @@ public class EnrollmentService {
 
         course.incrementEnrollmentCount();
         courseRepository.save(course);
+
+        streakService.recordDailyActivity(userId);
+        achievementService.checkAchievements(userId, "COURSE_ENROLLED");
 
         log.info("Enrollment created successfully with ID: {} ({} lessons initialized)",
                 enrollment.getId(), lessons.size());
