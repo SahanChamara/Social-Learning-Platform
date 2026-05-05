@@ -1,7 +1,6 @@
 import { useQuery } from '@apollo/client/react';
-import { Flame } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { AchievementBadge } from '../components';
+import { AchievementBadge, LearningStreak, type LearningStreakData } from '../components';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
@@ -35,12 +34,6 @@ interface UserAchievementData {
   isUnlocked: boolean;
   earnedAt?: string | null;
   createdAt: string;
-}
-
-interface LearningStreakData {
-  currentStreakDays: number;
-  longestStreakDays: number;
-  totalActiveDays: number;
 }
 
 export default function Profile() {
@@ -196,38 +189,7 @@ export default function Profile() {
           </Card>
 
           {/* Learning Streak Card */}
-          {!streakLoading && streak && (
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle>Learning Streak</CardTitle>
-                    <CardDescription>Your consistent learning progress</CardDescription>
-                  </div>
-                  <Flame className="h-6 w-6 text-orange-500" />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="rounded-lg bg-orange-50 p-4">
-                    <p className="text-sm text-orange-600 font-medium">Current Streak</p>
-                    <p className="text-3xl font-bold text-orange-700 mt-1">{streak.currentStreakDays}</p>
-                    <p className="text-xs text-orange-600 mt-1">days</p>
-                  </div>
-                  <div className="rounded-lg bg-amber-50 p-4">
-                    <p className="text-sm text-amber-600 font-medium">Longest Streak</p>
-                    <p className="text-3xl font-bold text-amber-700 mt-1">{streak.longestStreakDays}</p>
-                    <p className="text-xs text-amber-600 mt-1">days</p>
-                  </div>
-                  <div className="rounded-lg bg-blue-50 p-4">
-                    <p className="text-sm text-blue-600 font-medium">Total Active Days</p>
-                    <p className="text-3xl font-bold text-blue-700 mt-1">{streak.totalActiveDays}</p>
-                    <p className="text-xs text-blue-600 mt-1">days</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
+          <LearningStreak streak={streak} loading={streakLoading} />
 
           {/* Achievements Card */}
           <Card>
