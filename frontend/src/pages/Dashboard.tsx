@@ -1,10 +1,15 @@
+import { useEffect, useMemo, useState } from 'react';
+import { useQuery } from '@apollo/client/react';
+import * as AlertDialog from '@radix-ui/react-alert-dialog';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks';
+import { LEARNING_STREAK_QUERY } from '../graphql';
+import { LearningStreak } from '../components';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import {
   BookOpen,
-  TrendingUp,
+  Flame,
   Award,
   Clock,
   User,
@@ -13,14 +18,66 @@ import {
   GraduationCap
 } from 'lucide-react';
 
+interface LearningStreakData {
+  currentStreakDays: number;
+  longestStreakDays: number;
+  totalActiveDays: number;
+  lastActivityDate?: string | null;
+  streakStartDate?: string | null;
+}
+
+const STREAK_MILESTONES = [3, 7, 14, 30, 60, 100];
+
 export default function Dashboard() {
   const { user, logout } = useAuth();
+  const [celebrationMilestone, setCelebrationMilestone] = useState<number | null>(null);
+
+  const { data: streakData, loading: streakLoading } = useQuery<{
+    learningStreak: LearningStreakData;
+  }>(LEARNING_STREAK_QUERY, {
+    skip: !user,
+    fetchPolicy: 'cache-and-network',
+  });
+
+  const streak = streakData?.learningStreak ?? null;
+  const currentStreak = streak?.currentStreakDays ?? 0;
+
+  const nextMilestone = useMemo(
+    () => STREAK_MILESTONES.find((milestone) => milestone > currentStreak),
+    [currentStreak],
+  );
+
+  useEffect(() => {
+    if (!user || !streak) {
+      return;
+    }
+
+    const matchedMilestone = STREAK_MILESTONES.find(
+      (milestone) => milestone === streak.currentStreakDays,
+    );
+    if (!matchedMilestone) {
+      return;
+    }
+
+    const storageKey = `slp:streak-milestone:${user.id}:${matchedMilestone}`;
+    if (localStorage.getItem(storageKey)) {
+      return;
+    }
+
+    localStorage.setItem(storageKey, new Date().toISOString());
+    setCelebrationMilestone(matchedMilestone);
+  }, [streak, user]);
 
   const stats = [
     { label: 'Courses Enrolled', value: '12', icon: BookOpen, color: 'text-blue-600' },
     { label: 'In Progress', value: '5', icon: Clock, color: 'text-orange-600' },
     { label: 'Completed', value: '7', icon: Award, color: 'text-green-600' },
-    { label: 'Learning Streak', value: '15 days', icon: TrendingUp, color: 'text-purple-600' },
+    {
+      label: 'Learning Streak',
+      value: streakLoading ? '...' : `${currentStreak} day${currentStreak === 1 ? '' : 's'}`,
+      icon: Flame,
+      color: 'text-purple-600',
+    },
   ];
 
   const handleLogout = () => {
@@ -69,6 +126,33 @@ export default function Dashboard() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <AlertDialog.Root
+          open={celebrationMilestone !== null}
+          onOpenChange={(open) => {
+            if (!open) {
+              setCelebrationMilestone(null);
+            }
+          }}
+        >
+          <AlertDialog.Portal>
+            <AlertDialog.Overlay className="fixed inset-0 z-50 bg-black/40" />
+            <AlertDialog.Content className="fixed left-1/2 top-1/2 z-50 w-[92vw] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl border border-orange-200 bg-white p-6 shadow-xl">
+              <AlertDialog.Title className="text-xl font-bold text-slate-900">
+                🔥 Streak milestone reached!
+              </AlertDialog.Title>
+              <AlertDialog.Description className="mt-2 text-sm text-slate-600">
+                Amazing consistency — you just hit a {celebrationMilestone}-day learning streak.
+                Keep it going and unlock your next badge.
+              </AlertDialog.Description>
+              <div className="mt-5 flex justify-end">
+                <AlertDialog.Action asChild>
+                  <Button>Keep Going</Button>
+                </AlertDialog.Action>
+              </div>
+            </AlertDialog.Content>
+          </AlertDialog.Portal>
+        </AlertDialog.Root>
+
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {stats.map((stat) => {
@@ -89,6 +173,32 @@ export default function Dashboard() {
               </Card>
             );
           })}
+        </div>
+
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 mb-8">
+          <LearningStreak streak={streak} loading={streakLoading} className="lg:col-span-2" />
+          <Card className="border-purple-200 bg-gradient-to-br from-purple-50 to-pink-50">
+            <CardHeader>
+              <CardTitle className="text-purple-900">Daily Motivation</CardTitle>
+              <CardDescription className="text-purple-700">
+                {currentStreak > 0
+                  ? `You're on a ${currentStreak}-day streak.`
+                  : 'Start your streak today with one lesson.'}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-purple-800">
+                {nextMilestone
+                  ? `Only ${nextMilestone - currentStreak} day${
+                      nextMilestone - currentStreak === 1 ? '' : 's'
+                    } to your next ${nextMilestone}-day milestone.`
+                  : 'You are beyond all current streak milestones. Keep inspiring everyone!'}
+              </p>
+              <Link to="/my-learning">
+                <Button className="w-full">Complete today&apos;s learning</Button>
+              </Link>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Quick Actions */}

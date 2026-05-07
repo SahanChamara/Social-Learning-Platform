@@ -12,3 +12,6 @@ export * from './courses';
 
 // Export Engagement components
 export * from './engagement';
+
+// Export Gamification components
+export * from './gamification';
