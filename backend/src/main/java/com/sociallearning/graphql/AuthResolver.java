@@ -4,15 +4,18 @@ import com.sociallearning.dto.AuthPayload;
 import com.sociallearning.dto.LoginInput;
 import com.sociallearning.dto.RegisterInput;
 import com.sociallearning.entity.User;
+import com.sociallearning.security.InputSanitizer;
 import com.sociallearning.security.SecurityUtils;
 import com.sociallearning.service.AuthService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
 import org.springframework.stereotype.Controller;
+import org.springframework.validation.annotation.Validated;
 
 /**
  * GraphQL resolver for authentication operations.
@@ -25,10 +28,12 @@ import org.springframework.stereotype.Controller;
  */
 @Slf4j
 @Controller
+@Validated
 @RequiredArgsConstructor
 public class AuthResolver {
 
     private final AuthService authService;
+    private final InputSanitizer inputSanitizer;
 
     /**
      * Register a new user account.
@@ -54,15 +59,10 @@ public class AuthResolver {
     @MutationMapping
     public AuthPayload register(@Argument("input") @Valid RegisterInput input) {
         log.info("GraphQL register mutation called for email: {}", input.getEmail());
-        try {
-            return authService.register(input);
-        } catch (IllegalArgumentException e) {
-            log.error("Registration failed: {}", e.getMessage());
-            throw e;
-        } catch (Exception e) {
-            log.error("Unexpected error during registration", e);
-            throw new RuntimeException("Registration failed: " + e.getMessage());
-        }
+        input.setUsername(inputSanitizer.sanitize(input.getUsername()));
+        input.setEmail(inputSanitizer.sanitize(input.getEmail()));
+        input.setFullName(inputSanitizer.sanitize(input.getFullName()));
+        return authService.register(input);
     }
 
     /**
@@ -89,15 +89,8 @@ public class AuthResolver {
     @MutationMapping
     public AuthPayload login(@Argument("input") @Valid LoginInput input) {
         log.info("GraphQL login mutation called for: {}", input.getEmailOrUsername());
-        try {
-            return authService.login(input);
-        } catch (IllegalArgumentException e) {
-            log.error("Login failed: {}", e.getMessage());
-            throw e;
-        } catch (Exception e) {
-            log.error("Unexpected error during login", e);
-            throw new RuntimeException("Login failed: " + e.getMessage());
-        }
+        input.setEmailOrUsername(inputSanitizer.sanitize(input.getEmailOrUsername()));
+        return authService.login(input);
     }
 
     /**
@@ -120,17 +113,9 @@ public class AuthResolver {
      * @return AuthPayload with new tokens
      */
     @MutationMapping
-    public AuthPayload refreshToken(@Argument String refreshToken) {
+    public AuthPayload refreshToken(@Argument @NotBlank(message = "Refresh token is required") String refreshToken) {
         log.info("GraphQL refreshToken mutation called");
-        try {
-            return authService.refreshToken(refreshToken);
-        } catch (IllegalArgumentException e) {
-            log.error("Token refresh failed: {}", e.getMessage());
-            throw e;
-        } catch (Exception e) {
-            log.error("Unexpected error during token refresh", e);
-            throw new RuntimeException("Token refresh failed: " + e.getMessage());
-        }
+        return authService.refreshToken(inputSanitizer.sanitize(refreshToken));
     }
 
     /**

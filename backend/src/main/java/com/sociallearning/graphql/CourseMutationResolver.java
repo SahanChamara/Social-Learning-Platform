@@ -4,16 +4,21 @@ import com.sociallearning.dto.*;
 import com.sociallearning.entity.Course;
 import com.sociallearning.entity.Lesson;
 import com.sociallearning.entity.Module;
+import com.sociallearning.security.InputSanitizer;
 import com.sociallearning.security.SecurityUtils;
 import com.sociallearning.service.CourseService;
 import com.sociallearning.service.LessonService;
 import com.sociallearning.service.ModuleService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.stereotype.Controller;
+import org.springframework.validation.annotation.Validated;
 
 import java.util.List;
 
@@ -27,12 +32,14 @@ import java.util.List;
  */
 @Slf4j
 @Controller
+@Validated
 @RequiredArgsConstructor
 public class CourseMutationResolver {
 
     private final CourseService courseService;
     private final ModuleService moduleService;
     private final LessonService lessonService;
+    private final InputSanitizer inputSanitizer;
 
     // ============================================
     // Course Mutations
@@ -57,6 +64,9 @@ public class CourseMutationResolver {
     public Course createCourse(@Argument("input") @Valid CreateCourseInput input) {
         Long userId = SecurityUtils.getCurrentUserId();
         log.info("GraphQL mutation: createCourse by user {}", userId);
+        input.setTitle(inputSanitizer.sanitize(input.getTitle()));
+        input.setDescription(inputSanitizer.sanitize(input.getDescription()));
+        input.setLanguage(inputSanitizer.sanitize(input.getLanguage()));
         
         return courseService.createCourse(
                 input.getTitle(),
@@ -81,11 +91,17 @@ public class CourseMutationResolver {
      */
     @MutationMapping
     public Course updateCourse(
-            @Argument Long id,
+            @Argument @NotNull @Positive Long id,
             @Argument("input") @Valid UpdateCourseInput input) {
         
         Long userId = SecurityUtils.getCurrentUserId();
         log.info("GraphQL mutation: updateCourse(id={}) by user {}", id, userId);
+        input.setTitle(inputSanitizer.sanitizeNullable(input.getTitle()));
+        input.setDescription(inputSanitizer.sanitizeNullable(input.getDescription()));
+        input.setLanguage(inputSanitizer.sanitizeNullable(input.getLanguage()));
+        input.setThumbnailUrl(inputSanitizer.sanitizeNullable(input.getThumbnailUrl()));
+        input.setRequirements(inputSanitizer.sanitizeNullable(input.getRequirements()));
+        input.setLearningOutcomes(inputSanitizer.sanitizeNullable(input.getLearningOutcomes()));
         
         return courseService.updateCourse(
                 id,
@@ -108,7 +124,7 @@ public class CourseMutationResolver {
      * @return True if deleted successfully
      */
     @MutationMapping
-    public Boolean deleteCourse(@Argument Long id) {
+    public Boolean deleteCourse(@Argument @NotNull @Positive Long id) {
         Long userId = SecurityUtils.getCurrentUserId();
         log.info("GraphQL mutation: deleteCourse(id={}) by user {}", id, userId);
         
@@ -123,7 +139,7 @@ public class CourseMutationResolver {
      * @return Published course
      */
     @MutationMapping
-    public Course publishCourse(@Argument Long id) {
+    public Course publishCourse(@Argument @NotNull @Positive Long id) {
         Long userId = SecurityUtils.getCurrentUserId();
         log.info("GraphQL mutation: publishCourse(id={}) by user {}", id, userId);
         
@@ -137,7 +153,7 @@ public class CourseMutationResolver {
      * @return Unpublished course
      */
     @MutationMapping
-    public Course unpublishCourse(@Argument Long id) {
+    public Course unpublishCourse(@Argument @NotNull @Positive Long id) {
         Long userId = SecurityUtils.getCurrentUserId();
         log.info("GraphQL mutation: unpublishCourse(id={}) by user {}", id, userId);
         
@@ -151,7 +167,7 @@ public class CourseMutationResolver {
      * @return Archived course
      */
     @MutationMapping
-    public Course archiveCourse(@Argument Long id) {
+    public Course archiveCourse(@Argument @NotNull @Positive Long id) {
         Long userId = SecurityUtils.getCurrentUserId();
         log.info("GraphQL mutation: archiveCourse(id={}) by user {}", id, userId);
         
@@ -167,8 +183,8 @@ public class CourseMutationResolver {
      */
     @MutationMapping
     public Course addTagsToCourse(
-            @Argument Long courseId,
-            @Argument List<Long> tagIds) {
+            @Argument @NotNull @Positive Long courseId,
+            @Argument @NotEmpty List<@NotNull @Positive Long> tagIds) {
         
         Long userId = SecurityUtils.getCurrentUserId();
         log.info("GraphQL mutation: addTagsToCourse(courseId={}, tagIds={}) by user {}",
@@ -186,8 +202,8 @@ public class CourseMutationResolver {
      */
     @MutationMapping
     public Course removeTagsFromCourse(
-            @Argument Long courseId,
-            @Argument List<Long> tagIds) {
+            @Argument @NotNull @Positive Long courseId,
+            @Argument @NotEmpty List<@NotNull @Positive Long> tagIds) {
         
         Long userId = SecurityUtils.getCurrentUserId();
         log.info("GraphQL mutation: removeTagsFromCourse(courseId={}, tagIds={}) by user {}",
@@ -209,12 +225,14 @@ public class CourseMutationResolver {
      */
     @MutationMapping
     public Module createModule(
-            @Argument Long courseId,
+            @Argument @NotNull @Positive Long courseId,
             @Argument("input") @Valid CreateModuleInput input) {
         
         Long userId = SecurityUtils.getCurrentUserId();
         log.info("GraphQL mutation: createModule(courseId={}) by user {}", courseId, userId);
         
+        input.setTitle(inputSanitizer.sanitize(input.getTitle()));
+        input.setDescription(inputSanitizer.sanitizeNullable(input.getDescription()));
         return moduleService.createModule(
                 courseId,
                 userId,
@@ -232,12 +250,14 @@ public class CourseMutationResolver {
      */
     @MutationMapping
     public Module updateModule(
-            @Argument Long id,
+            @Argument @NotNull @Positive Long id,
             @Argument("input") @Valid UpdateModuleInput input) {
         
         Long userId = SecurityUtils.getCurrentUserId();
         log.info("GraphQL mutation: updateModule(id={}) by user {}", id, userId);
         
+        input.setTitle(inputSanitizer.sanitizeNullable(input.getTitle()));
+        input.setDescription(inputSanitizer.sanitizeNullable(input.getDescription()));
         return moduleService.updateModule(
                 id,
                 userId,
@@ -254,7 +274,7 @@ public class CourseMutationResolver {
      * @return True if deleted successfully
      */
     @MutationMapping
-    public Boolean deleteModule(@Argument Long id) {
+    public Boolean deleteModule(@Argument @NotNull @Positive Long id) {
         Long userId = SecurityUtils.getCurrentUserId();
         log.info("GraphQL mutation: deleteModule(id={}) by user {}", id, userId);
         
@@ -271,8 +291,8 @@ public class CourseMutationResolver {
      */
     @MutationMapping
     public List<Module> reorderModules(
-            @Argument Long courseId,
-            @Argument List<Long> moduleIds) {
+            @Argument @NotNull @Positive Long courseId,
+            @Argument @NotEmpty List<@NotNull @Positive Long> moduleIds) {
         
         Long userId = SecurityUtils.getCurrentUserId();
         log.info("GraphQL mutation: reorderModules(courseId={}, moduleIds={}) by user {}",
@@ -295,12 +315,14 @@ public class CourseMutationResolver {
      */
     @MutationMapping
     public Lesson createLesson(
-            @Argument Long moduleId,
+            @Argument @NotNull @Positive Long moduleId,
             @Argument("input") @Valid CreateLessonInput input) {
         
         Long userId = SecurityUtils.getCurrentUserId();
         log.info("GraphQL mutation: createLesson(moduleId={}) by user {}", moduleId, userId);
         
+        input.setTitle(inputSanitizer.sanitize(input.getTitle()));
+        input.setDescription(inputSanitizer.sanitizeNullable(input.getDescription()));
         return lessonService.createLesson(
                 moduleId,
                 userId,
@@ -320,12 +342,14 @@ public class CourseMutationResolver {
      */
     @MutationMapping
     public Lesson updateLesson(
-            @Argument Long id,
+            @Argument @NotNull @Positive Long id,
             @Argument("input") @Valid CreateLessonInput input) {
         
         Long userId = SecurityUtils.getCurrentUserId();
         log.info("GraphQL mutation: updateLesson(id={}) by user {}", id, userId);
         
+        input.setTitle(inputSanitizer.sanitize(input.getTitle()));
+        input.setDescription(inputSanitizer.sanitizeNullable(input.getDescription()));
         return lessonService.updateLesson(
                 id,
                 userId,
@@ -348,12 +372,20 @@ public class CourseMutationResolver {
      */
     @MutationMapping
     public Lesson updateLessonContent(
-            @Argument Long id,
+            @Argument @NotNull @Positive Long id,
             @Argument("input") @Valid UpdateLessonContentInput input) {
         
         Long userId = SecurityUtils.getCurrentUserId();
         log.info("GraphQL mutation: updateLessonContent(id={}) by user {}", id, userId);
         
+        input.setVideoUrl(inputSanitizer.sanitizeNullable(input.getVideoUrl()));
+        input.setVideoThumbnailUrl(inputSanitizer.sanitizeNullable(input.getVideoThumbnailUrl()));
+        input.setTextContent(inputSanitizer.sanitizeNullable(input.getTextContent()));
+        input.setQuizData(inputSanitizer.sanitizeNullable(input.getQuizData()));
+        input.setAssignmentInstructions(inputSanitizer.sanitizeNullable(input.getAssignmentInstructions()));
+        input.setResourceUrl(inputSanitizer.sanitizeNullable(input.getResourceUrl()));
+        input.setAdditionalResources(inputSanitizer.sanitizeNullable(input.getAdditionalResources()));
+        input.setTranscript(inputSanitizer.sanitizeNullable(input.getTranscript()));
         return lessonService.updateLessonContent(
                 id,
                 userId,
@@ -377,7 +409,7 @@ public class CourseMutationResolver {
      * @return True if deleted successfully
      */
     @MutationMapping
-    public Boolean deleteLesson(@Argument Long id) {
+    public Boolean deleteLesson(@Argument @NotNull @Positive Long id) {
         Long userId = SecurityUtils.getCurrentUserId();
         log.info("GraphQL mutation: deleteLesson(id={}) by user {}", id, userId);
         
@@ -394,8 +426,8 @@ public class CourseMutationResolver {
      */
     @MutationMapping
     public List<Lesson> reorderLessons(
-            @Argument Long moduleId,
-            @Argument List<Long> lessonIds) {
+            @Argument @NotNull @Positive Long moduleId,
+            @Argument @NotEmpty List<@NotNull @Positive Long> lessonIds) {
         
         Long userId = SecurityUtils.getCurrentUserId();
         log.info("GraphQL mutation: reorderLessons(moduleId={}, lessonIds={}) by user {}",

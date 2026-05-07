@@ -1,6 +1,7 @@
 package com.sociallearning.dto;
 
 import com.sociallearning.enums.CourseDifficulty;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -47,27 +48,31 @@ public class CreateCourseInput {
      * Course language (required).
      */
     @NotBlank(message = "Language is required")
-    @Size(max = 50, message = "Language must not exceed 50 characters")
+    @Size(max = 10, message = "Language must not exceed 10 characters")
     private String language;
     
     /**
      * Thumbnail URL (optional).
      */
+    @Size(max = 1000, message = "Thumbnail URL must not exceed 1000 characters")
     private String thumbnailUrl;
     
     /**
      * Course requirements (optional).
      */
+    @Size(max = 5000, message = "Requirements must not exceed 5000 characters")
     private String requirements;
     
     /**
      * Learning outcomes (optional).
      */
+    @Size(max = 5000, message = "Learning outcomes must not exceed 5000 characters")
     private String learningOutcomes;
     
     /**
      * Price in cents (0 for free, default 0).
      */
     @Min(value = 0, message = "Price must be non-negative")
+    @Max(value = 100000000, message = "Price exceeds allowed maximum")
     private Integer priceInCents = 0;
 }

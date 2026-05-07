@@ -4,12 +4,15 @@ import com.sociallearning.enums.LikeableType;
 import com.sociallearning.security.SecurityUtils;
 import com.sociallearning.service.LikeService;
 import com.sociallearning.service.SubscriptionPublisher;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
 import org.springframework.stereotype.Controller;
+import org.springframework.validation.annotation.Validated;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -24,6 +27,7 @@ import java.util.Map;
  */
 @Slf4j
 @Controller
+@Validated
 @RequiredArgsConstructor
 public class LikeResolver {
 
@@ -49,20 +53,19 @@ public class LikeResolver {
      */
     @MutationMapping
     public Map<String, Object> toggleLike(
-            @Argument String targetType,
-            @Argument Long targetId) {
+            @Argument @NotNull LikeableType targetType,
+            @Argument @NotNull @Positive Long targetId) {
         
         Long userId = requireAuthentication();
         
         log.info("GraphQL toggleLike mutation: userId={}, targetType={}, targetId={}", 
                 userId, targetType, targetId);
         
-        LikeableType type = LikeableType.valueOf(targetType);
-        boolean isLiked = likeService.toggleLike(userId, type, targetId);
-        long likeCount = likeService.getLikeCount(type, targetId);
+        boolean isLiked = likeService.toggleLike(userId, targetType, targetId);
+        long likeCount = likeService.getLikeCount(targetType, targetId);
         
         // Publish subscription event
-        subscriptionPublisher.publishLikeToggled(targetType, targetId, userId, isLiked, likeCount);
+        subscriptionPublisher.publishLikeToggled(targetType.name(), targetId, userId, isLiked, likeCount);
         
         Map<String, Object> result = new HashMap<>();
         result.put("liked", isLiked);
@@ -86,8 +89,8 @@ public class LikeResolver {
      */
     @QueryMapping
     public boolean hasLiked(
-            @Argument String targetType,
-            @Argument Long targetId) {
+            @Argument @NotNull LikeableType targetType,
+            @Argument @NotNull @Positive Long targetId) {
         
         Long userId = SecurityUtils.getCurrentUserId();
         if (userId == null) {
@@ -97,8 +100,7 @@ public class LikeResolver {
         log.debug("GraphQL hasLiked query: userId={}, targetType={}, targetId={}", 
                 userId, targetType, targetId);
         
-        LikeableType type = LikeableType.valueOf(targetType);
-        return likeService.hasUserLiked(userId, type, targetId);
+        return likeService.hasUserLiked(userId, targetType, targetId);
     }
 
     /**
@@ -111,13 +113,12 @@ public class LikeResolver {
      */
     @QueryMapping
     public long likeCount(
-            @Argument String targetType,
-            @Argument Long targetId) {
+            @Argument @NotNull LikeableType targetType,
+            @Argument @NotNull @Positive Long targetId) {
         
         log.debug("GraphQL likeCount query: targetType={}, targetId={}", targetType, targetId);
         
-        LikeableType type = LikeableType.valueOf(targetType);
-        return likeService.getLikeCount(type, targetId);
+        return likeService.getLikeCount(targetType, targetId);
     }
 
     // ============================================
