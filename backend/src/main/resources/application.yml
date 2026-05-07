@@ -64,12 +64,39 @@ server:
 
 # Logging
 logging:
+  file:
+    name: logs/social-learning-platform.log
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} [requestId=%X{requestId:-N/A}] - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} [requestId=%X{requestId:-N/A}] - %msg%n"
   level:
     root: INFO
-    com.sociallearning: DEBUG
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
-    org.springframework.graphql: DEBUG
+    com.sociallearning: INFO
+    org.springframework.graphql: INFO
+    org.springframework.security: WARN
+    org.hibernate.SQL: WARN
+    org.hibernate.type.descriptor.sql.BasicBinder: WARN
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: always
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+
+info:
+  app:
+    name: Social Learning Platform
+    description: Backend API health and monitoring metadata
 
 app:
   rate-limit:

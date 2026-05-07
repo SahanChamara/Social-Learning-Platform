@@ -2,6 +2,7 @@ package com.sociallearning.config;
 
 import com.sociallearning.security.JwtAuthenticationFilter;
 import com.sociallearning.security.RateLimitingFilter;
+import com.sociallearning.security.RequestLoggingFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -39,6 +40,7 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final RequestLoggingFilter requestLoggingFilter;
     private final RateLimitingFilter rateLimitingFilter;
 
     /**
@@ -82,8 +84,10 @@ public class SecurityConfig {
             
             // Add JWT authentication filter before UsernamePasswordAuthenticationFilter
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+            // Log requests with status and latency
+            .addFilterAfter(requestLoggingFilter, JwtAuthenticationFilter.class)
             // Apply endpoint-based rate limiting after authentication is established
-            .addFilterAfter(rateLimitingFilter, JwtAuthenticationFilter.class);
+            .addFilterAfter(rateLimitingFilter, RequestLoggingFilter.class);
 
         return http.build();
     }
