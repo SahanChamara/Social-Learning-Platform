@@ -21,6 +21,7 @@ import {
 import { useMemo } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Progress } from '@/components/ui';
+import { SkeletonLessonPage } from '@/components/skeletons';
 import {
   COURSE_ENROLLMENT_QUERY,
   COURSE_QUERY,
@@ -377,14 +378,7 @@ export default function LessonPage() {
   const isLoading = courseLoading || (isAuthenticated && enrollmentLoading);
 
   if (isLoading) {
-    return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="mx-auto h-8 w-8 animate-spin text-blue-600" />
-          <p className="mt-4 text-sm text-slate-600">Loading lesson...</p>
-        </div>
-      </div>
-    );
+    return <SkeletonLessonPage />;
   }
 
   if (courseError || !course) {

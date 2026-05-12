@@ -7,13 +7,13 @@ import {
   CheckCircle2,
   Clock,
   GraduationCap,
-  Loader2,
   PlayCircle,
   Star,
   TrendingUp,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, Progress } from '@/components/ui';
+import { SkeletonEnrollmentCard } from '@/components/skeletons';
 import { MY_ENROLLMENTS_QUERY } from '@/graphql';
 import { useAuth } from '@/hooks/useAuth';
 import type { Enrollment, MyEnrollmentsResponse } from '@/types/courses';
@@ -228,11 +228,30 @@ export default function LearnerDashboard() {
 
   if (loading && !data) {
     return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="mx-auto h-8 w-8 animate-spin text-blue-600" />
-          <p className="mt-4 text-sm text-slate-600">Loading your courses...</p>
-        </div>
+      <div className="min-h-screen bg-slate-50">
+        <header className="border-b border-slate-200 bg-white">
+          <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+            <div className="space-y-2">
+              <div className="h-8 w-40 animate-pulse rounded bg-slate-200" />
+              <div className="h-4 w-60 animate-pulse rounded bg-slate-200" />
+            </div>
+          </div>
+        </header>
+        <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+          <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <div key={index} className="rounded-lg border border-slate-200 bg-white p-6">
+                <div className="h-4 w-24 animate-pulse rounded bg-slate-200" />
+                <div className="mt-2 h-8 w-16 animate-pulse rounded bg-slate-200" />
+              </div>
+            ))}
+          </div>
+          <div className="space-y-4">
+            {Array.from({ length: 3 }).map((_, index) => (
+              <SkeletonEnrollmentCard key={index} />
+            ))}
+          </div>
+        </main>
       </div>
     );
   }

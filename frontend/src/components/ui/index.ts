@@ -8,6 +8,8 @@ export { Label } from "./Label";
 
 export { Progress } from "./Progress";
 
+export { Skeleton } from "./Skeleton";
+
 export {
   Card,
   CardHeader,

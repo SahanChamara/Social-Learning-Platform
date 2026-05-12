@@ -4,6 +4,9 @@ export * from './ui';
 // Export Toaster component
 export { Toaster } from './Toaster';
 
+// Export Skeleton components
+export * from './skeletons';
+
 // Export Auth components
 export * from './auth';
 

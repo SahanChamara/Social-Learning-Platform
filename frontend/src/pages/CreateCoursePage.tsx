@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { ArrowLeft, Loader2, Plus, Trash2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Button, Input, Label } from '@/components/ui';
+import { Button, Input, Label, Skeleton } from '@/components/ui';
 import { useToast } from '@/hooks';
 import {
   ADD_TAGS_TO_COURSE_MUTATION,
@@ -606,7 +606,10 @@ export default function CreateCoursePage() {
                       <p className="text-sm text-red-600">{errors.categoryId.message}</p>
                     ) : null}
                     {categoriesLoading ? (
-                      <p className="text-xs text-slate-500">Loading categories...</p>
+                      <div className="space-y-2">
+                        <Skeleton className="h-4 w-32" />
+                        <Skeleton className="h-3 w-48" />
+                      </div>
                     ) : null}
                   </div>
 
@@ -645,7 +648,13 @@ export default function CreateCoursePage() {
                 <div className="space-y-2">
                   <Label>Tags</Label>
                   <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
-                    {tags.length > 0 ? (
+                    {tagsLoading ? (
+                      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                        {Array.from({ length: 6 }).map((_, index) => (
+                          <Skeleton key={index} className="h-6 w-full rounded-full" />
+                        ))}
+                      </div>
+                    ) : tags.length > 0 ? (
                       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                         {tags.map((tag: Tag) => (
                           <label key={tag.id} className="inline-flex items-center gap-2 text-sm text-slate-700">
@@ -660,9 +669,7 @@ export default function CreateCoursePage() {
                         ))}
                       </div>
                     ) : (
-                      <p className="text-sm text-slate-600">
-                        {tagsLoading ? 'Loading tags...' : 'No tags available yet.'}
-                      </p>
+                      <p className="text-sm text-slate-600">No tags available yet.</p>
                     )}
                   </div>
                 </div>

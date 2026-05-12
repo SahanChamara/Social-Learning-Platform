@@ -1,6 +1,7 @@
 import { useQuery } from '@apollo/client/react';
 import { Link } from 'react-router-dom';
 import { AchievementBadge, LearningStreak, type LearningStreakData } from '../components';
+import { Skeleton } from '../components/ui';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
@@ -205,8 +206,21 @@ export default function Profile() {
             </CardHeader>
             <CardContent>
               {achievementsLoading ? (
-                <div className="text-center py-8">
-                  <p className="text-gray-500">Loading achievements...</p>
+                <div className="space-y-4 py-2">
+                  <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                    {Array.from({ length: 5 }).map((_, index) => (
+                      <div key={index} className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs">
+                        <Skeleton className="mx-auto h-12 w-12 rounded-full" />
+                        <Skeleton className="mx-auto mt-3 h-4 w-24" />
+                        <Skeleton className="mt-3 h-1.5 w-full rounded-full" />
+                        <Skeleton className="mx-auto mt-2 h-3 w-16" />
+                      </div>
+                    ))}
+                  </div>
+                  <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                    <Skeleton className="h-4 w-40" />
+                    <Skeleton className="mt-2 h-3 w-56" />
+                  </div>
                 </div>
               ) : myAchievements.length === 0 ? (
                 <div className="text-center py-8">

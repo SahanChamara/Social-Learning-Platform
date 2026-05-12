@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@apollo/client/react';
 import { AlertCircle, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { CourseCard, SearchBar } from '@/components';
+import { CourseCard, SearchBar, SkeletonCourseCard } from '@/components';
 import { COURSES_QUERY } from '@/graphql';
 import { useAuth } from '@/hooks';
 import { UserRole } from '@/types/auth';
@@ -11,17 +11,7 @@ import { CourseDifficulty, type CoursesQueryVariables, type CoursesResponse } fr
 const PAGE_SIZE = 9;
 
 function CourseCardSkeleton() {
-  return (
-    <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-      <div className="aspect-video animate-pulse bg-slate-200" />
-      <div className="space-y-3 p-4">
-        <div className="h-3 w-20 animate-pulse rounded bg-slate-200" />
-        <div className="h-5 w-4/5 animate-pulse rounded bg-slate-200" />
-        <div className="h-4 w-full animate-pulse rounded bg-slate-200" />
-        <div className="h-4 w-3/4 animate-pulse rounded bg-slate-200" />
-      </div>
-    </div>
-  );
+  return <SkeletonCourseCard />;
 }
 
 export default function CoursesPage() {

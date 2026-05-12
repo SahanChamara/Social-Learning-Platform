@@ -4,6 +4,7 @@ import { Star } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { MY_RATING_QUERY, RATE_COURSE_MUTATION } from '@/graphql';
+import { SkeletonRatingStars } from '@/components/skeletons';
 import { useAuth } from '@/hooks';
 import { useToast } from '@/hooks/useToast';
 
@@ -62,18 +63,29 @@ export function RatingStars({
   ratingCount,
   className,
 }: Readonly<RatingStarsProps>) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
 
   const [selectedRatingDraft, setSelectedRatingDraft] = useState<number | null>(null);
   const [reviewDraft, setReviewDraft] = useState<string | null>(null);
   const [ratingStatsOverride, setRatingStatsOverride] = useState<{ average: number; count: number } | null>(null);
 
-  const { data: myRatingData } = useQuery<MyRatingResponse, MyRatingVariables>(MY_RATING_QUERY, {
-    variables: { courseId },
-    skip: !isAuthenticated,
-    fetchPolicy: 'cache-and-network',
-  });
+  const { data: myRatingData, loading: ratingLoading } = useQuery<MyRatingResponse, MyRatingVariables>(
+    MY_RATING_QUERY,
+    {
+      variables: { courseId },
+      skip: !isAuthenticated,
+      fetchPolicy: 'cache-and-network',
+    },
+  );
+
+  if (authLoading || (isAuthenticated && ratingLoading && !myRatingData)) {
+    return (
+      <section className={className}>
+        <SkeletonRatingStars />
+      </section>
+    );
+  }
 
   const myRating = myRatingData?.myRating;
   const selectedRating = selectedRatingDraft ?? myRating?.ratingValue ?? 0;
@@ -161,7 +173,7 @@ export function RatingStars({
         </p>
       </div>
 
-      {isLoading ? null : !isAuthenticated ? (
+      {!isAuthenticated ? (
         <div className="mt-4 rounded-lg border border-slate-200 bg-white p-4 text-sm text-slate-600">
           <Link to="/auth/login" className="font-semibold text-blue-700 hover:text-blue-800">
             Sign in

@@ -7,6 +7,7 @@ import { LEARNING_STREAK_QUERY } from '../graphql';
 import { LearningStreak } from '../components';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
+import { Skeleton } from '../components/ui';
 import {
   BookOpen,
   Flame,
@@ -74,7 +75,7 @@ export default function Dashboard() {
     { label: 'Completed', value: '7', icon: Award, color: 'text-green-600' },
     {
       label: 'Learning Streak',
-      value: streakLoading ? '...' : `${currentStreak} day${currentStreak === 1 ? '' : 's'}`,
+      value: streakLoading ? <Skeleton className="h-8 w-24 rounded-md" /> : `${currentStreak} day${currentStreak === 1 ? '' : 's'}`,
       icon: Flame,
       color: 'text-purple-600',
     },
@@ -163,7 +164,7 @@ export default function Dashboard() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-gray-600 mb-1">{stat.label}</p>
-                      <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+                      <div className="min-h-8">{stat.value}</div>
                     </div>
                     <div className={`p-3 rounded-lg bg-gray-100 ${stat.color}`}>
                       <Icon className="h-6 w-6" />

@@ -19,6 +19,7 @@ import {
 import { Link, useParams } from 'react-router-dom';
 import { EnrollButton } from '@/components/courses';
 import { CommentForm, CommentList, RatingStars } from '@/components/engagement';
+import { SkeletonCourseDetail } from '@/components/skeletons';
 import { COURSE_QUERY } from '@/graphql';
 import type {
   CourseQueryVariables,
@@ -97,31 +98,6 @@ function sortLessons(lessons: Lesson[]): Lesson[] {
   return [...lessons].sort((a, b) => a.orderIndex - b.orderIndex);
 }
 
-function CourseDetailLoading() {
-  return (
-    <div className="min-h-screen bg-slate-50">
-      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="mb-6 h-6 w-40 animate-pulse rounded bg-slate-200" />
-        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <div className="grid lg:grid-cols-[2fr_1fr]">
-            <div className="space-y-4 p-6">
-              <div className="aspect-video animate-pulse rounded-xl bg-slate-200" />
-              <div className="h-10 w-4/5 animate-pulse rounded bg-slate-200" />
-              <div className="h-5 w-full animate-pulse rounded bg-slate-200" />
-              <div className="h-5 w-3/4 animate-pulse rounded bg-slate-200" />
-            </div>
-            <div className="border-t border-slate-200 p-6 lg:border-l lg:border-t-0">
-              <div className="h-9 w-28 animate-pulse rounded bg-slate-200" />
-              <div className="mt-4 h-11 w-full animate-pulse rounded bg-slate-200" />
-              <div className="mt-4 h-4 w-5/6 animate-pulse rounded bg-slate-200" />
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export default function CourseDetailPage() {
   const { slug } = useParams<{ slug: string }>();
 
@@ -154,7 +130,7 @@ export default function CourseDetailPage() {
   }
 
   if (loading && !data) {
-    return <CourseDetailLoading />;
+    return <SkeletonCourseDetail />;
   }
 
   if (error && !data) {

@@ -3,7 +3,7 @@ import { useQuery } from '@apollo/client/react';
 import * as Tabs from '@radix-ui/react-tabs';
 import { Compass, Loader2, Sparkles, TrendingUp } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { CourseCard } from '@/components';
+import { CourseCard, SkeletonCourseCard } from '@/components';
 import { Card, CardContent } from '@/components/ui';
 import {
   CATEGORIES_QUERY,
@@ -27,14 +27,7 @@ function SectionSkeleton() {
   return (
     <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
       {Array.from({ length: 6 }, (_, index) => `discover-skeleton-${index}`).map((key) => (
-        <div key={key} className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-          <div className="aspect-video animate-pulse bg-slate-200" />
-          <div className="space-y-3 p-4">
-            <div className="h-4 w-3/4 animate-pulse rounded bg-slate-200" />
-            <div className="h-3 w-full animate-pulse rounded bg-slate-200" />
-            <div className="h-3 w-2/3 animate-pulse rounded bg-slate-200" />
-          </div>
-        </div>
+        <SkeletonCourseCard key={key} />
       ))}
     </div>
   );

@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@apollo/client/react';
 import * as Accordion from '@radix-ui/react-accordion';
-import { AlertCircle, ChevronDown, Loader2 } from 'lucide-react';
+import { AlertCircle, ChevronDown } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { CourseCard, SearchBar } from '@/components';
+import { CourseCard, SearchBar, SkeletonCourseCard } from '@/components';
+import { Skeleton } from '@/components/ui';
 import { CATEGORIES_QUERY, COURSES_QUERY, SEARCH_QUERY } from '@/graphql';
 import {
   CourseDifficulty,
@@ -151,6 +152,7 @@ export default function SearchPage() {
 
   const categories = mixedNodes.filter((node) => node.__typename === 'Category');
   const tags = mixedNodes.filter((node) => node.__typename === 'Tag');
+  const isInitialLoading = coursesLoading && allCourses.length === 0;
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -179,20 +181,31 @@ export default function SearchPage() {
                   Categories <ChevronDown className="h-4 w-4" />
                 </Accordion.Trigger>
                 <Accordion.Content className="space-y-2 px-3 pb-3">
-                  {(categoriesData?.categories ?? []).slice(0, 10).map((category) => (
-                    <label key={category.id} className="flex items-center gap-2 text-sm text-slate-700">
-                      <input
-                        type="checkbox"
-                        checked={selectedCategoryIds.includes(category.id)}
-                        onChange={() => {
-                          setSelectedCategoryIds((prev) => toggleSingleSelect(prev, category.id));
-                          setPage(0);
-                          setAllCourses([]);
-                        }}
-                      />
-                      {category.name}
-                    </label>
-                  ))}
+                  {categoriesData ? (
+                    (categoriesData.categories ?? []).slice(0, 10).map((category) => (
+                      <label key={category.id} className="flex items-center gap-2 text-sm text-slate-700">
+                        <input
+                          type="checkbox"
+                          checked={selectedCategoryIds.includes(category.id)}
+                          onChange={() => {
+                            setSelectedCategoryIds((prev) => toggleSingleSelect(prev, category.id));
+                            setPage(0);
+                            setAllCourses([]);
+                          }}
+                        />
+                        {category.name}
+                      </label>
+                    ))
+                  ) : (
+                    <div className="space-y-2">
+                      {Array.from({ length: 6 }).map((_, index) => (
+                        <div key={index} className="flex items-center gap-2">
+                          <Skeleton className="h-4 w-4 rounded-sm" />
+                          <Skeleton className="h-4 w-32" />
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </Accordion.Content>
               </Accordion.Item>
 
@@ -278,7 +291,13 @@ export default function SearchPage() {
                 </div>
               ) : null}
 
-              {allCourses.length > 0 ? (
+              {isInitialLoading ? (
+                <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                  {Array.from({ length: PAGE_SIZE }).map((_, index) => (
+                    <SkeletonCourseCard key={index} />
+                  ))}
+                </div>
+              ) : allCourses.length > 0 ? (
                 <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
                   {allCourses.map((course) => (
                     <CourseCard key={course.id} course={course} href={`/courses/${course.slug}`} />
@@ -292,9 +311,11 @@ export default function SearchPage() {
 
               <div ref={sentinelRef} className="h-8" />
 
-              {coursesLoading ? (
-                <div className="inline-flex items-center gap-2 text-sm text-slate-600">
-                  <Loader2 className="h-4 w-4 animate-spin" /> Loading more...
+              {coursesLoading && allCourses.length > 0 ? (
+                <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                  {Array.from({ length: 3 }).map((_, index) => (
+                    <SkeletonCourseCard key={index} />
+                  ))}
                 </div>
               ) : null}
             </div>
