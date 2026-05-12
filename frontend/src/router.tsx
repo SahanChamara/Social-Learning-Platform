@@ -15,6 +15,7 @@ import SearchPage from '@/pages/SearchPage';
 import CourseDetailPage from '@/pages/CourseDetailPage';
 import CreateCoursePage from '@/pages/CreateCoursePage';
 import { ProtectedRoute } from '@/components/auth';
+import { ErrorBoundary } from '@/components';
 import { UserRole } from '@/types/auth';
 
 // Router configuration
@@ -25,58 +26,98 @@ const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <Home />,
+        element: (
+          <ErrorBoundary>
+            <Home />
+          </ErrorBoundary>
+        ),
       },
       {
         path: 'discover',
-        element: <Discover />,
+        element: (
+          <ErrorBoundary>
+            <Discover />
+          </ErrorBoundary>
+        ),
       },
       {
         path: 'courses',
-        element: <CoursesPage />,
+        element: (
+          <ErrorBoundary>
+            <CoursesPage />
+          </ErrorBoundary>
+        ),
       },
       {
         path: 'search',
-        element: <SearchPage />,
+        element: (
+          <ErrorBoundary>
+            <SearchPage />
+          </ErrorBoundary>
+        ),
       },
       {
         path: 'courses/create',
         element: (
-          <ProtectedRoute allowedRoles={[UserRole.CREATOR, UserRole.ADMIN]}>
-            <CreateCoursePage />
-          </ProtectedRoute>
+          <ErrorBoundary>
+            <ProtectedRoute allowedRoles={[UserRole.CREATOR, UserRole.ADMIN]}>
+              <CreateCoursePage />
+            </ProtectedRoute>
+          </ErrorBoundary>
         ),
       },
       {
         path: 'courses/:slug',
-        element: <CourseDetailPage />,
+        element: (
+          <ErrorBoundary>
+            <CourseDetailPage />
+          </ErrorBoundary>
+        ),
       },
       {
         path: 'courses/:slug/learn/:lessonId',
         element: (
-          <ProtectedRoute>
-            <LessonPage />
-          </ProtectedRoute>
+          <ErrorBoundary>
+            <ProtectedRoute>
+              <LessonPage />
+            </ProtectedRoute>
+          </ErrorBoundary>
         ),
       },
       {
         path: 'components-demo',
-        element: <ComponentsDemo />,
+        element: (
+          <ErrorBoundary>
+            <ComponentsDemo />
+          </ErrorBoundary>
+        ),
       },
       {
         path: 'auth-demo',
-        element: <AuthDemo />,
+        element: (
+          <ErrorBoundary>
+            <AuthDemo />
+          </ErrorBoundary>
+        ),
       },
       {
         path: 'auth',
         children: [
           {
             path: 'login',
-            element: <Login />,
+            element: (
+              <ErrorBoundary>
+                <Login />
+              </ErrorBoundary>
+            ),
           },
           {
             path: 'register',
-            element: <Register />,
+            element: (
+              <ErrorBoundary>
+                <Register />
+              </ErrorBoundary>
+            ),
           },
         ],
       },
@@ -84,25 +125,31 @@ const router = createBrowserRouter([
       {
         path: 'dashboard',
         element: (
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
+          <ErrorBoundary>
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          </ErrorBoundary>
         ),
       },
       {
         path: 'my-learning',
         element: (
-          <ProtectedRoute>
-            <LearnerDashboard />
-          </ProtectedRoute>
+          <ErrorBoundary>
+            <ProtectedRoute>
+              <LearnerDashboard />
+            </ProtectedRoute>
+          </ErrorBoundary>
         ),
       },
       {
         path: 'profile',
         element: (
-          <ProtectedRoute>
-            <Profile />
-          </ProtectedRoute>
+          <ErrorBoundary>
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          </ErrorBoundary>
         ),
       },
     ],
