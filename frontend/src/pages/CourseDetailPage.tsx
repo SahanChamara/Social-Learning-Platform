@@ -184,6 +184,9 @@ export default function CourseDetailPage() {
   }
 
   const modules = sortModules(course.modules);
+  const firstLesson = modules
+    .flatMap((module) => sortLessons(module.lessons))
+    .find((lesson) => lesson.isPublished);
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -272,6 +275,7 @@ export default function CourseDetailPage() {
                 courseTitle={course.title}
                 courseSlug={course.slug}
                 priceInCents={course.priceInCents}
+                firstLessonId={firstLesson?.id}
               />
 
               <div className="mt-6 space-y-3 border-t border-slate-200 pt-4 text-sm text-slate-700">

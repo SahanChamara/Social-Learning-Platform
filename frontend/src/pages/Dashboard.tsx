@@ -3,18 +3,18 @@ import { useQuery } from '@apollo/client/react';
 import * as AlertDialog from '@radix-ui/react-alert-dialog';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks';
-import { LEARNING_STREAK_QUERY } from '../graphql';
+import { LEARNING_STREAK_QUERY, MY_ENROLLMENTS_QUERY } from '../graphql';
 import { LearningStreak } from '../components';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Skeleton } from '../components/ui';
+import type { MyEnrollmentsResponse } from '../types/courses';
 import {
   BookOpen,
   Flame,
   Award,
   Clock,
   User,
-  Settings,
   LogOut,
   GraduationCap
 } from 'lucide-react';
@@ -40,8 +40,19 @@ export default function Dashboard() {
     fetchPolicy: 'cache-and-network',
   });
 
+  const { data: enrollmentsData, loading: enrollmentsLoading } = useQuery<MyEnrollmentsResponse>(
+    MY_ENROLLMENTS_QUERY,
+    {
+      skip: !user,
+      fetchPolicy: 'cache-and-network',
+    },
+  );
+
   const streak = streakData?.learningStreak ?? null;
   const currentStreak = streak?.currentStreakDays ?? 0;
+  const enrollments = enrollmentsData?.myEnrollments ?? [];
+  const completedEnrollments = enrollments.filter((enrollment) => enrollment.status === 'COMPLETED');
+  const inProgressEnrollments = enrollments.filter((enrollment) => enrollment.status === 'ENROLLED');
 
   const nextMilestone = useMemo(
     () => STREAK_MILESTONES.find((milestone) => milestone > currentStreak),
@@ -70,9 +81,24 @@ export default function Dashboard() {
   }, [streak, user]);
 
   const stats = [
-    { label: 'Courses Enrolled', value: '12', icon: BookOpen, color: 'text-blue-600' },
-    { label: 'In Progress', value: '5', icon: Clock, color: 'text-orange-600' },
-    { label: 'Completed', value: '7', icon: Award, color: 'text-green-600' },
+    {
+      label: 'Courses Enrolled',
+      value: enrollmentsLoading ? <Skeleton className="h-8 w-14 rounded-md" /> : enrollments.length,
+      icon: BookOpen,
+      color: 'text-blue-600',
+    },
+    {
+      label: 'In Progress',
+      value: enrollmentsLoading ? <Skeleton className="h-8 w-14 rounded-md" /> : inProgressEnrollments.length,
+      icon: Clock,
+      color: 'text-orange-600',
+    },
+    {
+      label: 'Completed',
+      value: enrollmentsLoading ? <Skeleton className="h-8 w-14 rounded-md" /> : completedEnrollments.length,
+      icon: Award,
+      color: 'text-green-600',
+    },
     {
       label: 'Learning Streak',
       value: streakLoading ? <Skeleton className="h-8 w-24 rounded-md" /> : `${currentStreak} day${currentStreak === 1 ? '' : 's'}`,
@@ -108,12 +134,6 @@ export default function Dashboard() {
                 <Button variant="outline" size="sm">
                   <User className="h-4 w-4" />
                   Profile
-                </Button>
-              </Link>
-              <Link to="/settings">
-                <Button variant="outline" size="sm">
-                  <Settings className="h-4 w-4" />
-                  Settings
                 </Button>
               </Link>
               <Button variant="outline" size="sm" onClick={handleLogout}>
@@ -202,88 +222,74 @@ export default function Dashboard() {
           </Card>
         </div>
 
-        {/* Quick Actions */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           <Card>
             <CardHeader>
               <CardTitle>Continue Learning</CardTitle>
-              <CardDescription>Pick up where you left off</CardDescription>
+              <CardDescription>Open your active courses and choose the next lesson</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg">
-                    <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-purple-100 rounded-lg flex-shrink-0"></div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-semibold text-gray-900 truncate">
-                        Course Title {i}
-                      </h4>
-                      <p className="text-sm text-gray-600">Lesson {i * 3}/20</p>
-                      <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
-                        <div
-                          className="bg-blue-600 h-2 rounded-full"
-                          style={{ width: `${(i * 3) * 5}%` }}
-                        ></div>
+              {inProgressEnrollments.length > 0 ? (
+                <div className="space-y-4">
+                  {inProgressEnrollments.slice(0, 3).map((enrollment) => (
+                    <Link
+                      key={enrollment.id}
+                      to="/my-learning"
+                      className="block rounded-lg bg-gray-50 p-4 transition hover:bg-gray-100"
+                    >
+                      <h4 className="font-semibold text-gray-900">{enrollment.course.title}</h4>
+                      <div className="mt-2 flex items-center justify-between text-sm text-gray-600">
+                        <span>
+                          {enrollment.completedLessons} of {enrollment.totalLessons} lessons
+                        </span>
+                        <span className="font-medium text-blue-700">{enrollment.progressPercentage}%</span>
                       </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                      <div className="mt-2 h-2 w-full rounded-full bg-gray-200">
+                        <div
+                          className="h-2 rounded-full bg-blue-600"
+                          style={{ width: `${enrollment.progressPercentage}%` }}
+                        />
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <div className="rounded-lg border border-dashed border-gray-300 p-6 text-center">
+                  <p className="text-sm text-gray-600">No active courses yet.</p>
+                  <Link to="/courses">
+                    <Button className="mt-4">Browse Courses</Button>
+                  </Link>
+                </div>
+              )}
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle>Recent Achievements</CardTitle>
-              <CardDescription>Your latest milestones</CardDescription>
+              <CardTitle>Learning Summary</CardTitle>
+              <CardDescription>Your progress across enrolled courses</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {[
-                  { name: 'First Course Completed', icon: '🎓', date: '2 days ago' },
-                  { name: '7-Day Streak', icon: '🔥', date: '5 days ago' },
-                  { name: 'Quick Learner', icon: '⚡', date: '1 week ago' },
-                ].map((achievement) => (
-                  <div key={achievement.name} className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg">
-                    <div className="text-4xl">{achievement.icon}</div>
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-gray-900">{achievement.name}</h4>
-                      <p className="text-sm text-gray-600">{achievement.date}</p>
-                    </div>
-                  </div>
-                ))}
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="rounded-lg bg-gray-50 p-4">
+                  <p className="text-sm text-gray-600">Lessons Completed</p>
+                  <p className="mt-1 text-2xl font-bold text-gray-900">
+                    {enrollments.reduce((sum, enrollment) => sum + enrollment.completedLessons, 0)}
+                  </p>
+                </div>
+                <div className="rounded-lg bg-gray-50 p-4">
+                  <p className="text-sm text-gray-600">Study Time</p>
+                  <p className="mt-1 text-2xl font-bold text-gray-900">
+                    {enrollments.reduce((sum, enrollment) => sum + enrollment.timeSpentMinutes, 0)}m
+                  </p>
+                </div>
               </div>
+              <Link to="/my-learning">
+                <Button variant="outline" className="mt-4 w-full">View My Learning</Button>
+              </Link>
             </CardContent>
           </Card>
         </div>
-
-        {/* Info Card */}
-        <Card className="bg-blue-50 border-blue-200">
-          <CardHeader>
-            <CardTitle className="text-blue-900">🎉 You're on a Protected Route!</CardTitle>
-            <CardDescription className="text-blue-700">
-              This dashboard is only accessible to authenticated users
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3 text-sm text-blue-800">
-              <p>
-                <strong>Your Info:</strong>
-              </p>
-              <ul className="list-disc list-inside space-y-1 ml-2">
-                <li>Username: {user?.username}</li>
-                <li>Email: {user?.email}</li>
-                <li>Full Name: {user?.fullName}</li>
-                <li>Role: {user?.role}</li>
-                <li>Verified: {user?.isVerified ? 'Yes' : 'No'}</li>
-              </ul>
-              <p className="mt-4 pt-4 border-t border-blue-200">
-                <strong>Try this:</strong> Log out and try to access this page directly. 
-                You'll be redirected to the login page and then brought back here after logging in!
-              </p>
-            </div>
-          </CardContent>
-        </Card>
       </main>
     </div>
   );

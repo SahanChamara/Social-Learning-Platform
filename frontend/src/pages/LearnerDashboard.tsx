@@ -48,6 +48,17 @@ interface EnrollmentCardProps {
   enrollment: Enrollment;
 }
 
+function getNextLessonPath(enrollment: Enrollment): string {
+  const progressRecords = enrollment.progressRecords ?? [];
+  const nextProgress = progressRecords.find((progress) => !progress.completed) ?? progressRecords[0];
+
+  if (!nextProgress?.lesson?.id) {
+    return `/courses/${enrollment.course.slug}`;
+  }
+
+  return `/courses/${enrollment.course.slug}/learn/${nextProgress.lesson.id}`;
+}
+
 function EnrollmentCard({ enrollment }: Readonly<EnrollmentCardProps>) {
   const { course, progressPercentage, completedLessons, totalLessons, status, lastAccessedAt } =
     enrollment;
@@ -55,7 +66,7 @@ function EnrollmentCard({ enrollment }: Readonly<EnrollmentCardProps>) {
 
   return (
     <Link
-      to={`/courses/${course.slug}/learn`}
+      to={getNextLessonPath(enrollment)}
       className="group block rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-blue-300 hover:shadow-md"
     >
       <div className="flex gap-4">

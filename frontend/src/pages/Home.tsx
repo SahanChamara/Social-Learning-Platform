@@ -1,80 +1,59 @@
+import { Link } from 'react-router-dom';
+
 export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
       <div className="container mx-auto px-4 py-16">
         <div className="max-w-4xl mx-auto text-center">
-          {/* Hero Section */}
           <h1 className="text-5xl font-bold text-gray-900 mb-6">
-            Welcome to Social Learning Platform
+            Learn with structure, progress, and community
           </h1>
           <p className="text-xl text-gray-600 mb-8">
-            Learn, share, and grow together. Discover courses, tutorials, and connect with learners worldwide.
+            Discover practical courses, complete lessons step by step, and learn alongside
+            people working toward the same goals.
           </p>
           
-          {/* CTA Buttons */}
-          <div className="flex gap-4 justify-center mb-16">
-            <a
-              href="/auth/register"
+          <div className="flex flex-col gap-3 justify-center mb-16 sm:flex-row">
+            <Link
+              to="/courses"
               className="px-8 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
             >
-              Get Started
-            </a>
-            <a
-              href="/auth/login"
+              Browse Courses
+            </Link>
+            <Link
+              to="/auth/register"
               className="px-8 py-3 bg-white text-blue-600 border-2 border-blue-600 rounded-lg font-semibold hover:bg-blue-50 transition-colors"
             >
-              Sign In
-            </a>
+              Create Account
+            </Link>
           </div>
 
-          {/* Features */}
           <div className="grid md:grid-cols-3 gap-8 mt-16">
             <div className="p-6 bg-white rounded-lg shadow-md">
-              <div className="text-4xl mb-4">📚</div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                Quality Courses
+                Structured Courses
               </h3>
               <p className="text-gray-600">
-                Access thousands of courses created by expert instructors
+                Follow modules and lessons in a clear order, with outcomes visible before you enroll.
               </p>
             </div>
 
             <div className="p-6 bg-white rounded-lg shadow-md">
-              <div className="text-4xl mb-4">👥</div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                Community
+                Learning Progress
               </h3>
               <p className="text-gray-600">
-                Connect with learners and share knowledge through discussions
+                Track enrolled courses, completed lessons, streaks, and achievements from one place.
               </p>
             </div>
 
             <div className="p-6 bg-white rounded-lg shadow-md">
-              <div className="text-4xl mb-4">🎯</div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                Track Progress
+                Social Feedback
               </h3>
               <p className="text-gray-600">
-                Monitor your learning journey with achievements and streaks
+                Ask questions, reply to learners, like helpful comments, and rate courses after learning.
               </p>
-            </div>
-          </div>
-
-          {/* Navigation Info */}
-          <div className="mt-16 p-6 bg-blue-50 rounded-lg">
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">
-              🎉 React Router is Now Set Up!
-            </h2>
-            <p className="text-gray-700 mb-4">
-              You can navigate between pages using the links above or by visiting these routes:
-            </p>
-            <div className="flex flex-wrap gap-2 justify-center">
-              <code className="px-3 py-1 bg-white rounded text-sm">/</code>
-              <code className="px-3 py-1 bg-white rounded text-sm">/auth/login</code>
-              <code className="px-3 py-1 bg-white rounded text-sm">/auth/register</code>
-              <code className="px-3 py-1 bg-white rounded text-sm">/courses</code>
-              <code className="px-3 py-1 bg-white rounded text-sm">/my-learning</code>
-              <code className="px-3 py-1 bg-white rounded text-sm">/discover</code>
             </div>
           </div>
         </div>

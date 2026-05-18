@@ -3,9 +3,6 @@ import { Link } from 'react-router-dom';
 import { AchievementBadge, LearningStreak, type LearningStreakData } from '../components';
 import { Skeleton } from '../components/ui';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/Card';
-import { Button } from '../components/ui/Button';
-import { Input } from '../components/ui/Input';
-import { Label } from '../components/ui/Label';
 import { MY_ACHIEVEMENTS_QUERY, LEARNING_STREAK_QUERY } from '../graphql';
 import { useAuth } from '../hooks';
 import { 
@@ -240,76 +237,6 @@ export default function Profile() {
                   ))}
                 </div>
               )}
-            </CardContent>
-          </Card>
-
-          {/* Edit Profile Form (Placeholder) */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Edit Profile</CardTitle>
-              <CardDescription>
-                Update your profile information (Demo - not functional yet)
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="fullName">Full Name</Label>
-                  <Input
-                    id="fullName"
-                    defaultValue={user.fullName}
-                    placeholder="Enter your full name"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="bio">Bio</Label>
-                  <textarea
-                    id="bio"
-                    className="flex w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 min-h-[100px]"
-                    defaultValue={user.bio || ''}
-                    placeholder="Tell us about yourself..."
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="expertise">Expertise</Label>
-                  <Input
-                    id="expertise"
-                    defaultValue={user.expertise || ''}
-                    placeholder="e.g., Web Development, Data Science"
-                  />
-                </div>
-
-                <div className="flex gap-3 pt-4">
-                  <Button type="submit" disabled>
-                    Save Changes
-                  </Button>
-                  <Button type="button" variant="outline" disabled>
-                    Cancel
-                  </Button>
-                </div>
-
-                <p className="text-sm text-gray-500 italic">
-                  Note: Profile editing functionality will be implemented in a future phase.
-                </p>
-              </form>
-            </CardContent>
-          </Card>
-
-          {/* Protected Route Info */}
-          <Card className="bg-purple-50 border-purple-200">
-            <CardHeader>
-              <CardTitle className="text-purple-900">🔒 Protected Profile Page</CardTitle>
-              <CardDescription className="text-purple-700">
-                This profile page is protected and requires authentication
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="text-sm text-purple-800">
-              <p>
-                Only authenticated users can view their profile. The ProtectedRoute component
-                ensures that unauthorized access is prevented and users are redirected to login.
-              </p>
             </CardContent>
           </Card>
         </div>

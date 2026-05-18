@@ -16,6 +16,7 @@ interface EnrollButtonProps {
   courseTitle: string;
   courseSlug: string;
   priceInCents: number;
+  firstLessonId?: string;
 }
 
 function formatPrice(priceInCents: number): string {
@@ -34,6 +35,7 @@ export function EnrollButton({
   courseTitle,
   courseSlug,
   priceInCents,
+  firstLessonId,
 }: Readonly<EnrollButtonProps>) {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
 
@@ -84,6 +86,9 @@ export function EnrollButton({
   const isEnrolled = !!enrollmentStatus;
   const isCompleted = enrollmentStatus?.status === 'COMPLETED';
   const progressPercentage = enrollmentStatus?.progressPercentage ?? 0;
+  const learningPath = firstLessonId
+    ? `/courses/${courseSlug}/learn/${firstLessonId}`
+    : `/courses/${courseSlug}`;
 
   if (isLoading) {
     return (
@@ -102,7 +107,7 @@ export function EnrollButton({
     return (
       <div className="mt-5 space-y-3">
         <Link
-          to="/login"
+          to="/auth/login"
           state={{ from: `/courses/${courseSlug}` }}
           className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 text-sm font-semibold text-white transition hover:bg-blue-700"
         >
@@ -111,7 +116,7 @@ export function EnrollButton({
         </Link>
         <p className="text-center text-xs text-slate-500">
           Don't have an account?{' '}
-          <Link to="/register" className="text-blue-600 hover:underline">
+          <Link to="/auth/register" className="text-blue-600 hover:underline">
             Sign up
           </Link>
         </p>
@@ -129,7 +134,7 @@ export function EnrollButton({
               <span className="font-medium">Course Completed!</span>
             </div>
             <Link
-              to={`/courses/${courseSlug}/learn`}
+              to={learningPath}
               className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
             >
               <BookOpen className="h-4 w-4" />
@@ -155,7 +160,7 @@ export function EnrollButton({
               </p>
             </div>
             <Link
-              to={`/courses/${courseSlug}/learn`}
+              to={learningPath}
               className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 text-sm font-semibold text-white transition hover:bg-blue-700"
             >
               <PlayCircle className="h-4 w-4" />
