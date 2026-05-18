@@ -29,3 +29,4 @@ export {
   ToastViewport,
 } from "./Toast";
 export type { ToastProps, ToastActionElement } from "./Toast";
+export { ThemeToggle } from './ThemeToggle';
