@@ -1,19 +1,20 @@
+import { Suspense, lazy } from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-import Home from '@/pages/Home';
-import Login from '@/pages/auth/Login';
-import Register from '@/pages/auth/Register';
-import Discover from '@/pages/Discover';
-import NotFound from '@/pages/NotFound';
-import ComponentsDemo from '@/pages/ComponentsDemo';
-import AuthDemo from '@/pages/AuthDemo';
-import Dashboard from '@/pages/Dashboard';
-import LearnerDashboard from '@/pages/LearnerDashboard';
-import LessonPage from '@/pages/LessonPage';
-import Profile from '@/pages/Profile';
-import CoursesPage from '@/pages/CoursesPage';
-import SearchPage from '@/pages/SearchPage';
-import CourseDetailPage from '@/pages/CourseDetailPage';
-import CreateCoursePage from '@/pages/CreateCoursePage';
+const Home = lazy(() => import('@/pages/Home'));
+const Login = lazy(() => import('@/pages/auth/Login'));
+const Register = lazy(() => import('@/pages/auth/Register'));
+const Discover = lazy(() => import('@/pages/Discover'));
+const NotFound = lazy(() => import('@/pages/NotFound'));
+const ComponentsDemo = lazy(() => import('@/pages/ComponentsDemo'));
+const AuthDemo = lazy(() => import('@/pages/AuthDemo'));
+const Dashboard = lazy(() => import('@/pages/Dashboard'));
+const LearnerDashboard = lazy(() => import('@/pages/LearnerDashboard'));
+const LessonPage = lazy(() => import('@/pages/LessonPage'));
+const Profile = lazy(() => import('@/pages/Profile'));
+const CoursesPage = lazy(() => import('@/pages/CoursesPage'));
+const SearchPage = lazy(() => import('@/pages/SearchPage'));
+const CourseDetailPage = lazy(() => import('@/pages/CourseDetailPage'));
+const CreateCoursePage = lazy(() => import('@/pages/CreateCoursePage'));
 import { ProtectedRoute } from '@/components/auth';
 import { ErrorBoundary } from '@/components';
 import { UserRole } from '@/types/auth';
@@ -28,7 +29,9 @@ const router = createBrowserRouter([
         index: true,
         element: (
           <ErrorBoundary>
-            <Home />
+            <Suspense fallback={<div className="p-8">Loading...</div>}>
+              <Home />
+            </Suspense>
           </ErrorBoundary>
         ),
       },
@@ -36,7 +39,9 @@ const router = createBrowserRouter([
         path: 'discover',
         element: (
           <ErrorBoundary>
-            <Discover />
+            <Suspense fallback={<div className="p-8">Loading...</div>}>
+              <Discover />
+            </Suspense>
           </ErrorBoundary>
         ),
       },
@@ -44,7 +49,9 @@ const router = createBrowserRouter([
         path: 'courses',
         element: (
           <ErrorBoundary>
-            <CoursesPage />
+            <Suspense fallback={<div className="p-8">Loading...</div>}>
+              <CoursesPage />
+            </Suspense>
           </ErrorBoundary>
         ),
       },
@@ -52,7 +59,9 @@ const router = createBrowserRouter([
         path: 'search',
         element: (
           <ErrorBoundary>
-            <SearchPage />
+            <Suspense fallback={<div className="p-8">Loading...</div>}>
+              <SearchPage />
+            </Suspense>
           </ErrorBoundary>
         ),
       },
@@ -60,9 +69,11 @@ const router = createBrowserRouter([
         path: 'courses/create',
         element: (
           <ErrorBoundary>
-            <ProtectedRoute allowedRoles={[UserRole.CREATOR, UserRole.ADMIN]}>
-              <CreateCoursePage />
-            </ProtectedRoute>
+            <Suspense fallback={<div className="p-8">Loading...</div>}>
+              <ProtectedRoute allowedRoles={[UserRole.CREATOR, UserRole.ADMIN]}>
+                <CreateCoursePage />
+              </ProtectedRoute>
+            </Suspense>
           </ErrorBoundary>
         ),
       },
@@ -70,7 +81,9 @@ const router = createBrowserRouter([
         path: 'courses/:slug',
         element: (
           <ErrorBoundary>
-            <CourseDetailPage />
+            <Suspense fallback={<div className="p-8">Loading...</div>}>
+              <CourseDetailPage />
+            </Suspense>
           </ErrorBoundary>
         ),
       },
@@ -78,9 +91,11 @@ const router = createBrowserRouter([
         path: 'courses/:slug/learn/:lessonId',
         element: (
           <ErrorBoundary>
-            <ProtectedRoute>
-              <LessonPage />
-            </ProtectedRoute>
+            <Suspense fallback={<div className="p-8">Loading...</div>}>
+              <ProtectedRoute>
+                <LessonPage />
+              </ProtectedRoute>
+            </Suspense>
           </ErrorBoundary>
         ),
       },
@@ -88,7 +103,9 @@ const router = createBrowserRouter([
         path: 'components-demo',
         element: (
           <ErrorBoundary>
-            <ComponentsDemo />
+            <Suspense fallback={<div className="p-8">Loading...</div>}>
+              <ComponentsDemo />
+            </Suspense>
           </ErrorBoundary>
         ),
       },
@@ -96,7 +113,9 @@ const router = createBrowserRouter([
         path: 'auth-demo',
         element: (
           <ErrorBoundary>
-            <AuthDemo />
+            <Suspense fallback={<div className="p-8">Loading...</div>}>
+              <AuthDemo />
+            </Suspense>
           </ErrorBoundary>
         ),
       },
@@ -107,7 +126,9 @@ const router = createBrowserRouter([
             path: 'login',
             element: (
               <ErrorBoundary>
-                <Login />
+                <Suspense fallback={<div className="p-8">Loading...</div>}>
+                  <Login />
+                </Suspense>
               </ErrorBoundary>
             ),
           },
@@ -115,7 +136,9 @@ const router = createBrowserRouter([
             path: 'register',
             element: (
               <ErrorBoundary>
-                <Register />
+                <Suspense fallback={<div className="p-8">Loading...</div>}>
+                  <Register />
+                </Suspense>
               </ErrorBoundary>
             ),
           },
@@ -126,9 +149,11 @@ const router = createBrowserRouter([
         path: 'dashboard',
         element: (
           <ErrorBoundary>
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
+            <Suspense fallback={<div className="p-8">Loading...</div>}>
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            </Suspense>
           </ErrorBoundary>
         ),
       },
@@ -136,9 +161,11 @@ const router = createBrowserRouter([
         path: 'my-learning',
         element: (
           <ErrorBoundary>
-            <ProtectedRoute>
-              <LearnerDashboard />
-            </ProtectedRoute>
+            <Suspense fallback={<div className="p-8">Loading...</div>}>
+              <ProtectedRoute>
+                <LearnerDashboard />
+              </ProtectedRoute>
+            </Suspense>
           </ErrorBoundary>
         ),
       },
@@ -146,9 +173,11 @@ const router = createBrowserRouter([
         path: 'profile',
         element: (
           <ErrorBoundary>
-            <ProtectedRoute>
-              <Profile />
-            </ProtectedRoute>
+            <Suspense fallback={<div className="p-8">Loading...</div>}>
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            </Suspense>
           </ErrorBoundary>
         ),
       },
@@ -156,7 +185,11 @@ const router = createBrowserRouter([
   },
   {
     path: '*',
-    element: <NotFound />,
+    element: (
+      <Suspense fallback={<div className="p-8">Loading...</div>}>
+        <NotFound />
+      </Suspense>
+    ),
   },
 ]);
 
