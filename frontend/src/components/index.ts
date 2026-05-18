@@ -7,6 +7,9 @@ export { Toaster } from './Toaster';
 // Export Error Boundary component
 export { ErrorBoundary } from './ErrorBoundary';
 
+// Export Notifications
+export * from './notifications';
+
 // Export Skeleton components
 export * from './skeletons';
 
