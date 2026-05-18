@@ -1,10 +1,10 @@
 import { useMemo } from 'react';
 import { useQuery } from '@apollo/client/react';
 import * as Tabs from '@radix-ui/react-tabs';
-import { Compass, Loader2, Sparkles, TrendingUp } from 'lucide-react';
+import { BookOpen, Compass, Sparkles, TrendingUp } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { CourseCard, SkeletonCourseCard } from '@/components';
-import { Card, CardContent } from '@/components/ui';
+import { Button, EmptyState, PageHeader } from '@/components/ui';
 import {
   CATEGORIES_QUERY,
   MY_ENROLLMENTS_QUERY,
@@ -79,18 +79,21 @@ export default function Discover() {
   const categories = categoriesData?.categories ?? [];
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-        <header className="mb-8 space-y-3">
-          <h1 className="text-4xl font-bold tracking-tight text-slate-900">Discover</h1>
-          <p className="max-w-3xl text-slate-600">
-            Explore trending content, personalized recommendations, and categories to continue your
-            learning journey.
-          </p>
-        </header>
+    <div>
+      <div className="app-container py-10">
+        <PageHeader
+          eyebrow="Discover"
+          title="Find your next learning path"
+          description="Explore trending courses, browse categories, and get recommendations based on what you are already learning."
+          actions={
+            <Button variant="outline" asChild>
+              <Link to="/search">Open Search</Link>
+            </Button>
+          }
+        />
 
         <Tabs.Root defaultValue="trending" className="space-y-6">
-          <Tabs.List className="inline-flex rounded-lg border border-slate-200 bg-white p-1">
+          <Tabs.List className="flex w-full gap-1 overflow-x-auto rounded-lg border border-slate-200 bg-white p-1 sm:inline-flex sm:w-auto">
             <Tabs.Trigger
               value="trending"
               className="inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold text-slate-600 data-[state=active]:bg-blue-600 data-[state=active]:text-white"
@@ -124,12 +127,19 @@ export default function Discover() {
 
             {trendingLoading && !trendingData ? (
               <SectionSkeleton />
-            ) : (
+            ) : trendingCourses.length > 0 ? (
               <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
                 {trendingCourses.map((course) => (
                   <CourseCard key={course.id} course={course} href={`/courses/${course.slug}`} />
                 ))}
               </div>
+            ) : (
+              <EmptyState
+                icon={<TrendingUp className="h-6 w-6" />}
+                title="No trending courses yet"
+                description="Trending courses will appear here as learners start enrolling and engaging with content."
+                action={<Button asChild><Link to="/courses">Browse Courses</Link></Button>}
+              />
             )}
           </Tabs.Content>
 
@@ -152,12 +162,12 @@ export default function Discover() {
                 ))}
               </div>
             ) : (
-              <Card>
-                <CardContent className="flex items-center gap-3 py-6 text-slate-600">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Build your personalized feed by enrolling in a few courses first.
-                </CardContent>
-              </Card>
+              <EmptyState
+                icon={<Sparkles className="h-6 w-6" />}
+                title="Recommendations need a starting point"
+                description="Enroll in a course first, then this area can show more relevant next steps."
+                action={<Button asChild><Link to="/courses">Find a Course</Link></Button>}
+              />
             )}
           </Tabs.Content>
 
@@ -171,7 +181,7 @@ export default function Discover() {
 
             {categoriesLoading && !categoriesData ? (
               <SectionSkeleton />
-            ) : (
+            ) : categories.length > 0 ? (
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {categories.map((category) => (
                   <Link
@@ -189,6 +199,13 @@ export default function Discover() {
                   </Link>
                 ))}
               </div>
+            ) : (
+              <EmptyState
+                icon={<BookOpen className="h-6 w-6" />}
+                title="No categories available"
+                description="Categories will appear after the first courses and learning areas are added."
+                action={<Button asChild><Link to="/courses">Browse Courses</Link></Button>}
+              />
             )}
           </Tabs.Content>
         </Tabs.Root>

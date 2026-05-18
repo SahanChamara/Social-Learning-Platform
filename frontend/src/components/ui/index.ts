@@ -30,3 +30,5 @@ export {
 } from "./Toast";
 export type { ToastProps, ToastActionElement } from "./Toast";
 export { ThemeToggle } from './ThemeToggle';
+export { PageHeader } from './PageHeader';
+export { EmptyState } from './EmptyState';

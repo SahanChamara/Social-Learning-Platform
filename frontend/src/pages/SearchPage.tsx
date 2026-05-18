@@ -4,7 +4,7 @@ import * as Accordion from '@radix-ui/react-accordion';
 import { AlertCircle, ChevronDown } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { CourseCard, SearchBar, SkeletonCourseCard } from '@/components';
-import { Skeleton } from '@/components/ui';
+import { Button, EmptyState, PageHeader, Skeleton } from '@/components/ui';
 import { CATEGORIES_QUERY, COURSES_QUERY, SEARCH_QUERY } from '@/graphql';
 import {
   CourseDifficulty,
@@ -155,13 +155,15 @@ export default function SearchPage() {
   const isInitialLoading = coursesLoading && allCourses.length === 0;
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-        <header className="mb-8 space-y-3">
-          <h1 className="text-4xl font-bold tracking-tight text-slate-900">Search</h1>
-          <p className="text-slate-600">
-            Find relevant courses with filters, sorting, and continuous scrolling.
-          </p>
+    <div>
+      <div className="app-container py-10">
+        <PageHeader
+          eyebrow="Search"
+          title="Search courses by topic"
+          description="Find learning paths by keyword, level, category, rating, and popularity."
+        />
+
+        <section className="mb-6 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
           <SearchBar
             value={searchInput}
             onChange={setSearchInput}
@@ -170,7 +172,7 @@ export default function SearchPage() {
             navigateToOnSubmit={null}
             className="flex w-full items-center gap-2"
           />
-        </header>
+        </section>
 
         <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
           <aside className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
@@ -304,9 +306,15 @@ export default function SearchPage() {
                   ))}
                 </div>
               ) : (
-                <div className="rounded-lg border border-dashed border-slate-300 p-8 text-center text-slate-600">
-                  No matching courses found.
-                </div>
+                <EmptyState
+                  title="No matching courses found"
+                  description="Try a broader keyword, clear a filter, or browse all courses."
+                  action={
+                    <Button variant="outline" asChild>
+                      <Link to="/courses">Browse Courses</Link>
+                    </Button>
+                  }
+                />
               )}
 
               <div ref={sentinelRef} className="h-8" />
@@ -372,9 +380,6 @@ export default function SearchPage() {
                   </div>
                 </div>
 
-                <p className="mt-4 text-xs text-slate-500">
-                  User and tutorial entity search will appear here once those backend search entities are available.
-                </p>
               </div>
             ) : (
               <div className="rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-600 shadow-sm">
