@@ -37,6 +37,23 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> {
            "ORDER BY e.enrolledAt DESC")
     List<Enrollment> findByUserIdWithCourseDetails(@Param("userId") Long userId);
 
+    @Query("SELECT e FROM Enrollment e " +
+           "LEFT JOIN FETCH e.course c " +
+           "LEFT JOIN FETCH c.category " +
+           "LEFT JOIN FETCH c.creator " +
+           "WHERE e.user.id = :userId AND e.status = :status " +
+           "ORDER BY e.enrolledAt DESC")
+    List<Enrollment> findByUserIdAndStatusWithCourseDetails(@Param("userId") Long userId,
+                                                            @Param("status") EnrollmentStatus status);
+
+    @Query("SELECT e FROM Enrollment e " +
+           "LEFT JOIN FETCH e.course c " +
+           "LEFT JOIN FETCH c.category " +
+           "LEFT JOIN FETCH c.creator " +
+           "WHERE e.user.id = :userId AND e.course.id = :courseId")
+    Optional<Enrollment> findByUserIdAndCourseIdWithCourseDetails(@Param("userId") Long userId,
+                                                                  @Param("courseId") Long courseId);
+
     @Query("SELECT e FROM Enrollment e LEFT JOIN FETCH e.progressRecords WHERE e.id = :id")
     Optional<Enrollment> findByIdWithProgress(@Param("id") Long id);
 

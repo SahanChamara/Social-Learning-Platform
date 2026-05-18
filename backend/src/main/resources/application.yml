@@ -14,7 +14,8 @@ spring:
       connection-timeout: 30000
 
   output:
-    ansi: enabled
+    ansi:
+      enabled: ALWAYS
 
   
   # JPA Configuration

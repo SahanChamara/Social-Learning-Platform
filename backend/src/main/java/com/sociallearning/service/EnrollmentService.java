@@ -5,6 +5,7 @@ import com.sociallearning.entity.Enrollment;
 import com.sociallearning.entity.Lesson;
 import com.sociallearning.entity.Progress;
 import com.sociallearning.entity.User;
+import com.sociallearning.enums.EnrollmentStatus;
 import com.sociallearning.repository.CourseRepository;
 import com.sociallearning.repository.EnrollmentRepository;
 import com.sociallearning.repository.LessonRepository;
@@ -140,6 +141,22 @@ public class EnrollmentService {
     }
 
     /**
+     * Get all enrollments for a learner, optionally filtered by status.
+     *
+     * @param userId Learner ID
+     * @param status Optional enrollment status
+     * @return Enrollment list
+     */
+    @Transactional(readOnly = true)
+    public List<Enrollment> getUserEnrollments(Long userId, EnrollmentStatus status) {
+        if (status != null) {
+            return enrollmentRepository.findByUserIdAndStatusWithCourseDetails(userId, status);
+        }
+
+        return enrollmentRepository.findByUserIdWithCourseDetails(userId);
+    }
+
+    /**
      * Get a learner enrollment for a specific course.
      *
      * @param userId Learner ID
@@ -152,6 +169,36 @@ public class EnrollmentService {
         return enrollmentRepository.findByUserIdAndCourseId(userId, courseId)
                 .orElseThrow(() -> new IllegalArgumentException(
                         "Enrollment not found for user " + userId + " and course " + courseId));
+    }
+
+    /**
+     * Get a learner enrollment for a specific course if one exists.
+     *
+     * @param userId Learner ID
+     * @param courseId Course ID
+     * @return Optional enrollment
+     */
+    @Transactional(readOnly = true)
+    public java.util.Optional<Enrollment> findEnrollment(Long userId, Long courseId) {
+        return enrollmentRepository.findByUserIdAndCourseIdWithCourseDetails(userId, courseId);
+    }
+
+    /**
+     * Remove a learner's enrollment and progress records for a course.
+     *
+     * @param userId Learner ID
+     * @param courseId Course ID
+     * @return true when an enrollment was removed
+     */
+    @Transactional
+    public boolean unenrollCourse(Long userId, Long courseId) {
+        return enrollmentRepository.findByUserIdAndCourseId(userId, courseId)
+                .map(enrollment -> {
+                    progressRepository.deleteByEnrollmentId(enrollment.getId());
+                    enrollmentRepository.delete(enrollment);
+                    return true;
+                })
+                .orElse(false);
     }
 
     private List<Progress> createInitialProgressRecords(Enrollment enrollment, List<Lesson> lessons) {

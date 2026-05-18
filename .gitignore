@@ -4,3 +4,4 @@ Completed Phases
 backend/*.md
 backend/target
 postman/social-learning-frontend-backend.postman_collection.json
+backend/logs/social-learning-platform.log
