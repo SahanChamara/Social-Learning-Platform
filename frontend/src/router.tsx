@@ -18,11 +18,13 @@ const CreateCoursePage = lazy(() => import('@/pages/CreateCoursePage'));
 import { ProtectedRoute } from '@/components/auth';
 import { ErrorBoundary } from '@/components';
 import { UserRole } from '@/types/auth';
+import AppShell from '@/components/layout/AppShell';
 
 // Router configuration
 const router = createBrowserRouter([
   {
     path: '/',
+    element: <AppShell />,
     errorElement: <NotFound />,
     children: [
       {
