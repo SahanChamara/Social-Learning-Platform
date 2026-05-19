@@ -2,22 +2,13 @@ import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@apollo/client/react';
 import * as AlertDialog from '@radix-ui/react-alert-dialog';
 import { Link } from 'react-router-dom';
+import { Award, BookOpen, Clock, Flame, GraduationCap, Trophy } from 'lucide-react';
+import { AchievementBadge, LearningStreak } from '../components';
+import { LEARNING_STREAK_QUERY, MY_ACHIEVEMENTS_QUERY, MY_ENROLLMENTS_QUERY } from '../graphql';
 import { useAuth } from '../hooks';
-import { LEARNING_STREAK_QUERY, MY_ENROLLMENTS_QUERY } from '../graphql';
-import { LearningStreak } from '../components';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/Card';
-import { Button } from '../components/ui/Button';
-import { Skeleton } from '../components/ui';
+import { Button, EmptyState, PageHeader, Skeleton } from '../components/ui';
 import type { MyEnrollmentsResponse } from '../types/courses';
-import {
-  BookOpen,
-  Flame,
-  Award,
-  Clock,
-  User,
-  LogOut,
-  GraduationCap
-} from 'lucide-react';
 
 interface LearningStreakData {
   currentStreakDays: number;
@@ -27,10 +18,28 @@ interface LearningStreakData {
   streakStartDate?: string | null;
 }
 
+interface Achievement {
+  id: string;
+  name: string;
+  description?: string | null;
+  category?: string | null;
+  iconUrl?: string | null;
+  badgeColor?: string | null;
+  points?: number | null;
+}
+
+interface UserAchievementData {
+  id: string;
+  achievement: Achievement;
+  progressPercentage: number;
+  isUnlocked: boolean;
+  earnedAt?: string | null;
+}
+
 const STREAK_MILESTONES = [3, 7, 14, 30, 60, 100];
 
 export default function Dashboard() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const [celebrationMilestone, setCelebrationMilestone] = useState<number | null>(null);
 
   const { data: streakData, loading: streakLoading } = useQuery<{
@@ -48,11 +57,37 @@ export default function Dashboard() {
     },
   );
 
+  const { data: achievementsData, loading: achievementsLoading } = useQuery<{
+    myAchievements: UserAchievementData[];
+  }>(MY_ACHIEVEMENTS_QUERY, {
+    skip: !user,
+    fetchPolicy: 'cache-and-network',
+  });
+
   const streak = streakData?.learningStreak ?? null;
   const currentStreak = streak?.currentStreakDays ?? 0;
   const enrollments = enrollmentsData?.myEnrollments ?? [];
+  const achievements = achievementsData?.myAchievements ?? [];
   const completedEnrollments = enrollments.filter((enrollment) => enrollment.status === 'COMPLETED');
   const inProgressEnrollments = enrollments.filter((enrollment) => enrollment.status === 'ENROLLED');
+  const unlockedAchievements = achievements.filter((achievement) => achievement.isUnlocked);
+  const achievementPreview = achievements
+    .filter((achievement) => achievement.isUnlocked || achievement.progressPercentage > 0)
+    .sort((a, b) => {
+      if (a.isUnlocked !== b.isUnlocked) {
+        return a.isUnlocked ? -1 : 1;
+      }
+      return b.progressPercentage - a.progressPercentage;
+    })
+    .slice(0, 3);
+  const totalLessonsCompleted = enrollments.reduce(
+    (sum, enrollment) => sum + enrollment.completedLessons,
+    0,
+  );
+  const totalStudyTimeMinutes = enrollments.reduce(
+    (sum, enrollment) => sum + enrollment.timeSpentMinutes,
+    0,
+  );
 
   const nextMilestone = useMemo(
     () => STREAK_MILESTONES.find((milestone) => milestone > currentStreak),
@@ -82,13 +117,13 @@ export default function Dashboard() {
 
   const stats = [
     {
-      label: 'Courses Enrolled',
+      label: 'Courses enrolled',
       value: enrollmentsLoading ? <Skeleton className="h-8 w-14 rounded-md" /> : enrollments.length,
       icon: BookOpen,
       color: 'text-blue-600',
     },
     {
-      label: 'In Progress',
+      label: 'In progress',
       value: enrollmentsLoading ? <Skeleton className="h-8 w-14 rounded-md" /> : inProgressEnrollments.length,
       icon: Clock,
       color: 'text-orange-600',
@@ -97,56 +132,33 @@ export default function Dashboard() {
       label: 'Completed',
       value: enrollmentsLoading ? <Skeleton className="h-8 w-14 rounded-md" /> : completedEnrollments.length,
       icon: Award,
-      color: 'text-green-600',
+      color: 'text-emerald-600',
     },
     {
-      label: 'Learning Streak',
+      label: 'Learning streak',
       value: streakLoading ? <Skeleton className="h-8 w-24 rounded-md" /> : `${currentStreak} day${currentStreak === 1 ? '' : 's'}`,
       icon: Flame,
-      color: 'text-purple-600',
+      color: 'text-orange-600',
     },
   ];
 
-  const handleLogout = () => {
-    logout();
-  };
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-              <p className="text-gray-600 mt-1">
-                Welcome back, {user?.fullName || user?.username}!
-              </p>
-            </div>
-            <div className="flex items-center gap-3">
+    <div className="bg-slate-50">
+      <main className="app-container py-10">
+        <PageHeader
+          eyebrow="Learning dashboard"
+          title={`Welcome back, ${user?.fullName || user?.username || 'learner'}`}
+          description="Track real course progress, streak consistency, and achievements earned through learning activity."
+          actions={
+            <Button asChild>
               <Link to="/my-learning">
-                <Button variant="outline" size="sm">
-                  <GraduationCap className="h-4 w-4" />
-                  My Learning
-                </Button>
+                <GraduationCap className="h-4 w-4" />
+                Continue Learning
               </Link>
-              <Link to="/profile">
-                <Button variant="outline" size="sm">
-                  <User className="h-4 w-4" />
-                  Profile
-                </Button>
-              </Link>
-              <Button variant="outline" size="sm" onClick={handleLogout}>
-                <LogOut className="h-4 w-4" />
-                Logout
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
+            </Button>
+          }
+        />
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <AlertDialog.Root
           open={celebrationMilestone !== null}
           onOpenChange={(open) => {
@@ -159,11 +171,11 @@ export default function Dashboard() {
             <AlertDialog.Overlay className="fixed inset-0 z-50 bg-black/40" />
             <AlertDialog.Content className="fixed left-1/2 top-1/2 z-50 w-[92vw] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl border border-orange-200 bg-white p-6 shadow-xl">
               <AlertDialog.Title className="text-xl font-bold text-slate-900">
-                🔥 Streak milestone reached!
+                Streak milestone reached
               </AlertDialog.Title>
               <AlertDialog.Description className="mt-2 text-sm text-slate-600">
-                Amazing consistency — you just hit a {celebrationMilestone}-day learning streak.
-                Keep it going and unlock your next badge.
+                You just hit a {celebrationMilestone}-day learning streak. Keep it going and unlock
+                your next badge.
               </AlertDialog.Description>
               <div className="mt-5 flex justify-end">
                 <AlertDialog.Action asChild>
@@ -174,8 +186,7 @@ export default function Dashboard() {
           </AlertDialog.Portal>
         </AlertDialog.Root>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
           {stats.map((stat) => {
             const Icon = stat.icon;
             return (
@@ -183,10 +194,10 @@ export default function Dashboard() {
                 <CardContent className="pt-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-gray-600 mb-1">{stat.label}</p>
-                      <div className="min-h-8">{stat.value}</div>
+                      <p className="mb-1 text-sm text-slate-600">{stat.label}</p>
+                      <div className="min-h-8 text-2xl font-bold text-slate-950">{stat.value}</div>
                     </div>
-                    <div className={`p-3 rounded-lg bg-gray-100 ${stat.color}`}>
+                    <div className={`rounded-lg bg-slate-100 p-3 ${stat.color}`}>
                       <Icon className="h-6 w-6" />
                     </div>
                   </div>
@@ -196,37 +207,37 @@ export default function Dashboard() {
           })}
         </div>
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 mb-8">
+        <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
           <LearningStreak streak={streak} loading={streakLoading} className="lg:col-span-2" />
-          <Card className="border-purple-200 bg-gradient-to-br from-purple-50 to-pink-50">
+          <Card>
             <CardHeader>
-              <CardTitle className="text-purple-900">Daily Motivation</CardTitle>
-              <CardDescription className="text-purple-700">
+              <CardTitle>Next streak milestone</CardTitle>
+              <CardDescription>
                 {currentStreak > 0
                   ? `You're on a ${currentStreak}-day streak.`
                   : 'Start your streak today with one lesson.'}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <p className="text-sm text-purple-800">
+              <p className="text-sm text-slate-600">
                 {nextMilestone
                   ? `Only ${nextMilestone - currentStreak} day${
                       nextMilestone - currentStreak === 1 ? '' : 's'
                     } to your next ${nextMilestone}-day milestone.`
-                  : 'You are beyond all current streak milestones. Keep inspiring everyone!'}
+                  : 'You are beyond the current milestone set.'}
               </p>
-              <Link to="/my-learning">
-                <Button className="w-full">Complete today&apos;s learning</Button>
-              </Link>
+              <Button className="w-full" asChild>
+                <Link to="/my-learning">Complete today&apos;s learning</Link>
+              </Button>
             </CardContent>
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div className="mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
           <Card>
             <CardHeader>
-              <CardTitle>Continue Learning</CardTitle>
-              <CardDescription>Open your active courses and choose the next lesson</CardDescription>
+              <CardTitle>Continue learning</CardTitle>
+              <CardDescription>Open your active courses and choose the next lesson.</CardDescription>
             </CardHeader>
             <CardContent>
               {inProgressEnrollments.length > 0 ? (
@@ -235,16 +246,16 @@ export default function Dashboard() {
                     <Link
                       key={enrollment.id}
                       to="/my-learning"
-                      className="block rounded-lg bg-gray-50 p-4 transition hover:bg-gray-100"
+                      className="block rounded-lg bg-slate-50 p-4 transition hover:bg-slate-100"
                     >
-                      <h4 className="font-semibold text-gray-900">{enrollment.course.title}</h4>
-                      <div className="mt-2 flex items-center justify-between text-sm text-gray-600">
+                      <h4 className="font-semibold text-slate-950">{enrollment.course.title}</h4>
+                      <div className="mt-2 flex items-center justify-between text-sm text-slate-600">
                         <span>
                           {enrollment.completedLessons} of {enrollment.totalLessons} lessons
                         </span>
                         <span className="font-medium text-blue-700">{enrollment.progressPercentage}%</span>
                       </div>
-                      <div className="mt-2 h-2 w-full rounded-full bg-gray-200">
+                      <div className="mt-2 h-2 w-full rounded-full bg-slate-200">
                         <div
                           className="h-2 rounded-full bg-blue-600"
                           style={{ width: `${enrollment.progressPercentage}%` }}
@@ -254,42 +265,94 @@ export default function Dashboard() {
                   ))}
                 </div>
               ) : (
-                <div className="rounded-lg border border-dashed border-gray-300 p-6 text-center">
-                  <p className="text-sm text-gray-600">No active courses yet.</p>
-                  <Link to="/courses">
-                    <Button className="mt-4">Browse Courses</Button>
-                  </Link>
-                </div>
+                <EmptyState
+                  title="No active courses yet"
+                  description="Enroll in a course to start tracking progress here."
+                  action={
+                    <Button asChild>
+                      <Link to="/courses">Browse Courses</Link>
+                    </Button>
+                  }
+                />
               )}
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle>Learning Summary</CardTitle>
-              <CardDescription>Your progress across enrolled courses</CardDescription>
+              <CardTitle>Learning summary</CardTitle>
+              <CardDescription>Your real activity across enrolled courses.</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid gap-4 sm:grid-cols-2">
-                <div className="rounded-lg bg-gray-50 p-4">
-                  <p className="text-sm text-gray-600">Lessons Completed</p>
-                  <p className="mt-1 text-2xl font-bold text-gray-900">
-                    {enrollments.reduce((sum, enrollment) => sum + enrollment.completedLessons, 0)}
-                  </p>
+                <div className="rounded-lg bg-slate-50 p-4">
+                  <p className="text-sm text-slate-600">Lessons completed</p>
+                  <p className="mt-1 text-2xl font-bold text-slate-950">{totalLessonsCompleted}</p>
                 </div>
-                <div className="rounded-lg bg-gray-50 p-4">
-                  <p className="text-sm text-gray-600">Study Time</p>
-                  <p className="mt-1 text-2xl font-bold text-gray-900">
-                    {enrollments.reduce((sum, enrollment) => sum + enrollment.timeSpentMinutes, 0)}m
-                  </p>
+                <div className="rounded-lg bg-slate-50 p-4">
+                  <p className="text-sm text-slate-600">Study time</p>
+                  <p className="mt-1 text-2xl font-bold text-slate-950">{totalStudyTimeMinutes}m</p>
                 </div>
               </div>
-              <Link to="/my-learning">
-                <Button variant="outline" className="mt-4 w-full">View My Learning</Button>
-              </Link>
+              <Button variant="outline" className="mt-4 w-full" asChild>
+                <Link to="/my-learning">View My Learning</Link>
+              </Button>
             </CardContent>
           </Card>
         </div>
+
+        <Card>
+          <CardHeader>
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <CardTitle>Achievement progress</CardTitle>
+                <CardDescription>
+                  {achievementsLoading
+                    ? 'Loading achievement progress...'
+                    : `${unlockedAchievements.length} of ${achievements.length} achievements unlocked`}
+                </CardDescription>
+              </div>
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/profile">
+                  <Trophy className="h-4 w-4" />
+                  View all
+                </Link>
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {achievementsLoading ? (
+              <div className="grid gap-4 sm:grid-cols-3">
+                {Array.from({ length: 3 }).map((_, index) => (
+                  <Skeleton key={index} className="h-36 rounded-xl" />
+                ))}
+              </div>
+            ) : achievementPreview.length > 0 ? (
+              <div className="grid gap-4 sm:grid-cols-3">
+                {achievementPreview.map((userAchievement) => (
+                  <AchievementBadge
+                    key={userAchievement.id}
+                    achievement={userAchievement.achievement}
+                    unlocked={userAchievement.isUnlocked}
+                    progressPercentage={userAchievement.progressPercentage}
+                    earnedAt={userAchievement.earnedAt}
+                  />
+                ))}
+              </div>
+            ) : (
+              <EmptyState
+                title="No achievement progress yet"
+                description="Complete lessons and keep learning to start unlocking achievements."
+                icon={<Award className="h-6 w-6" />}
+                action={
+                  <Button asChild>
+                    <Link to="/my-learning">Open My Learning</Link>
+                  </Button>
+                }
+              />
+            )}
+          </CardContent>
+        </Card>
       </main>
     </div>
   );
