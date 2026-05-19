@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from '@apollo/client/react';
 import { BookOpen, CheckCircle2, Loader2, LogIn, PlayCircle } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { ENROLLMENT_STATUS_QUERY, ENROLL_COURSE_MUTATION } from '@/graphql';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/useToast';
@@ -38,6 +38,10 @@ export function EnrollButton({
   firstLessonId,
 }: Readonly<EnrollButtonProps>) {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const navigate = useNavigate();
+  const learningPath = firstLessonId
+    ? `/courses/${courseSlug}/learn/${firstLessonId}`
+    : `/courses/${courseSlug}`;
 
   const {
     data: enrollmentData,
@@ -63,6 +67,9 @@ export function EnrollButton({
         variant: 'success',
       });
       void refetchStatus();
+      if (firstLessonId) {
+        navigate(learningPath);
+      }
     },
     onError: (error) => {
       const message = error.message.includes('already enrolled')
@@ -86,9 +93,6 @@ export function EnrollButton({
   const isEnrolled = !!enrollmentStatus;
   const isCompleted = enrollmentStatus?.status === 'COMPLETED';
   const progressPercentage = enrollmentStatus?.progressPercentage ?? 0;
-  const learningPath = firstLessonId
-    ? `/courses/${courseSlug}/learn/${firstLessonId}`
-    : `/courses/${courseSlug}`;
 
   if (isLoading) {
     return (

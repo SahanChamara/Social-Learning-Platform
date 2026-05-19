@@ -12,7 +12,17 @@ import {
   TrendingUp,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, Progress } from '@/components/ui';
+import {
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  EmptyState as UIEmptyState,
+  PageHeader,
+  Progress,
+} from '@/components/ui';
 import { SkeletonEnrollmentCard } from '@/components/skeletons';
 import { MY_ENROLLMENTS_QUERY } from '@/graphql';
 import { useAuth } from '@/hooks/useAuth';
@@ -155,7 +165,7 @@ function StatsCard({ label, value, icon: Icon, color, bgColor }: Readonly<StatsC
   );
 }
 
-function EmptyState({ status }: { status: 'all' | 'in_progress' | 'completed' }) {
+function EnrollmentEmptyState({ status }: { status: 'all' | 'in_progress' | 'completed' }) {
   const messages = {
     all: {
       title: "You haven't enrolled in any courses yet",
@@ -177,18 +187,19 @@ function EmptyState({ status }: { status: 'all' | 'in_progress' | 'completed' })
   const message = messages[status];
 
   return (
-    <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-12 text-center">
-      <GraduationCap className="mx-auto h-12 w-12 text-slate-400" />
-      <h3 className="mt-4 text-lg font-semibold text-slate-900">{message.title}</h3>
-      <p className="mt-2 text-sm text-slate-600">{message.description}</p>
-      <Link
-        to="/courses"
-        className="mt-6 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
-      >
-        <BookOpen className="h-4 w-4" />
-        {message.cta}
-      </Link>
-    </div>
+    <UIEmptyState
+      icon={<GraduationCap className="h-6 w-6" />}
+      title={message.title}
+      description={message.description}
+      action={
+        <Button asChild>
+          <Link to="/courses">
+            <BookOpen className="h-4 w-4" />
+            {message.cta}
+          </Link>
+        </Button>
+      }
+    />
   );
 }
 
@@ -239,16 +250,12 @@ export default function LearnerDashboard() {
 
   if (loading && !data) {
     return (
-      <div className="min-h-screen bg-slate-50">
-        <header className="border-b border-slate-200 bg-white">
-          <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-            <div className="space-y-2">
-              <div className="h-8 w-40 animate-pulse rounded bg-slate-200" />
-              <div className="h-4 w-60 animate-pulse rounded bg-slate-200" />
-            </div>
+      <div>
+        <main className="app-container py-8">
+          <div className="mb-8 space-y-2">
+            <div className="h-8 w-40 animate-pulse rounded bg-slate-200" />
+            <div className="h-4 w-60 animate-pulse rounded bg-slate-200" />
           </div>
-        </header>
-        <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
           <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {Array.from({ length: 4 }).map((_, index) => (
               <div key={index} className="rounded-lg border border-slate-200 bg-white p-6">
@@ -269,46 +276,44 @@ export default function LearnerDashboard() {
 
   if (error) {
     return (
-      <div className="mx-auto max-w-2xl px-4 py-16 text-center">
-        <AlertCircle className="mx-auto h-12 w-12 text-red-500" />
-        <h2 className="mt-4 text-xl font-semibold text-slate-900">Failed to load dashboard</h2>
-        <p className="mt-2 text-slate-600">{error.message}</p>
+      <div className="app-container py-16">
+        <UIEmptyState
+          icon={<AlertCircle className="h-6 w-6" />}
+          title="Failed to load My Learning"
+          description={error.message}
+          action={
+            <Button asChild>
+              <Link to="/courses">Browse Courses</Link>
+            </Button>
+          }
+        />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      {/* Header */}
-      <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-slate-900">My Learning</h1>
-              <p className="mt-1 text-slate-600">
-                Welcome back, {user?.fullName || user?.username}!
-              </p>
-            </div>
-            <Link
-              to="/courses"
-              className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
-            >
-              <BookOpen className="h-4 w-4" />
-              Browse Courses
-            </Link>
-          </div>
-        </div>
-      </header>
+    <div>
+      <main className="app-container py-8">
+        <PageHeader
+          eyebrow="Learner workspace"
+          title="My Learning"
+          description={`Welcome back, ${user?.fullName || user?.username || 'learner'}. Continue active courses, review completed paths, and track your progress.`}
+          actions={
+            <Button asChild>
+              <Link to="/courses">
+                <BookOpen className="h-4 w-4" />
+                Browse Courses
+              </Link>
+            </Button>
+          }
+        />
 
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        {/* Stats Grid */}
         <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {stats.map((stat) => (
             <StatsCard key={stat.label} {...stat} />
           ))}
         </div>
 
-        {/* Continue Learning Section */}
         {inProgressEnrollments.length > 0 && (
           <Card className="mb-8">
             <CardHeader>
@@ -328,7 +333,6 @@ export default function LearnerDashboard() {
           </Card>
         )}
 
-        {/* All Enrollments with Tabs */}
         <Card>
           <CardHeader>
             <CardTitle>All Courses</CardTitle>
@@ -367,7 +371,7 @@ export default function LearnerDashboard() {
                     ))}
                   </div>
                 ) : (
-                  <EmptyState status="all" />
+                  <EnrollmentEmptyState status="all" />
                 )}
               </Tabs.Content>
 
@@ -379,7 +383,7 @@ export default function LearnerDashboard() {
                     ))}
                   </div>
                 ) : (
-                  <EmptyState status="in_progress" />
+                  <EnrollmentEmptyState status="in_progress" />
                 )}
               </Tabs.Content>
 
@@ -391,14 +395,13 @@ export default function LearnerDashboard() {
                     ))}
                   </div>
                 ) : (
-                  <EmptyState status="completed" />
+                  <EnrollmentEmptyState status="completed" />
                 )}
               </Tabs.Content>
             </Tabs.Root>
           </CardContent>
         </Card>
 
-        {/* Achievements Preview */}
         {totalLessonsCompleted > 0 && (
           <Card className="mt-8 bg-gradient-to-r from-blue-50 to-purple-50">
             <CardHeader>

@@ -183,7 +183,7 @@ function QuizContent({ lesson }: Readonly<QuizContentProps>) {
       <p className="mt-2 text-sm text-slate-600">
         {lesson.description || 'Complete this quiz to test your knowledge.'}
       </p>
-      <p className="mt-4 text-xs text-slate-400">Quiz functionality coming soon</p>
+      <p className="mt-4 text-xs text-slate-400">Quiz content is not available for this lesson yet.</p>
     </div>
   );
 }
@@ -219,7 +219,7 @@ function AssignmentContent({ lesson }: Readonly<AssignmentContentProps>) {
       ) : (
         <p className="mt-4 text-sm text-slate-600">No instructions provided.</p>
       )}
-      <p className="mt-4 text-xs text-slate-400">Assignment submission coming soon</p>
+      <p className="mt-4 text-xs text-slate-400">Assignment submission is not available for this lesson yet.</p>
     </div>
   );
 }
@@ -599,8 +599,8 @@ export default function LessonPage() {
                 className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-green-700"
               >
                 <CheckCircle2 className="h-4 w-4" />
-                <span className="hidden sm:inline">Complete Course</span>
-                <span className="sm:hidden">Done</span>
+                <span className="hidden sm:inline">Back to Course</span>
+                <span className="sm:hidden">Course</span>
               </Link>
             )}
           </div>
