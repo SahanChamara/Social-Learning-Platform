@@ -14,21 +14,25 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks(id) {
-          if (!id.includes('node_modules')) return;
-          if (id.includes('node_modules/react') || id.includes('node_modules/react-dom') || id.includes('node_modules/react-router')) {
-            return 'react-vendor';
-          }
-          if (id.includes('node_modules/@apollo') || id.includes('node_modules/graphql') || id.includes('node_modules/apollo')) {
-            return 'apollo-vendor';
-          }
-          if (id.includes('node_modules/lucide-react')) {
-            return 'icons-vendor';
-          }
-          if (id.includes('node_modules/lodash')) {
-            return 'lodash-vendor';
-          }
-          return 'vendor';
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'apollo-vendor': ['@apollo/client', 'graphql', 'graphql-ws'],
+          'forms-vendor': ['react-hook-form', '@hookform/resolvers', 'zod'],
+          'radix-vendor': [
+            '@radix-ui/react-accordion',
+            '@radix-ui/react-alert-dialog',
+            '@radix-ui/react-collapsible',
+            '@radix-ui/react-hover-card',
+            '@radix-ui/react-label',
+            '@radix-ui/react-popover',
+            '@radix-ui/react-radio-group',
+            '@radix-ui/react-slot',
+            '@radix-ui/react-tabs',
+            '@radix-ui/react-toast',
+            '@radix-ui/react-toggle',
+          ],
+          'date-vendor': ['date-fns'],
+          'icons-vendor': ['lucide-react'],
         },
       },
     },

@@ -1,12 +1,10 @@
 import { Suspense, lazy } from 'react';
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider, type RouteObject } from 'react-router-dom';
 const Home = lazy(() => import('@/pages/Home'));
 const Login = lazy(() => import('@/pages/auth/Login'));
 const Register = lazy(() => import('@/pages/auth/Register'));
 const Discover = lazy(() => import('@/pages/Discover'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
-const ComponentsDemo = lazy(() => import('@/pages/ComponentsDemo'));
-const AuthDemo = lazy(() => import('@/pages/AuthDemo'));
 const Dashboard = lazy(() => import('@/pages/Dashboard'));
 const LearnerDashboard = lazy(() => import('@/pages/LearnerDashboard'));
 const LessonPage = lazy(() => import('@/pages/LessonPage'));
@@ -21,7 +19,37 @@ import { ErrorBoundary } from '@/components';
 import { UserRole } from '@/types/auth';
 import AppShell from '@/components/layout/AppShell';
 
-// Router configuration
+const developmentRoutes: RouteObject[] = import.meta.env.DEV
+  ? [
+      {
+        path: 'components-demo',
+        lazy: async () => {
+          const { default: ComponentsDemo } = await import('@/pages/ComponentsDemo');
+          return {
+            element: (
+              <ErrorBoundary>
+                <ComponentsDemo />
+              </ErrorBoundary>
+            ),
+          };
+        },
+      },
+      {
+        path: 'auth-demo',
+        lazy: async () => {
+          const { default: AuthDemo } = await import('@/pages/AuthDemo');
+          return {
+            element: (
+              <ErrorBoundary>
+                <AuthDemo />
+              </ErrorBoundary>
+            ),
+          };
+        },
+      },
+    ]
+  : [];
+
 const router = createBrowserRouter([
   {
     path: '/',
@@ -115,26 +143,6 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: 'components-demo',
-        element: (
-          <ErrorBoundary>
-            <Suspense fallback={<div className="p-8">Loading...</div>}>
-              <ComponentsDemo />
-            </Suspense>
-          </ErrorBoundary>
-        ),
-      },
-      {
-        path: 'auth-demo',
-        element: (
-          <ErrorBoundary>
-            <Suspense fallback={<div className="p-8">Loading...</div>}>
-              <AuthDemo />
-            </Suspense>
-          </ErrorBoundary>
-        ),
-      },
-      {
         path: 'auth',
         children: [
           {
@@ -196,6 +204,7 @@ const router = createBrowserRouter([
           </ErrorBoundary>
         ),
       },
+      ...developmentRoutes,
     ],
   },
   {
