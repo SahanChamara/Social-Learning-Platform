@@ -4,9 +4,9 @@ import * as Tabs from '@radix-ui/react-tabs';
 import { useFieldArray, useForm, type Control, type FieldErrors, type UseFormRegister } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { ArrowLeft, Loader2, Plus, Trash2 } from 'lucide-react';
+import { ArrowLeft, BookOpen, CheckCircle2, Eye, Image, Layers3, Loader2, Plus, Sparkles, Trash2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Button, Input, Label, Skeleton } from '@/components/ui';
+import { Button, Input, Label, PageHeader, Skeleton } from '@/components/ui';
 import { useToast } from '@/hooks';
 import {
   ADD_TAGS_TO_COURSE_MUTATION,
@@ -14,6 +14,7 @@ import {
   CREATE_COURSE_MUTATION,
   CREATE_LESSON_MUTATION,
   CREATE_MODULE_MUTATION,
+  PUBLISH_COURSE_MUTATION,
   TAGS_QUERY,
 } from '@/graphql';
 import { CourseDifficulty, LessonType } from '@/types/courses';
@@ -21,6 +22,7 @@ import type {
   CategoriesResponse,
   Category,
   CourseMutationResponse,
+  CourseIdMutationVariables,
   CourseTagsMutationVariables,
   CreateCourseInput,
   CreateCourseMutationVariables,
@@ -64,9 +66,16 @@ const createCourseSchema = z.object({
 
 type CreateCourseFormData = z.infer<typeof createCourseSchema>;
 
-type CourseFormStep = 'basic' | 'classification' | 'curriculum';
+type CourseFormStep = 'basics' | 'value' | 'curriculum' | 'review';
 
-const FORM_STEPS: CourseFormStep[] = ['basic', 'classification', 'curriculum'];
+const FORM_STEPS: CourseFormStep[] = ['basics', 'value', 'curriculum', 'review'];
+
+const STEP_COPY: Record<CourseFormStep, { label: string; title: string; icon: typeof BookOpen }> = {
+  basics: { label: 'Basics', title: 'Course basics', icon: BookOpen },
+  value: { label: 'Value', title: 'Course value', icon: Sparkles },
+  curriculum: { label: 'Curriculum', title: 'Curriculum', icon: Layers3 },
+  review: { label: 'Review', title: 'Review and publish', icon: Eye },
+};
 
 const defaultLesson: CreateCourseFormData['modules'][number]['lessons'][number] = {
   title: '',
@@ -294,7 +303,8 @@ export default function CreateCoursePage() {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const [activeStep, setActiveStep] = useState<CourseFormStep>('basic');
+  const [activeStep, setActiveStep] = useState<CourseFormStep>('basics');
+  const [publishOnSubmit, setPublishOnSubmit] = useState(true);
 
   const {
     control,
@@ -302,6 +312,7 @@ export default function CreateCoursePage() {
     handleSubmit,
     trigger,
     formState: { errors, isSubmitting },
+    watch,
   } = useForm<CreateCourseFormData>({
     resolver: zodResolver(createCourseSchema),
     defaultValues: {
@@ -339,6 +350,9 @@ export default function CreateCoursePage() {
   const [addTagsToCourse] = useMutation<CourseMutationResponse, CourseTagsMutationVariables>(
     ADD_TAGS_TO_COURSE_MUTATION,
   );
+  const [publishCourse] = useMutation<CourseMutationResponse, CourseIdMutationVariables>(
+    PUBLISH_COURSE_MUTATION,
+  );
   const [createModule] = useMutation<ModuleMutationResponse, CreateModuleMutationVariables>(
     CREATE_MODULE_MUTATION,
   );
@@ -348,6 +362,23 @@ export default function CreateCoursePage() {
 
   const categories = (categoriesData?.categories ?? []).filter((category) => category.isActive);
   const tags = tagsData?.tags ?? [];
+  const formPreview = watch();
+  const selectedCategory = categories.find((category) => category.id === formPreview.categoryId);
+  const selectedTags = tags.filter((tag) => formPreview.tagIds.includes(tag.id));
+  const totalLessons = formPreview.modules.reduce(
+    (sum, moduleData) => sum + moduleData.lessons.length,
+    0,
+  );
+  const totalMinutes = formPreview.modules.reduce(
+    (sum, moduleData) =>
+      sum +
+      moduleData.lessons.reduce(
+        (lessonSum, lesson) =>
+          lessonSum + (Number.isFinite(lesson.durationMinutes) ? lesson.durationMinutes : 0),
+        0,
+      ),
+    0,
+  );
 
   const navigateStep = async (direction: 'next' | 'prev') => {
     const currentIndex = FORM_STEPS.indexOf(activeStep);
@@ -357,15 +388,27 @@ export default function CreateCoursePage() {
       return;
     }
 
-    if (activeStep === 'basic') {
-      const valid = await trigger(['title', 'description']);
+    if (activeStep === 'basics') {
+      const valid = await trigger(['title', 'description', 'categoryId', 'difficulty', 'language']);
       if (!valid) {
         return;
       }
     }
 
-    if (activeStep === 'classification') {
-      const valid = await trigger(['categoryId', 'difficulty', 'language', 'priceInCents']);
+    if (activeStep === 'value') {
+      const valid = await trigger([
+        'thumbnailUrl',
+        'requirements',
+        'learningOutcomes',
+        'priceInCents',
+      ]);
+      if (!valid) {
+        return;
+      }
+    }
+
+    if (activeStep === 'curriculum') {
+      const valid = await trigger(['modules']);
       if (!valid) {
         return;
       }
@@ -452,9 +495,19 @@ export default function CreateCoursePage() {
         }
       }
 
+      if (publishOnSubmit) {
+        await publishCourse({
+          variables: {
+            id: createdCourse.id,
+          },
+        });
+      }
+
       toast({
-        title: 'Course created',
-        description: 'Your course, modules, and lessons were created successfully.',
+        title: publishOnSubmit ? 'Course published' : 'Draft saved',
+        description: publishOnSubmit
+          ? 'Your course is live with its starter curriculum.'
+          : 'Your course was saved as a draft.',
       });
 
       navigate(`/courses/${createdCourse.slug}`, { replace: true });
@@ -468,49 +521,47 @@ export default function CreateCoursePage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
+    <div className="bg-slate-50">
+      <div className="app-container py-10">
         <Link
-          to="/courses"
+          to="/creator"
           className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-slate-600 transition hover:text-slate-900"
         >
-          <ArrowLeft className="h-4 w-4" /> Back to Courses
+          <ArrowLeft className="h-4 w-4" /> Creator dashboard
         </Link>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">Create a New Course</h1>
-          <p className="mt-2 max-w-3xl text-slate-600">
-            Build your course in three steps. Add core details, classification metadata, and your
-            starter curriculum.
-          </p>
+        <PageHeader
+          eyebrow="Creator workspace"
+          title="Create course"
+          description="Shape the promise, structure the path, and publish when the first learning loop is ready."
+        />
 
-          <form className="mt-8" onSubmit={handleSubmit(onSubmit)}>
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
+          <form className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6" onSubmit={handleSubmit(onSubmit)}>
             <Tabs.Root
               value={activeStep}
               onValueChange={(value) => setActiveStep(value as CourseFormStep)}
             >
-              <Tabs.List className="flex flex-wrap gap-2 rounded-xl border border-slate-200 bg-slate-50 p-2">
-                <Tabs.Trigger
-                  value="basic"
-                  className="rounded-lg px-4 py-2 text-sm font-semibold text-slate-700 transition data-[state=active]:bg-blue-600 data-[state=active]:text-white"
-                >
-                  1. Basic Info
-                </Tabs.Trigger>
-                <Tabs.Trigger
-                  value="classification"
-                  className="rounded-lg px-4 py-2 text-sm font-semibold text-slate-700 transition data-[state=active]:bg-blue-600 data-[state=active]:text-white"
-                >
-                  2. Category & Tags
-                </Tabs.Trigger>
-                <Tabs.Trigger
-                  value="curriculum"
-                  className="rounded-lg px-4 py-2 text-sm font-semibold text-slate-700 transition data-[state=active]:bg-blue-600 data-[state=active]:text-white"
-                >
-                  3. Modules & Lessons
-                </Tabs.Trigger>
+              <Tabs.List className="grid gap-2 rounded-lg border border-slate-200 bg-slate-50 p-2 sm:grid-cols-4">
+                {FORM_STEPS.map((step, index) => {
+                  const Icon = STEP_COPY[step].icon;
+                  return (
+                    <Tabs.Trigger
+                      key={step}
+                      value={step}
+                      className="inline-flex items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-semibold text-slate-700 transition data-[state=active]:bg-blue-600 data-[state=active]:text-white"
+                    >
+                      <Icon className="h-4 w-4" />
+                      <span>{index + 1}. {STEP_COPY[step].label}</span>
+                    </Tabs.Trigger>
+                  );
+                })}
               </Tabs.List>
 
-              <Tabs.Content value="basic" className="mt-6 space-y-5">
+              <Tabs.Content value="basics" className="mt-6 space-y-5">
+                <div>
+                  <h2 className="text-lg font-semibold text-slate-950">{STEP_COPY.basics.title}</h2>
+                </div>
                 <div className="space-y-2">
                   <Label htmlFor="title">Course title</Label>
                   <Input
@@ -535,6 +586,59 @@ export default function CreateCoursePage() {
                   ) : null}
                 </div>
 
+                <div className="grid gap-4 sm:grid-cols-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="categoryId">Category</Label>
+                    <select
+                      id="categoryId"
+                      className="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+                      {...register('categoryId')}
+                    >
+                      <option value="">Select a category</option>
+                      {categories.map((category: Category) => (
+                        <option key={category.id} value={category.id}>
+                          {category.name}
+                        </option>
+                      ))}
+                    </select>
+                    {typeof errors.categoryId?.message === 'string' ? (
+                      <p className="text-sm text-red-600">{errors.categoryId.message}</p>
+                    ) : null}
+                    {categoriesLoading ? <Skeleton className="h-4 w-40" /> : null}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="difficulty">Difficulty</Label>
+                    <select
+                      id="difficulty"
+                      className="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+                      {...register('difficulty')}
+                    >
+                      <option value={CourseDifficulty.BEGINNER}>Beginner</option>
+                      <option value={CourseDifficulty.INTERMEDIATE}>Intermediate</option>
+                      <option value={CourseDifficulty.ADVANCED}>Advanced</option>
+                      <option value={CourseDifficulty.EXPERT}>Expert</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="language">Language</Label>
+                    <Input
+                      id="language"
+                      placeholder="English"
+                      error={
+                        typeof errors.language?.message === 'string' ? errors.language.message : undefined
+                      }
+                      {...register('language')}
+                    />
+                  </div>
+                </div>
+              </Tabs.Content>
+
+              <Tabs.Content value="value" className="mt-6 space-y-5">
+                <div>
+                  <h2 className="text-lg font-semibold text-slate-950">{STEP_COPY.value.title}</h2>
+                </div>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="thumbnailUrl">Thumbnail URL</Label>
@@ -549,16 +653,20 @@ export default function CreateCoursePage() {
                       {...register('thumbnailUrl')}
                     />
                   </div>
-
                   <div className="space-y-2">
-                    <Label htmlFor="language">Language</Label>
+                    <Label htmlFor="priceInCents">Price (in cents)</Label>
                     <Input
-                      id="language"
-                      placeholder="English"
+                      id="priceInCents"
+                      type="number"
+                      min={0}
                       error={
-                        typeof errors.language?.message === 'string' ? errors.language.message : undefined
+                        typeof errors.priceInCents?.message === 'string'
+                          ? errors.priceInCents.message
+                          : undefined
                       }
-                      {...register('language')}
+                      {...register('priceInCents', {
+                        valueAsNumber: true,
+                      })}
                     />
                   </div>
                 </div>
@@ -578,70 +686,10 @@ export default function CreateCoursePage() {
                   <Label htmlFor="learningOutcomes">Learning outcomes</Label>
                   <textarea
                     id="learningOutcomes"
-                    rows={3}
+                    rows={4}
                     className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
                     placeholder="What students will be able to do after this course"
                     {...register('learningOutcomes')}
-                  />
-                </div>
-              </Tabs.Content>
-
-              <Tabs.Content value="classification" className="mt-6 space-y-5">
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="categoryId">Category</Label>
-                    <select
-                      id="categoryId"
-                      className="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
-                      {...register('categoryId')}
-                    >
-                      <option value="">Select a category</option>
-                      {categories.map((category: Category) => (
-                        <option key={category.id} value={category.id}>
-                          {category.name}
-                        </option>
-                      ))}
-                    </select>
-                    {typeof errors.categoryId?.message === 'string' ? (
-                      <p className="text-sm text-red-600">{errors.categoryId.message}</p>
-                    ) : null}
-                    {categoriesLoading ? (
-                      <div className="space-y-2">
-                        <Skeleton className="h-4 w-32" />
-                        <Skeleton className="h-3 w-48" />
-                      </div>
-                    ) : null}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="difficulty">Difficulty</Label>
-                    <select
-                      id="difficulty"
-                      className="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
-                      {...register('difficulty')}
-                    >
-                      <option value={CourseDifficulty.BEGINNER}>Beginner</option>
-                      <option value={CourseDifficulty.INTERMEDIATE}>Intermediate</option>
-                      <option value={CourseDifficulty.ADVANCED}>Advanced</option>
-                      <option value={CourseDifficulty.EXPERT}>Expert</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="space-y-2 max-w-xs">
-                  <Label htmlFor="priceInCents">Price (in cents)</Label>
-                  <Input
-                    id="priceInCents"
-                    type="number"
-                    min={0}
-                    error={
-                      typeof errors.priceInCents?.message === 'string'
-                        ? errors.priceInCents.message
-                        : undefined
-                    }
-                    {...register('priceInCents', {
-                      valueAsNumber: true,
-                    })}
                   />
                 </div>
 
@@ -677,7 +725,7 @@ export default function CreateCoursePage() {
 
               <Tabs.Content value="curriculum" className="mt-6 space-y-5">
                 <div className="flex flex-wrap items-center justify-between gap-3">
-                  <h2 className="text-lg font-semibold text-slate-900">Curriculum builder</h2>
+                  <h2 className="text-lg font-semibold text-slate-950">{STEP_COPY.curriculum.title}</h2>
                   <Button type="button" variant="outline" onClick={() => appendModule(defaultModule)}>
                     <Plus className="h-4 w-4" />
                     Add module
@@ -702,11 +750,93 @@ export default function CreateCoursePage() {
                   ))}
                 </div>
               </Tabs.Content>
+
+              <Tabs.Content value="review" className="mt-6 space-y-5">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <h2 className="text-lg font-semibold text-slate-950">{STEP_COPY.review.title}</h2>
+                    <p className="mt-1 text-sm text-slate-600">
+                      {publishOnSubmit ? 'Ready to publish' : 'Saving as draft'}
+                    </p>
+                  </div>
+                  <label className="inline-flex items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700">
+                    <input
+                      type="checkbox"
+                      checked={publishOnSubmit}
+                      onChange={(event) => setPublishOnSubmit(event.target.checked)}
+                      className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-600 focus:ring-offset-2"
+                    />
+                    Publish after creation
+                  </label>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                    <p className="text-sm font-semibold text-slate-950">Course</p>
+                    <dl className="mt-3 space-y-2 text-sm">
+                      <div className="flex justify-between gap-3">
+                        <dt className="text-slate-500">Title</dt>
+                        <dd className="text-right font-medium text-slate-900">{formPreview.title || 'Untitled course'}</dd>
+                      </div>
+                      <div className="flex justify-between gap-3">
+                        <dt className="text-slate-500">Category</dt>
+                        <dd className="text-right font-medium text-slate-900">{selectedCategory?.name ?? 'Not selected'}</dd>
+                      </div>
+                      <div className="flex justify-between gap-3">
+                        <dt className="text-slate-500">Difficulty</dt>
+                        <dd className="text-right font-medium text-slate-900">{formPreview.difficulty}</dd>
+                      </div>
+                      <div className="flex justify-between gap-3">
+                        <dt className="text-slate-500">Language</dt>
+                        <dd className="text-right font-medium text-slate-900">{formPreview.language}</dd>
+                      </div>
+                    </dl>
+                  </div>
+
+                  <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                    <p className="text-sm font-semibold text-slate-950">Curriculum</p>
+                    <dl className="mt-3 space-y-2 text-sm">
+                      <div className="flex justify-between gap-3">
+                        <dt className="text-slate-500">Modules</dt>
+                        <dd className="font-medium text-slate-900">{formPreview.modules.length}</dd>
+                      </div>
+                      <div className="flex justify-between gap-3">
+                        <dt className="text-slate-500">Lessons</dt>
+                        <dd className="font-medium text-slate-900">{totalLessons}</dd>
+                      </div>
+                      <div className="flex justify-between gap-3">
+                        <dt className="text-slate-500">Duration</dt>
+                        <dd className="font-medium text-slate-900">{totalMinutes}m</dd>
+                      </div>
+                      <div className="flex justify-between gap-3">
+                        <dt className="text-slate-500">Tags</dt>
+                        <dd className="text-right font-medium text-slate-900">
+                          {selectedTags.length > 0 ? selectedTags.map((tag) => tag.name).join(', ') : 'None'}
+                        </dd>
+                      </div>
+                    </dl>
+                  </div>
+                </div>
+
+                {formPreview.thumbnailUrl ? (
+                  <div className="overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
+                    <img
+                      src={formPreview.thumbnailUrl}
+                      alt=""
+                      className="h-56 w-full object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div className="flex min-h-40 items-center justify-center rounded-lg border border-dashed border-slate-300 bg-slate-50 text-slate-500">
+                    <Image className="h-6 w-6" />
+                  </div>
+                )}
+              </Tabs.Content>
             </Tabs.Root>
 
             <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 pt-6">
               <div>
-                {activeStep === 'basic' ? null : (
+                {activeStep === 'basics' ? null : (
                   <Button type="button" variant="outline" onClick={() => void navigateStep('prev')}>
                     Back
                   </Button>
@@ -714,15 +844,18 @@ export default function CreateCoursePage() {
               </div>
 
               <div className="flex items-center gap-2">
-                {activeStep === 'curriculum' ? (
+                {activeStep === 'review' ? (
                   <Button type="submit" disabled={isSubmitting}>
                     {isSubmitting ? (
                       <>
                         <Loader2 className="h-4 w-4 animate-spin" />
-                        Creating course...
+                        {publishOnSubmit ? 'Publishing...' : 'Saving...'}
                       </>
                     ) : (
-                      'Create Course'
+                      <>
+                        <CheckCircle2 className="h-4 w-4" />
+                        {publishOnSubmit ? 'Publish Course' : 'Save Draft'}
+                      </>
                     )}
                   </Button>
                 ) : (
@@ -733,6 +866,32 @@ export default function CreateCoursePage() {
               </div>
             </div>
           </form>
+
+          <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
+            <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+              <p className="text-sm font-semibold text-slate-950">Course snapshot</p>
+              <div className="mt-4 space-y-3 text-sm">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-slate-500">Status</span>
+                  <span className="rounded-full bg-amber-50 px-2.5 py-1 font-medium text-amber-700">
+                    {publishOnSubmit ? 'Publish' : 'Draft'}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-slate-500">Modules</span>
+                  <span className="font-medium text-slate-900">{formPreview.modules.length}</span>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-slate-500">Lessons</span>
+                  <span className="font-medium text-slate-900">{totalLessons}</span>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-slate-500">Total time</span>
+                  <span className="font-medium text-slate-900">{totalMinutes}m</span>
+                </div>
+              </div>
+            </div>
+          </aside>
         </div>
       </div>
     </div>

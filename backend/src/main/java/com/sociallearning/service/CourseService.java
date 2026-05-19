@@ -61,7 +61,9 @@ public class CourseService {
      */
     @Transactional
     public Course createCourse(String title, String description, Long creatorId,
-                               Long categoryId, CourseDifficulty difficulty, String language) {
+                               Long categoryId, CourseDifficulty difficulty, String language,
+                               String thumbnailUrl, String requirements, String learningOutcomes,
+                               Integer priceInCents) {
         log.info("Creating course: {} by user ID: {}", title, creatorId);
         
         // Validate creator exists
@@ -84,6 +86,10 @@ public class CourseService {
                 .category(category)
                 .difficulty(difficulty != null ? difficulty : CourseDifficulty.BEGINNER)
                 .language(language != null ? language : "en")
+                .thumbnailUrl(thumbnailUrl)
+                .requirements(requirements)
+                .learningOutcomes(learningOutcomes)
+                .priceInCents(priceInCents != null ? priceInCents : 0)
                 .published(false)
                 .draft(true)
                 .archived(false)

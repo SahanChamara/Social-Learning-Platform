@@ -15,6 +15,7 @@ const CoursesPage = lazy(() => import('@/pages/CoursesPage'));
 const SearchPage = lazy(() => import('@/pages/SearchPage'));
 const CourseDetailPage = lazy(() => import('@/pages/CourseDetailPage'));
 const CreateCoursePage = lazy(() => import('@/pages/CreateCoursePage'));
+const CreatorDashboard = lazy(() => import('@/pages/CreatorDashboard'));
 import { ProtectedRoute } from '@/components/auth';
 import { ErrorBoundary } from '@/components';
 import { UserRole } from '@/types/auth';
@@ -63,6 +64,18 @@ const router = createBrowserRouter([
           <ErrorBoundary>
             <Suspense fallback={<div className="p-8">Loading...</div>}>
               <SearchPage />
+            </Suspense>
+          </ErrorBoundary>
+        ),
+      },
+      {
+        path: 'creator',
+        element: (
+          <ErrorBoundary>
+            <Suspense fallback={<div className="p-8">Loading...</div>}>
+              <ProtectedRoute allowedRoles={[UserRole.CREATOR, UserRole.ADMIN]}>
+                <CreatorDashboard />
+              </ProtectedRoute>
             </Suspense>
           </ErrorBoundary>
         ),

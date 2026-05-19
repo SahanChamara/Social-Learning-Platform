@@ -1,4 +1,4 @@
-import { Menu, X, GraduationCap, LogOut, User, BookOpen, Compass, LayoutDashboard, Search } from 'lucide-react';
+import { Menu, X, GraduationCap, LogOut, User, BookOpen, Compass, LayoutDashboard, Search, PenTool } from 'lucide-react';
 import { useState } from 'react';
 import { Link, NavLink, Outlet } from 'react-router-dom';
 import { NotificationBell } from '@/components/notifications';
@@ -57,9 +57,9 @@ export default function AppShell() {
               );
             })}
             {isCreator ? (
-              <NavLink to="/courses/create" className={navClass}>
-                <BookOpen className="h-4 w-4" />
-                Create Course
+              <NavLink to="/creator" className={navClass}>
+                <PenTool className="h-4 w-4" />
+                Creator
               </NavLink>
             ) : null}
           </nav>
@@ -114,9 +114,9 @@ export default function AppShell() {
                 );
               })}
               {isCreator ? (
-                <NavLink to="/courses/create" className={navClass} onClick={closeMenu}>
-                  <BookOpen className="h-4 w-4" />
-                  Create Course
+                <NavLink to="/creator" className={navClass} onClick={closeMenu}>
+                  <PenTool className="h-4 w-4" />
+                  Creator
                 </NavLink>
               ) : null}
               <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3">

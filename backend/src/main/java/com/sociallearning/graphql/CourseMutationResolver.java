@@ -67,6 +67,9 @@ public class CourseMutationResolver {
         input.setTitle(inputSanitizer.sanitize(input.getTitle()));
         input.setDescription(inputSanitizer.sanitize(input.getDescription()));
         input.setLanguage(inputSanitizer.sanitize(input.getLanguage()));
+        input.setThumbnailUrl(inputSanitizer.sanitizeNullable(input.getThumbnailUrl()));
+        input.setRequirements(inputSanitizer.sanitizeNullable(input.getRequirements()));
+        input.setLearningOutcomes(inputSanitizer.sanitizeNullable(input.getLearningOutcomes()));
         
         return courseService.createCourse(
                 input.getTitle(),
@@ -74,11 +77,11 @@ public class CourseMutationResolver {
                 userId,
                 input.getCategoryId(),
                 input.getDifficulty(),
-                input.getLanguage()
-/*              input.getThumbnailUrl(),
+                input.getLanguage(),
+                input.getThumbnailUrl(),
                 input.getRequirements(),
                 input.getLearningOutcomes(),
-                input.getPriceInCents() != null ? input.getPriceInCents() : 0*/
+                input.getPriceInCents() != null ? input.getPriceInCents() : 0
         );
     }
 

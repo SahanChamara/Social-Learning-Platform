@@ -112,6 +112,11 @@ public class Course {
     @Column(columnDefinition = "TEXT")
     private String learningOutcomes; // What students will learn (plain text or JSON array)
 
+    @Min(value = 0, message = "Price cannot be negative")
+    @Column(nullable = false)
+    @Builder.Default
+    private Integer priceInCents = 0;
+
     // Denormalized Counts and Ratings (for performance)
     @Min(value = 0, message = "Enrollment count cannot be negative")
     @Column(name = "enrollment_count", nullable = false)
