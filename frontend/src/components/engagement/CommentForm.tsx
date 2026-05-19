@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
 import { ADD_COMMENT_MUTATION, COMMENTS_QUERY } from '@/graphql';
+import { Button } from '@/components/ui';
 import { useAuth } from '@/hooks';
 import { useToast } from '@/hooks/useToast';
 import type { User } from '@/types/auth';
@@ -112,12 +113,14 @@ export function CommentForm({
   if (!isAuthenticated || !user) {
     return (
       <div className={className}>
-        <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-          You need to{' '}
-          <Link to="/auth/login" className="font-semibold text-blue-700 hover:text-blue-800">
-            sign in
-          </Link>{' '}
-          to post comments.
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-200 bg-slate-50 p-4">
+          <div>
+            <p className="text-sm font-semibold text-slate-950">Join the discussion</p>
+            <p className="mt-1 text-sm text-slate-600">Sign in to ask questions, reply, and like helpful answers.</p>
+          </div>
+          <Button asChild size="sm">
+            <Link to="/auth/login">Sign In</Link>
+          </Button>
         </div>
       </div>
     );
@@ -185,23 +188,26 @@ export function CommentForm({
         rows={parentCommentId ? 3 : 4}
         className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-xs outline-hidden transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
       />
-      <div className="mt-2 flex items-center justify-end gap-2">
-        {onCancel && (
+      <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+        <p className="text-xs text-slate-500">{content.trim().length}/5000 characters</p>
+        <div className="flex items-center gap-2">
+          {onCancel && (
+            <button
+              type="button"
+              onClick={onCancel}
+              className="inline-flex items-center rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+            >
+              Cancel
+            </button>
+          )}
           <button
-            type="button"
-            onClick={onCancel}
-            className="inline-flex items-center rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+            type="submit"
+            disabled={loading || content.trim().length === 0}
+            className="inline-flex items-center rounded-md bg-blue-600 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            Cancel
+            {loading ? 'Posting...' : submitLabel}
           </button>
-        )}
-        <button
-          type="submit"
-          disabled={loading || content.trim().length === 0}
-          className="inline-flex items-center rounded-md bg-blue-600 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {loading ? 'Posting...' : submitLabel}
-        </button>
+        </div>
       </div>
     </form>
   );

@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
 import { EnrollButton } from '@/components/courses';
-import { CommentForm, CommentList, RatingStars } from '@/components/engagement';
+import { CommentForm, CommentList, CourseReviewList, RatingStars } from '@/components/engagement';
 import { SkeletonCourseDetail } from '@/components/skeletons';
 import { COURSE_QUERY } from '@/graphql';
 import type {
@@ -309,10 +309,10 @@ export default function CourseDetailPage() {
               Curriculum
             </Tabs.Trigger>
             <Tabs.Trigger
-              value="reviews"
+              value="engagement"
               className="rounded-lg px-4 py-2 text-sm font-semibold text-slate-700 transition data-[state=active]:bg-blue-600 data-[state=active]:text-white"
             >
-              Reviews
+              Reviews & Discussion
             </Tabs.Trigger>
           </Tabs.List>
 
@@ -408,30 +408,60 @@ export default function CourseDetailPage() {
             )}
           </Tabs.Content>
 
-          <Tabs.Content value="reviews" className="mt-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-            <h2 className="text-xl font-semibold text-slate-900">Reviews</h2>
-            <p className="mt-2 text-slate-600">
-              Join the discussion with other learners and share feedback.
-            </p>
-            <div className="mt-6">
-              <RatingStars
-                courseId={course.id}
-                averageRating={course.averageRating}
-                ratingCount={course.ratingCount}
-              />
-            </div>
+          <Tabs.Content value="engagement" className="mt-5 space-y-6">
+            <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div>
+                  <h2 className="text-xl font-semibold text-slate-900">Learner reviews</h2>
+                  <p className="mt-2 max-w-2xl text-slate-600">
+                    Ratings and written reviews help learners judge fit before enrolling.
+                  </p>
+                </div>
+                <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-800">
+                  {course.averageRating.toFixed(1)} average
+                </div>
+              </div>
 
-            <div className="mt-6">
-              <CommentForm targetType="COURSE" targetId={course.id} />
-            </div>
+              <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_24rem]">
+                <CourseReviewList
+                  courseId={course.id}
+                  averageRating={course.averageRating}
+                  ratingCount={course.ratingCount}
+                />
+                <RatingStars
+                  courseId={course.id}
+                  averageRating={course.averageRating}
+                  ratingCount={course.ratingCount}
+                />
+              </div>
+            </section>
 
-            <div className="mt-6">
-              <CommentList
-                targetType="COURSE"
-                targetId={course.id}
-                emptyMessage="No course comments yet. Be the first to ask a question or leave feedback."
-              />
-            </div>
+            <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div>
+                  <h2 className="text-xl font-semibold text-slate-900">Course discussion</h2>
+                  <p className="mt-2 max-w-2xl text-slate-600">
+                    Ask questions about the curriculum, reply to other learners, and surface helpful answers.
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-6">
+                <CommentForm
+                  targetType="COURSE"
+                  targetId={course.id}
+                  placeholder="Ask a question or share a helpful course note..."
+                />
+              </div>
+
+              <div className="mt-6">
+                <CommentList
+                  targetType="COURSE"
+                  targetId={course.id}
+                  emptyMessage="No discussion yet. Ask the first question about this course."
+                />
+              </div>
+            </section>
           </Tabs.Content>
         </Tabs.Root>
       </div>

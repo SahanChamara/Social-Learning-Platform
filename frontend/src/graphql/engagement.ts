@@ -140,6 +140,43 @@ export const MY_RATING_QUERY = gql`
   }
 `;
 
+/**
+ * Get written reviews for a course.
+ */
+export const COURSE_REVIEWS_QUERY = gql`
+  ${RATING_FRAGMENT}
+  query CourseReviews($courseId: ID!, $page: Int, $size: Int) {
+    courseReviews(courseId: $courseId, page: $page, size: $size) {
+      content {
+        ...RatingFields
+      }
+      totalElements
+      totalPages
+      pageNumber
+      pageSize
+      hasNext
+      hasPrevious
+    }
+  }
+`;
+
+/**
+ * Get rating distribution for a course.
+ */
+export const COURSE_RATING_STATS_QUERY = gql`
+  query CourseRatingStats($courseId: ID!) {
+    courseRatingStats(courseId: $courseId) {
+      average
+      totalCount
+      fiveStarCount
+      fourStarCount
+      threeStarCount
+      twoStarCount
+      oneStarCount
+    }
+  }
+`;
+
 // ============================================
 // GraphQL Mutations
 // ============================================
