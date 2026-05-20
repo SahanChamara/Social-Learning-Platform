@@ -3,7 +3,7 @@ import { useQuery } from '@apollo/client/react';
 import { AlertCircle, Loader2, Plus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { CourseCard, SearchBar, SkeletonCourseCard } from '@/components';
-import { Button, EmptyState, PageHeader } from '@/components/ui';
+import { AnimatedPage, Button, EmptyState, PageHeader, StatusBadge } from '@/components/ui';
 import { COURSES_QUERY } from '@/graphql';
 import { useAuth } from '@/hooks';
 import { UserRole } from '@/types/auth';
@@ -23,7 +23,6 @@ export default function CoursesPage() {
   const [page, setPage] = useState(0);
 
   const canCreateCourses = user?.role === UserRole.CREATOR || user?.role === UserRole.ADMIN;
-
   const variables: CoursesQueryVariables = {
     searchTerm: searchTerm.trim() ? searchTerm.trim() : undefined,
     difficulty: difficulty || undefined,
@@ -31,17 +30,13 @@ export default function CoursesPage() {
     size: PAGE_SIZE,
   };
 
-  const { data, loading, error, refetch } = useQuery<CoursesResponse, CoursesQueryVariables>(
-    COURSES_QUERY,
-    {
-      variables,
-      notifyOnNetworkStatusChange: true,
-    },
-  );
+  const { data, loading, error, refetch } = useQuery<CoursesResponse, CoursesQueryVariables>(COURSES_QUERY, {
+    variables,
+    notifyOnNetworkStatusChange: true,
+  });
 
   const courses = data?.courses.content ?? [];
   const coursePage = data?.courses;
-
   const hasPrevious = coursePage?.hasPrevious ?? false;
   const hasNext = coursePage?.hasNext ?? false;
   const totalElements = coursePage?.totalElements ?? 0;
@@ -67,28 +62,25 @@ export default function CoursesPage() {
 
   if (loading && !data) {
     return (
-      <div>
+      <AnimatedPage>
         <div className="app-container py-10">
           <div className="mb-8 space-y-2">
-            <div className="h-10 w-72 animate-pulse rounded bg-slate-200" />
-            <div className="h-5 w-96 animate-pulse rounded bg-slate-200" />
+            <div className="h-10 w-72 animate-pulse rounded bg-slate-800" />
+            <div className="h-5 w-96 animate-pulse rounded bg-slate-800" />
           </div>
-
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {Array.from({ length: PAGE_SIZE }, (_, value) => `course-skeleton-${value + 1}`).map(
-              (skeletonKey) => (
-                <CourseCardSkeleton key={skeletonKey} />
-              ),
-            )}
+            {Array.from({ length: PAGE_SIZE }, (_, value) => `course-skeleton-${value + 1}`).map((skeletonKey) => (
+              <CourseCardSkeleton key={skeletonKey} />
+            ))}
           </div>
         </div>
-      </div>
+      </AnimatedPage>
     );
   }
 
   if (error && !data) {
     return (
-      <div>
+      <AnimatedPage>
         <div className="app-container py-16">
           <EmptyState
             icon={<AlertCircle className="h-6 w-6" />}
@@ -106,20 +98,20 @@ export default function CoursesPage() {
             }
           />
         </div>
-      </div>
+      </AnimatedPage>
     );
   }
 
   return (
-    <div>
+    <AnimatedPage>
       <div className="app-container py-10">
         <PageHeader
           eyebrow="Course catalog"
           title="Explore practical courses"
-          description="Browse structured learning paths from creators. Search by topic, filter by level, and open a course to review outcomes, curriculum, and learner feedback."
+          description="Browse cinematic learning paths from creators. Search by topic, filter by level, and open a course to review outcomes, curriculum, and learner feedback."
           actions={
             canCreateCourses ? (
-              <Button asChild>
+              <Button variant="premium" asChild>
                 <Link to="/courses/create">
                   <Plus className="h-4 w-4" />
                   Create Course
@@ -129,7 +121,7 @@ export default function CoursesPage() {
           }
         />
 
-        <section className="mb-8 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+        <section className="cinematic-section mb-8 rounded-2xl p-4 sm:p-5">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <SearchBar
               value={searchInput}
@@ -146,7 +138,7 @@ export default function CoursesPage() {
             <select
               value={difficulty}
               onChange={(event) => handleDifficultyChange(event.target.value)}
-              className="h-11 rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-800 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              className="h-11 rounded-lg border border-slate-700/80 bg-slate-950/45 px-3 text-sm text-slate-100 outline-none transition focus:border-cyan-300/60 focus:ring-2 focus:ring-cyan-300/20"
               aria-label="Filter by difficulty"
             >
               <option value="">All Levels</option>
@@ -159,21 +151,21 @@ export default function CoursesPage() {
             <button
               type="button"
               onClick={handleClearFilters}
-              className="inline-flex h-11 items-center justify-center rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+              className="inline-flex h-11 items-center justify-center rounded-lg border border-slate-700/80 bg-slate-950/45 px-4 text-sm font-semibold text-slate-200 transition hover:border-cyan-300/60 hover:bg-slate-900"
             >
               Clear
             </button>
           </div>
 
-          <div className="mt-3 text-sm text-slate-600">
+          <div className="mt-3 text-sm text-slate-400">
             {loading ? (
               <span className="inline-flex items-center gap-2">
                 <Loader2 className="h-4 w-4 animate-spin" /> Updating results...
               </span>
             ) : (
-              <span>
+              <StatusBadge tone="slate">
                 {totalElements} course{totalElements === 1 ? '' : 's'} found
-              </span>
+              </StatusBadge>
             )}
           </div>
         </section>
@@ -181,12 +173,7 @@ export default function CoursesPage() {
         {courses.length > 0 ? (
           <section className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {courses.map((course) => (
-              <CourseCard
-                key={course.id}
-                course={course}
-                href={`/courses/${course.slug}`}
-                className="h-full"
-              />
+              <CourseCard key={course.id} course={course} href={`/courses/${course.slug}`} className="h-full" />
             ))}
           </section>
         ) : (
@@ -201,8 +188,8 @@ export default function CoursesPage() {
           />
         )}
 
-        <footer className="mt-10 flex flex-col items-center justify-between gap-4 border-t border-slate-200 pt-6 sm:flex-row">
-          <p className="text-sm text-slate-600">
+        <footer className="mt-10 flex flex-col items-center justify-between gap-4 border-t border-slate-800 pt-6 sm:flex-row">
+          <p className="text-sm text-slate-400">
             Page {pageNumber} of {totalPages}
           </p>
 
@@ -211,7 +198,7 @@ export default function CoursesPage() {
               type="button"
               disabled={!hasPrevious || loading}
               onClick={() => setPage((prev) => Math.max(prev - 1, 0))}
-              className="inline-flex h-10 items-center justify-center rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex h-10 items-center justify-center rounded-lg border border-slate-700 bg-slate-950/50 px-4 text-sm font-semibold text-slate-200 transition hover:bg-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Previous
             </button>
@@ -219,13 +206,13 @@ export default function CoursesPage() {
               type="button"
               disabled={!hasNext || loading}
               onClick={() => setPage((prev) => prev + 1)}
-              className="inline-flex h-10 items-center justify-center rounded-lg bg-blue-600 px-4 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex h-10 items-center justify-center rounded-lg bg-cyan-400 px-4 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Next
             </button>
           </div>
         </footer>
       </div>
-    </div>
+    </AnimatedPage>
   );
 }

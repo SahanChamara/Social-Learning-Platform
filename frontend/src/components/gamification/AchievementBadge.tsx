@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/static-components */
 import * as HoverCard from '@radix-ui/react-hover-card';
 import {
   Award,

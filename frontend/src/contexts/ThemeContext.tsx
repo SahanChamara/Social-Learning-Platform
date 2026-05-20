@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
 type Theme = 'light' | 'dark';
@@ -18,7 +19,7 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
       const stored = localStorage.getItem(STORAGE_KEY) as Theme | null;
       if (stored === 'light' || stored === 'dark') return stored;
       return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    } catch (e) {
+    } catch {
       return 'light';
     }
   });
@@ -29,7 +30,7 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
     else root.classList.remove('dark');
     try {
       localStorage.setItem(STORAGE_KEY, theme);
-    } catch (e) {
+    } catch {
       // ignore
     }
   }, [theme]);

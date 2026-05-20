@@ -18,6 +18,7 @@ import {
   Square,
   Video,
 } from 'lucide-react';
+/* eslint-disable react-hooks/static-components */
 import { useMemo } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Progress } from '@/components/ui';

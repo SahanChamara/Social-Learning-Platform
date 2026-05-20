@@ -2,13 +2,17 @@
 
 @theme {
   --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --color-app-bg: #f8fafc;
-  --color-app-surface: #ffffff;
-  --color-app-border: #e2e8f0;
-  --color-app-text: #020617;
-  --color-app-muted: #64748b;
-  --color-brand: #2563eb;
-  --color-brand-strong: #1d4ed8;
+  --color-app-bg: #050711;
+  --color-app-surface: #0b1020;
+  --color-app-surface-2: #11182b;
+  --color-app-border: #24304a;
+  --color-app-text: #f8fafc;
+  --color-app-muted: #9aa8bd;
+  --color-brand: #38bdf8;
+  --color-brand-strong: #2563eb;
+  --color-accent-violet: #8b5cf6;
+  --color-accent-emerald: #34d399;
+  --color-accent-gold: #fbbf24;
 }
 
 @layer base {
@@ -23,7 +27,10 @@
     min-width: 320px;
     min-height: 100vh;
     margin: 0;
-    background: var(--color-app-bg);
+    background:
+      radial-gradient(circle at top left, rgb(56 189 248 / 0.16), transparent 28rem),
+      radial-gradient(circle at 85% 10%, rgb(139 92 246 / 0.14), transparent 30rem),
+      linear-gradient(180deg, #050711 0%, #08111f 42%, #050711 100%);
     color: var(--color-app-text);
   }
 
@@ -40,8 +47,8 @@
   }
 
   ::selection {
-    background: #bfdbfe;
-    color: #0f172a;
+    background: rgb(56 189 248 / 0.35);
+    color: #f8fafc;
   }
 }
 
@@ -63,5 +70,60 @@
     .app-container {
       padding-inline: 2rem;
     }
+  }
+
+  .cinematic-page {
+    min-height: calc(100vh - 4rem);
+    background:
+      radial-gradient(circle at 15% 5%, rgb(56 189 248 / 0.18), transparent 24rem),
+      radial-gradient(circle at 88% 14%, rgb(139 92 246 / 0.16), transparent 26rem),
+      linear-gradient(180deg, rgb(5 7 17) 0%, rgb(8 15 29) 48%, rgb(5 7 17) 100%);
+  }
+
+  .cinematic-section {
+    border: 1px solid rgb(148 163 184 / 0.16);
+    background: linear-gradient(135deg, rgb(15 23 42 / 0.84), rgb(15 23 42 / 0.52));
+    box-shadow: 0 24px 80px rgb(0 0 0 / 0.28);
+    backdrop-filter: blur(20px);
+  }
+
+  .glass-panel {
+    border: 1px solid rgb(148 163 184 / 0.18);
+    background: linear-gradient(135deg, rgb(15 23 42 / 0.72), rgb(15 23 42 / 0.42));
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06), 0 20px 60px rgb(0 0 0 / 0.22);
+    backdrop-filter: blur(18px);
+  }
+
+  .text-gradient {
+    background: linear-gradient(90deg, #f8fafc, #7dd3fc 45%, #c4b5fd 78%, #fef3c7);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .aurora-border {
+    position: relative;
+  }
+
+  .aurora-border::before {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    z-index: -1;
+    border-radius: inherit;
+    background: linear-gradient(135deg, rgb(56 189 248 / 0.5), rgb(139 92 246 / 0.42), rgb(52 211 153 / 0.28));
+  }
+
+  .light {
+    color-scheme: light;
+  }
+
+  .light body,
+  .light .cinematic-page {
+    background:
+      radial-gradient(circle at top left, rgb(14 165 233 / 0.16), transparent 26rem),
+      radial-gradient(circle at 85% 10%, rgb(124 58 237 / 0.12), transparent 28rem),
+      linear-gradient(180deg, #f8fafc 0%, #eef6ff 46%, #f8fafc 100%);
+    color: #0f172a;
   }
 }
