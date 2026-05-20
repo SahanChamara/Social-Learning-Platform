@@ -2,10 +2,18 @@ package com.sociallearning.graphql;
 
 import com.sociallearning.entity.Comment;
 import com.sociallearning.enums.CommentableType;
+import com.sociallearning.security.InputSanitizer;
 import com.sociallearning.security.SecurityUtils;
 import com.sociallearning.service.CommentService;
 import com.sociallearning.service.LikeService;
 import com.sociallearning.service.SubscriptionPublisher;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -16,6 +24,7 @@ import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
 import org.springframework.graphql.data.method.annotation.SchemaMapping;
 import org.springframework.stereotype.Controller;
+import org.springframework.validation.annotation.Validated;
 
 import java.util.HashMap;
 import java.util.List;
@@ -33,12 +42,14 @@ import java.util.Map;
  */
 @Slf4j
 @Controller
+@Validated
 @RequiredArgsConstructor
 public class CommentResolver {
 
     private final CommentService commentService;
     private final LikeService likeService;
     private final SubscriptionPublisher subscriptionPublisher;
+    private final InputSanitizer inputSanitizer;
 
     // ============================================
     // Mutations
@@ -59,26 +70,26 @@ public class CommentResolver {
      * }
      */
     @MutationMapping
-    public Comment addComment(@Argument("input") AddCommentInput input) {
+    public Comment addComment(@Argument("input") @Valid AddCommentInput input) {
         Long userId = requireAuthentication();
         
         log.info("GraphQL addComment mutation: userId={}, targetType={}, targetId={}", 
                 userId, input.targetType(), input.targetId());
         
-        CommentableType targetType = CommentableType.valueOf(input.targetType());
-        Long parentId = input.parentCommentId() != null ? Long.parseLong(input.parentCommentId()) : null;
-        Long targetId = Long.parseLong(input.targetId());
-        
+        String sanitizedContent = inputSanitizer.sanitize(input.content());
+        Long parentId = input.parentCommentId();
+        Long targetId = input.targetId();
+
         Comment comment = commentService.addComment(
                 userId,
-                targetType,
+                input.targetType(),
                 targetId,
-                input.content(),
+                sanitizedContent,
                 parentId
         );
         
         // Publish subscription event
-        subscriptionPublisher.publishCommentAdded(comment, input.targetType(), targetId);
+        subscriptionPublisher.publishCommentAdded(comment, input.targetType().name(), targetId);
         
         return comment;
     }
@@ -99,12 +110,14 @@ public class CommentResolver {
      * }
      */
     @MutationMapping
-    public Comment updateComment(@Argument Long id, @Argument("input") UpdateCommentInput input) {
+    public Comment updateComment(
+            @Argument @NotNull @Positive Long id,
+            @Argument("input") @Valid UpdateCommentInput input) {
         Long userId = requireAuthentication();
         
         log.info("GraphQL updateComment mutation: userId={}, commentId={}", userId, id);
         
-        Comment comment = commentService.updateComment(userId, id, input.content());
+        Comment comment = commentService.updateComment(userId, id, inputSanitizer.sanitize(input.content()));
         
         // Publish subscription event
         subscriptionPublisher.publishCommentUpdated(comment);
@@ -123,7 +136,7 @@ public class CommentResolver {
      * }
      */
     @MutationMapping
-    public boolean deleteComment(@Argument Long id) {
+    public boolean deleteComment(@Argument @NotNull @Positive Long id) {
         Long userId = requireAuthentication();
         boolean isAdmin = SecurityUtils.hasRole("ADMIN");
         
@@ -154,7 +167,7 @@ public class CommentResolver {
      * }
      */
     @MutationMapping
-    public Comment pinComment(@Argument Long id, @Argument boolean pinned) {
+    public Comment pinComment(@Argument @NotNull @Positive Long id, @Argument boolean pinned) {
         requireAuthentication();
         // TODO: Add authorization check for admin/course creator
         
@@ -191,10 +204,10 @@ public class CommentResolver {
      */
     @QueryMapping
     public Map<String, Object> comments(
-            @Argument String targetType,
-            @Argument Long targetId,
-            @Argument Integer page,
-            @Argument Integer size) {
+            @Argument @NotNull CommentableType targetType,
+            @Argument @NotNull @Positive Long targetId,
+            @Argument @Min(0) Integer page,
+            @Argument @Min(1) @Max(50) Integer size) {
         
         log.info("GraphQL comments query: targetType={}, targetId={}, page={}, size={}", 
                 targetType, targetId, page, size);
@@ -203,8 +216,7 @@ public class CommentResolver {
         int pageSize = (size != null && size > 0) ? Math.min(size, 50) : 20;
         Pageable pageable = PageRequest.of(pageNumber, pageSize);
         
-        CommentableType type = CommentableType.valueOf(targetType);
-        Page<Comment> commentPage = commentService.getComments(type, targetId, pageable);
+        Page<Comment> commentPage = commentService.getComments(targetType, targetId, pageable);
         
         return toPageResult(commentPage);
     }
@@ -223,7 +235,7 @@ public class CommentResolver {
      * }
      */
     @QueryMapping
-    public List<Comment> commentReplies(@Argument Long commentId) {
+    public List<Comment> commentReplies(@Argument @NotNull @Positive Long commentId) {
         log.info("GraphQL commentReplies query: commentId={}", commentId);
         return commentService.getReplies(commentId);
     }
@@ -241,7 +253,7 @@ public class CommentResolver {
      * }
      */
     @QueryMapping
-    public Comment comment(@Argument Long id) {
+    public Comment comment(@Argument @NotNull @Positive Long id) {
         log.info("GraphQL comment query: id={}", id);
         try {
             return commentService.getComment(id);
@@ -303,13 +315,21 @@ public class CommentResolver {
     // ============================================
 
     public record AddCommentInput(
+        @NotBlank(message = "Comment content is required")
+        @Size(min = 1, max = 5000, message = "Comment content must be between 1 and 5000 characters")
         String content,
-        String targetType,
-        String targetId,
-        String parentCommentId
+        @NotNull(message = "Target type is required")
+        CommentableType targetType,
+        @NotNull(message = "Target ID is required")
+        @Positive(message = "Target ID must be positive")
+        Long targetId,
+        @Positive(message = "Parent comment ID must be positive")
+        Long parentCommentId
     ) {}
 
     public record UpdateCommentInput(
+        @NotBlank(message = "Comment content is required")
+        @Size(min = 1, max = 5000, message = "Comment content must be between 1 and 5000 characters")
         String content
     ) {}
 }

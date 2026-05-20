@@ -3,13 +3,20 @@ import * as RadioGroup from '@radix-ui/react-radio-group';
 import { Star } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { MY_RATING_QUERY, RATE_COURSE_MUTATION } from '@/graphql';
+import {
+  COURSE_RATING_STATS_QUERY,
+  COURSE_REVIEWS_QUERY,
+  MY_RATING_QUERY,
+  RATE_COURSE_MUTATION,
+} from '@/graphql';
+import { SkeletonRatingStars } from '@/components/skeletons';
 import { useAuth } from '@/hooks';
 import { useToast } from '@/hooks/useToast';
 
 interface Rating {
   id: string;
   ratingValue: number;
+  reviewTitle?: string | null;
   reviewContent?: string | null;
 }
 
@@ -38,6 +45,7 @@ interface RateCourseMutationVariables {
   input: {
     courseId: string;
     ratingValue: number;
+    reviewTitle?: string;
     reviewContent?: string;
   };
 }
@@ -62,28 +70,48 @@ export function RatingStars({
   ratingCount,
   className,
 }: Readonly<RatingStarsProps>) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
 
   const [selectedRatingDraft, setSelectedRatingDraft] = useState<number | null>(null);
+  const [reviewTitleDraft, setReviewTitleDraft] = useState<string | null>(null);
   const [reviewDraft, setReviewDraft] = useState<string | null>(null);
   const [ratingStatsOverride, setRatingStatsOverride] = useState<{ average: number; count: number } | null>(null);
 
-  const { data: myRatingData } = useQuery<MyRatingResponse, MyRatingVariables>(MY_RATING_QUERY, {
-    variables: { courseId },
-    skip: !isAuthenticated,
-    fetchPolicy: 'cache-and-network',
-  });
-
-  const myRating = myRatingData?.myRating;
-  const selectedRating = selectedRatingDraft ?? myRating?.ratingValue ?? 0;
-  const reviewText = reviewDraft ?? myRating?.reviewContent ?? '';
-  const displayAverage = ratingStatsOverride?.average ?? averageRating;
-  const displayCount = ratingStatsOverride?.count ?? ratingCount;
+  const { data: myRatingData, loading: ratingLoading } = useQuery<MyRatingResponse, MyRatingVariables>(
+    MY_RATING_QUERY,
+    {
+      variables: { courseId },
+      skip: !isAuthenticated,
+      fetchPolicy: 'cache-and-network',
+    },
+  );
 
   const [rateCourse, { loading }] = useMutation<RateCourseMutationResponse, RateCourseMutationVariables>(
     RATE_COURSE_MUTATION,
+    {
+      refetchQueries: [
+        { query: COURSE_REVIEWS_QUERY, variables: { courseId, page: 0, size: 6 } },
+        { query: COURSE_RATING_STATS_QUERY, variables: { courseId } },
+      ],
+      awaitRefetchQueries: false,
+    },
   );
+
+  if (authLoading || (isAuthenticated && ratingLoading && !myRatingData)) {
+    return (
+      <section className={className}>
+        <SkeletonRatingStars />
+      </section>
+    );
+  }
+
+  const myRating = myRatingData?.myRating;
+  const selectedRating = selectedRatingDraft ?? myRating?.ratingValue ?? 0;
+  const reviewTitle = reviewTitleDraft ?? myRating?.reviewTitle ?? '';
+  const reviewText = reviewDraft ?? myRating?.reviewContent ?? '';
+  const displayAverage = ratingStatsOverride?.average ?? averageRating;
+  const displayCount = ratingStatsOverride?.count ?? ratingCount;
 
   const submitRating = async () => {
     if (!isAuthenticated) {
@@ -125,6 +153,7 @@ export function RatingStars({
           input: {
             courseId,
             ratingValue: selectedRating,
+            reviewTitle: reviewTitle.trim() ? reviewTitle.trim() : undefined,
             reviewContent: reviewText.trim() ? reviewText.trim() : undefined,
           },
         },
@@ -139,7 +168,7 @@ export function RatingStars({
 
       toast({
         title: 'Rating saved',
-        description: 'Your rating was submitted successfully.',
+        description: reviewText.trim() ? 'Your review was saved successfully.' : 'Your rating was saved successfully.',
       });
     } catch {
       setRatingStatsOverride(null);
@@ -154,14 +183,17 @@ export function RatingStars({
   return (
     <section className={className}>
       <div className="rounded-xl border border-slate-200 bg-slate-50 p-5">
-        <p className="text-sm text-slate-600">Course rating</p>
+        <p className="text-sm font-medium text-slate-600">Average rating</p>
         <p className="mt-1 inline-flex items-center gap-2 text-lg font-semibold text-slate-900">
           <Star className="h-5 w-5 fill-amber-400 text-amber-400" />
-          {formatAverage(displayAverage)} <span className="text-sm font-normal text-slate-600">({displayCount})</span>
+          {formatAverage(displayAverage)}
+          <span className="text-sm font-normal text-slate-600">
+            ({displayCount} rating{displayCount === 1 ? '' : 's'})
+          </span>
         </p>
       </div>
 
-      {isLoading ? null : !isAuthenticated ? (
+      {!isAuthenticated ? (
         <div className="mt-4 rounded-lg border border-slate-200 bg-white p-4 text-sm text-slate-600">
           <Link to="/auth/login" className="font-semibold text-blue-700 hover:text-blue-800">
             Sign in
@@ -170,7 +202,9 @@ export function RatingStars({
         </div>
       ) : (
         <div className="mt-4 rounded-xl border border-slate-200 bg-white p-5">
-          <h3 className="text-sm font-semibold text-slate-900">Your rating</h3>
+          <h3 className="text-sm font-semibold text-slate-900">
+            {myRating ? 'Update your review' : 'Rate this course'}
+          </h3>
           <RadioGroup.Root
             className="mt-3 flex items-center gap-2"
             value={selectedRating > 0 ? String(selectedRating) : ''}
@@ -192,8 +226,19 @@ export function RatingStars({
             })}
           </RadioGroup.Root>
 
+          <label htmlFor={`review-title-${courseId}`} className="mt-4 block text-sm font-medium text-slate-700">
+            Review title
+          </label>
+          <input
+            id={`review-title-${courseId}`}
+            value={reviewTitle}
+            onChange={(event) => setReviewTitleDraft(event.target.value)}
+            placeholder="What should other learners know?"
+            className="mt-2 h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 shadow-xs outline-hidden transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+          />
+
           <label htmlFor={`review-${courseId}`} className="mt-4 block text-sm font-medium text-slate-700">
-            Review
+            Written review
           </label>
           <textarea
             id={`review-${courseId}`}
@@ -213,7 +258,7 @@ export function RatingStars({
               disabled={loading}
               className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {loading ? 'Saving...' : 'Submit rating'}
+              {loading ? 'Saving...' : myRating ? 'Update review' : 'Submit review'}
             </button>
           </div>
         </div>

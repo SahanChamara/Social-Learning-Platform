@@ -503,6 +503,15 @@ enum LessonType {
 }
 
 """
+Learner enrollment status for a course
+"""
+enum EnrollmentStatus {
+    ENROLLED
+    COMPLETED
+    DROPPED
+}
+
+"""
 Lesson entity
 """
 type Lesson {
@@ -656,6 +665,68 @@ type CoursePage {
     hasNext: Boolean!
     """Whether there is a previous page"""
     hasPrevious: Boolean!
+}
+
+"""
+Learner enrollment in a course with denormalized progress totals
+"""
+type Enrollment {
+    """Unique enrollment identifier"""
+    id: ID!
+    """Current enrollment status"""
+    status: EnrollmentStatus!
+    """Completion percentage from 0 to 100"""
+    progressPercentage: Float!
+    """Number of completed lessons"""
+    completedLessons: Int!
+    """Total tracked lessons"""
+    totalLessons: Int!
+    """Enrollment timestamp"""
+    enrolledAt: String!
+    """First learning activity timestamp"""
+    startedAt: String
+    """Completion timestamp"""
+    completedAt: String
+    """Most recent activity timestamp"""
+    lastAccessedAt: String
+    """Total tracked study time in minutes"""
+    timeSpentMinutes: Int!
+    """Enrolled course"""
+    course: Course!
+    """Lesson-level progress records"""
+    progressRecords: [Progress!]!
+    """Creation timestamp"""
+    createdAt: String!
+    """Update timestamp"""
+    updatedAt: String!
+}
+
+"""
+Lesson-level progress for a learner enrollment
+"""
+type Progress {
+    """Unique progress identifier"""
+    id: ID!
+    """Whether the lesson is completed"""
+    completed: Boolean!
+    """First access timestamp"""
+    startedAt: String
+    """Completion timestamp"""
+    completedAt: String
+    """Most recent access timestamp"""
+    lastAccessedAt: String
+    """Tracked watch/study time in seconds"""
+    watchTimeSeconds: Int!
+    """Attempt count for quiz/assignment style lessons"""
+    attemptCount: Int!
+    """Optional score percentage"""
+    scorePercentage: Float
+    """Related lesson"""
+    lesson: Lesson!
+    """Creation timestamp"""
+    createdAt: String!
+    """Update timestamp"""
+    updatedAt: String!
 }
 
 # ============================================
@@ -932,6 +1003,22 @@ type Mutation {
     Mark a review as helpful
     """
     markReviewHelpful(id: ID!): Rating!
+
+    # Enrollment & Progress
+    """
+    Enroll the current user in a course
+    """
+    enrollCourse(courseId: ID!): Enrollment!
+
+    """
+    Remove the current user's enrollment from a course
+    """
+    unenrollCourse(courseId: ID!): Boolean!
+
+    """
+    Mark a lesson complete for the current user
+    """
+    markLessonComplete(lessonId: ID!): Progress!
 }
 
 # ============================================
@@ -1067,6 +1154,22 @@ type Query {
     Get a tag by ID
     """
     tag(id: ID!): Tag
+
+    # Enrollment & Progress Queries
+    """
+    Get the current user's enrollments, optionally filtered by status
+    """
+    myEnrollments(status: EnrollmentStatus): [Enrollment!]!
+
+    """
+    Get lightweight current-user enrollment status for a course
+    """
+    enrollmentStatus(courseId: ID!): Enrollment
+
+    """
+    Get the current user's enrollment with progress records for a course
+    """
+    courseEnrollment(courseId: ID!): Enrollment
     
     # ============================================
     # Engagement Queries

@@ -4,6 +4,15 @@ export * from './ui';
 // Export Toaster component
 export { Toaster } from './Toaster';
 
+// Export Error Boundary component
+export { ErrorBoundary } from './ErrorBoundary';
+
+// Export Notifications
+export * from './notifications';
+
+// Export Skeleton components
+export * from './skeletons';
+
 // Export Auth components
 export * from './auth';
 

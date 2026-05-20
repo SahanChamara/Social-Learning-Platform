@@ -21,6 +21,7 @@ import {
 import { useMemo } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Progress } from '@/components/ui';
+import { SkeletonLessonPage } from '@/components/skeletons';
 import {
   COURSE_ENROLLMENT_QUERY,
   COURSE_QUERY,
@@ -182,7 +183,7 @@ function QuizContent({ lesson }: Readonly<QuizContentProps>) {
       <p className="mt-2 text-sm text-slate-600">
         {lesson.description || 'Complete this quiz to test your knowledge.'}
       </p>
-      <p className="mt-4 text-xs text-slate-400">Quiz functionality coming soon</p>
+      <p className="mt-4 text-xs text-slate-400">Quiz content is not available for this lesson yet.</p>
     </div>
   );
 }
@@ -218,7 +219,7 @@ function AssignmentContent({ lesson }: Readonly<AssignmentContentProps>) {
       ) : (
         <p className="mt-4 text-sm text-slate-600">No instructions provided.</p>
       )}
-      <p className="mt-4 text-xs text-slate-400">Assignment submission coming soon</p>
+      <p className="mt-4 text-xs text-slate-400">Assignment submission is not available for this lesson yet.</p>
     </div>
   );
 }
@@ -377,14 +378,7 @@ export default function LessonPage() {
   const isLoading = courseLoading || (isAuthenticated && enrollmentLoading);
 
   if (isLoading) {
-    return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="mx-auto h-8 w-8 animate-spin text-blue-600" />
-          <p className="mt-4 text-sm text-slate-600">Loading lesson...</p>
-        </div>
-      </div>
-    );
+    return <SkeletonLessonPage />;
   }
 
   if (courseError || !course) {
@@ -605,8 +599,8 @@ export default function LessonPage() {
                 className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-green-700"
               >
                 <CheckCircle2 className="h-4 w-4" />
-                <span className="hidden sm:inline">Complete Course</span>
-                <span className="sm:hidden">Done</span>
+                <span className="hidden sm:inline">Back to Course</span>
+                <span className="sm:hidden">Course</span>
               </Link>
             )}
           </div>

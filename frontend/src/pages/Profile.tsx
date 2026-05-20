@@ -1,21 +1,20 @@
 import { useQuery } from '@apollo/client/react';
 import { Link } from 'react-router-dom';
-import { AchievementBadge, LearningStreak, type LearningStreakData } from '../components';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/Card';
-import { Button } from '../components/ui/Button';
-import { Input } from '../components/ui/Input';
-import { Label } from '../components/ui/Label';
-import { MY_ACHIEVEMENTS_QUERY, LEARNING_STREAK_QUERY } from '../graphql';
-import { useAuth } from '../hooks';
-import { 
-  ArrowLeft,
-  User,
-  Mail,
-  Shield,
+import {
+  Award,
   Calendar,
   CheckCircle2,
-  XCircle
+  Mail,
+  Shield,
+  Trophy,
+  User,
 } from 'lucide-react';
+import { AchievementBadge, LearningStreak, type LearningStreakData } from '../components';
+import { EmptyState, PageHeader, Skeleton } from '../components/ui';
+import { Button } from '../components/ui/Button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/Card';
+import { LEARNING_STREAK_QUERY, MY_ACHIEVEMENTS_QUERY } from '../graphql';
+import { useAuth } from '../hooks';
 
 interface Achievement {
   id: string;
@@ -36,268 +35,223 @@ interface UserAchievementData {
   createdAt: string;
 }
 
+function formatDate(value: string) {
+  return new Intl.DateTimeFormat('en', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  }).format(new Date(value));
+}
+
+function initialsFromName(name: string, fallback: string) {
+  const initials = name
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? '')
+    .join('');
+
+  return initials || fallback.slice(0, 2).toUpperCase();
+}
+
 export default function Profile() {
   const { user } = useAuth();
 
   const { data: achievementsData, loading: achievementsLoading } = useQuery<{
     myAchievements: UserAchievementData[];
-  }>(MY_ACHIEVEMENTS_QUERY, { skip: !user });
+  }>(MY_ACHIEVEMENTS_QUERY, {
+    skip: !user,
+    fetchPolicy: 'cache-and-network',
+  });
 
   const { data: streakData, loading: streakLoading } = useQuery<{
     learningStreak: LearningStreakData;
-  }>(LEARNING_STREAK_QUERY, { skip: !user });
+  }>(LEARNING_STREAK_QUERY, {
+    skip: !user,
+    fetchPolicy: 'cache-and-network',
+  });
 
   if (!user) {
     return null;
   }
 
-  const userDetails = [
+  const myAchievements = achievementsData?.myAchievements ?? [];
+  const unlockedAchievements = myAchievements.filter((achievement) => achievement.isUnlocked);
+  const inProgressAchievements = myAchievements.filter((achievement) => !achievement.isUnlocked);
+  const totalPoints = unlockedAchievements.reduce(
+    (sum, userAchievement) => sum + (userAchievement.achievement.points ?? 0),
+    0,
+  );
+  const streak = streakData?.learningStreak;
+  const details = [
     { label: 'Username', value: user.username, icon: User },
     { label: 'Email', value: user.email, icon: Mail },
-    { label: 'Full Name', value: user.fullName, icon: User },
     { label: 'Role', value: user.role, icon: Shield },
-    { 
-      label: 'Account Created', 
-      value: new Date(user.createdAt).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      }), 
-      icon: Calendar 
-    },
+    { label: 'Joined', value: formatDate(user.createdAt), icon: Calendar },
   ];
 
-  const myAchievements = achievementsData?.myAchievements || [];
-  const unlockedCount = myAchievements.filter(a => a.isUnlocked).length;
-  const streak = streakData?.learningStreak;
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <Link
-            to="/dashboard"
-            className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-4 transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Dashboard
-          </Link>
-          <h1 className="text-2xl font-bold text-gray-900">My Profile</h1>
-          <p className="text-gray-600 mt-1">
-            Manage your account settings and view your achievements
-          </p>
-        </div>
-      </header>
+    <div className="bg-slate-50">
+      <main className="app-container py-10">
+        <PageHeader
+          eyebrow="Profile"
+          title={user.fullName}
+          description="Your account identity, learning streak, and achievement progress."
+          actions={
+            <Button variant="outline" asChild>
+              <Link to="/dashboard">Back to Dashboard</Link>
+            </Button>
+          }
+        />
 
-      {/* Main Content */}
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="space-y-6">
-          {/* Profile Overview Card */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Profile Information</CardTitle>
-              <CardDescription>
-                Your account details and status
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-start gap-6 mb-6">
-                {/* Avatar */}
-                <div className="flex-shrink-0">
-                  {user.avatarUrl ? (
-                    <img
-                      src={user.avatarUrl}
-                      alt={user.fullName}
-                      className="w-24 h-24 rounded-full object-cover border-4 border-gray-200"
-                    />
-                  ) : (
-                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white text-3xl font-bold border-4 border-gray-200">
-                      {user.fullName?.charAt(0).toUpperCase() || user.username?.charAt(0).toUpperCase()}
-                    </div>
-                  )}
-                </div>
-
-                {/* User Info */}
-                <div className="flex-1">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                    {user.fullName}
-                  </h2>
-                  <p className="text-gray-600 mb-3">@{user.username}</p>
-                  
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2">
-                      {user.isVerified ? (
-                        <>
-                          <CheckCircle2 className="h-5 w-5 text-green-600" />
-                          <span className="text-sm text-green-600 font-medium">Verified</span>
-                        </>
-                      ) : (
-                        <>
-                          <XCircle className="h-5 w-5 text-gray-400" />
-                          <span className="text-sm text-gray-500">Not Verified</span>
-                        </>
-                      )}
-                    </div>
-                    
-                    <div className="flex items-center gap-2">
-                      {user.isActive ? (
-                        <>
-                          <div className="h-2 w-2 rounded-full bg-green-500"></div>
-                          <span className="text-sm text-gray-600">Active</span>
-                        </>
-                      ) : (
-                        <>
-                          <div className="h-2 w-2 rounded-full bg-gray-300"></div>
-                          <span className="text-sm text-gray-500">Inactive</span>
-                        </>
-                      )}
-                    </div>
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
+          <section className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Account</CardTitle>
+                <CardDescription>Core account details used across the learning platform.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
+                  <div className="shrink-0">
+                    {user.avatarUrl ? (
+                      <img
+                        src={user.avatarUrl}
+                        alt={user.fullName}
+                        className="h-24 w-24 rounded-full border-4 border-slate-200 object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-24 w-24 items-center justify-center rounded-full border-4 border-slate-200 bg-blue-600 text-3xl font-bold text-white">
+                        {initialsFromName(user.fullName, user.username)}
+                      </div>
+                    )}
                   </div>
 
-                  {user.bio && (
-                    <p className="mt-4 text-gray-700">{user.bio}</p>
-                  )}
-                  
-                  {user.expertise && (
-                    <div className="mt-3">
-                      <span className="text-sm font-medium text-gray-600">Expertise: </span>
-                      <span className="text-sm text-gray-700">{user.expertise}</span>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h2 className="text-2xl font-bold text-slate-950">{user.fullName}</h2>
+                      {user.isVerified ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+                          <CheckCircle2 className="h-3.5 w-3.5" />
+                          Verified
+                        </span>
+                      ) : null}
                     </div>
-                  )}
-                </div>
-              </div>
+                    <p className="mt-1 text-sm text-slate-600">@{user.username}</p>
 
-              {/* User Details Grid */}
-              <div className="border-t border-gray-200 pt-6 mt-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {userDetails.map((detail) => {
+                    {user.bio ? <p className="mt-4 leading-7 text-slate-700">{user.bio}</p> : null}
+                    {user.expertise ? (
+                      <p className="mt-3 text-sm text-slate-600">
+                        <span className="font-semibold text-slate-900">Expertise:</span> {user.expertise}
+                      </p>
+                    ) : null}
+                  </div>
+                </div>
+
+                <div className="mt-6 grid gap-4 border-t border-slate-200 pt-6 sm:grid-cols-2">
+                  {details.map((detail) => {
                     const Icon = detail.icon;
                     return (
-                      <div key={detail.label} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
-                        <Icon className="h-5 w-5 text-gray-500 mt-0.5" />
-                        <div>
-                          <p className="text-sm font-medium text-gray-500">{detail.label}</p>
-                          <p className="text-base text-gray-900 mt-1">{detail.value}</p>
+                      <div key={detail.label} className="flex items-start gap-3 rounded-lg bg-slate-50 p-4">
+                        <Icon className="mt-0.5 h-5 w-5 text-slate-500" />
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-slate-500">{detail.label}</p>
+                          <p className="mt-1 truncate text-sm font-semibold text-slate-950">{detail.value}</p>
                         </div>
                       </div>
                     );
                   })}
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          {/* Learning Streak Card */}
-          <LearningStreak streak={streak} loading={streakLoading} />
+            <LearningStreak streak={streak} loading={streakLoading} />
 
-          {/* Achievements Card */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>Achievements</CardTitle>
-                  <CardDescription>
-                    {achievementsLoading ? 'Loading achievements...' : `${unlockedCount} unlocked`}
-                  </CardDescription>
+            <Card>
+              <CardHeader>
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <CardTitle>Achievements</CardTitle>
+                    <CardDescription>
+                      {achievementsLoading
+                        ? 'Loading achievements...'
+                        : `${unlockedAchievements.length} unlocked, ${inProgressAchievements.length} in progress`}
+                    </CardDescription>
+                  </div>
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1 text-sm font-semibold text-slate-700">
+                    <Trophy className="h-4 w-4" />
+                    {totalPoints} pts
+                  </span>
                 </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {achievementsLoading ? (
-                <div className="text-center py-8">
-                  <p className="text-gray-500">Loading achievements...</p>
-                </div>
-              ) : myAchievements.length === 0 ? (
-                <div className="text-center py-8">
-                  <p className="text-gray-500 mb-2">No achievements yet</p>
-                  <p className="text-sm text-gray-400">Start learning and unlocking achievements!</p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                  {myAchievements.map((userAchievement) => (
-                    <AchievementBadge
-                      key={userAchievement.id}
-                      achievement={userAchievement.achievement}
-                      unlocked={userAchievement.isUnlocked}
-                      progressPercentage={userAchievement.progressPercentage}
-                      earnedAt={userAchievement.earnedAt}
-                    />
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Edit Profile Form (Placeholder) */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Edit Profile</CardTitle>
-              <CardDescription>
-                Update your profile information (Demo - not functional yet)
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="fullName">Full Name</Label>
-                  <Input
-                    id="fullName"
-                    defaultValue={user.fullName}
-                    placeholder="Enter your full name"
+              </CardHeader>
+              <CardContent>
+                {achievementsLoading ? (
+                  <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+                    {Array.from({ length: 8 }).map((_, index) => (
+                      <div key={index} className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs">
+                        <Skeleton className="mx-auto h-12 w-12 rounded-full" />
+                        <Skeleton className="mx-auto mt-3 h-4 w-24" />
+                        <Skeleton className="mt-3 h-1.5 w-full rounded-full" />
+                        <Skeleton className="mx-auto mt-2 h-3 w-16" />
+                      </div>
+                    ))}
+                  </div>
+                ) : myAchievements.length > 0 ? (
+                  <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+                    {myAchievements.map((userAchievement) => (
+                      <AchievementBadge
+                        key={userAchievement.id}
+                        achievement={userAchievement.achievement}
+                        unlocked={userAchievement.isUnlocked}
+                        progressPercentage={userAchievement.progressPercentage}
+                        earnedAt={userAchievement.earnedAt}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <EmptyState
+                    title="No achievements yet"
+                    description="Complete lessons and build a streak to start earning badges."
+                    icon={<Award className="h-6 w-6" />}
+                    action={
+                      <Button asChild>
+                        <Link to="/my-learning">Open My Learning</Link>
+                      </Button>
+                    }
                   />
+                )}
+              </CardContent>
+            </Card>
+          </section>
+
+          <aside className="space-y-6 lg:sticky lg:top-24 lg:self-start">
+            <Card>
+              <CardHeader>
+                <CardTitle>Learning identity</CardTitle>
+                <CardDescription>Progress signals connected to real activity.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="rounded-lg bg-slate-50 p-4">
+                  <p className="text-sm text-slate-600">Current streak</p>
+                  <p className="mt-1 text-2xl font-bold text-slate-950">
+                    {streakLoading ? <Skeleton className="h-8 w-20" /> : `${streak?.currentStreakDays ?? 0} days`}
+                  </p>
                 </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="bio">Bio</Label>
-                  <textarea
-                    id="bio"
-                    className="flex w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-gray-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 min-h-[100px]"
-                    defaultValue={user.bio || ''}
-                    placeholder="Tell us about yourself..."
-                  />
+                <div className="rounded-lg bg-slate-50 p-4">
+                  <p className="text-sm text-slate-600">Achievements unlocked</p>
+                  <p className="mt-1 text-2xl font-bold text-slate-950">
+                    {achievementsLoading ? <Skeleton className="h-8 w-16" /> : unlockedAchievements.length}
+                  </p>
                 </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="expertise">Expertise</Label>
-                  <Input
-                    id="expertise"
-                    defaultValue={user.expertise || ''}
-                    placeholder="e.g., Web Development, Data Science"
-                  />
+                <div className="rounded-lg bg-slate-50 p-4">
+                  <p className="text-sm text-slate-600">Achievement points</p>
+                  <p className="mt-1 text-2xl font-bold text-slate-950">
+                    {achievementsLoading ? <Skeleton className="h-8 w-16" /> : totalPoints}
+                  </p>
                 </div>
-
-                <div className="flex gap-3 pt-4">
-                  <Button type="submit" disabled>
-                    Save Changes
-                  </Button>
-                  <Button type="button" variant="outline" disabled>
-                    Cancel
-                  </Button>
-                </div>
-
-                <p className="text-sm text-gray-500 italic">
-                  Note: Profile editing functionality will be implemented in a future phase.
-                </p>
-              </form>
-            </CardContent>
-          </Card>
-
-          {/* Protected Route Info */}
-          <Card className="bg-purple-50 border-purple-200">
-            <CardHeader>
-              <CardTitle className="text-purple-900">🔒 Protected Profile Page</CardTitle>
-              <CardDescription className="text-purple-700">
-                This profile page is protected and requires authentication
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="text-sm text-purple-800">
-              <p>
-                Only authenticated users can view their profile. The ProtectedRoute component
-                ensures that unauthorized access is prevented and users are redirected to login.
-              </p>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </aside>
         </div>
       </main>
     </div>

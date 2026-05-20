@@ -1,6 +1,7 @@
 import * as Popover from '@radix-ui/react-popover';
 import { addDays, format, parseISO, startOfDay, startOfWeek, subDays } from 'date-fns';
 import { Calendar, Flame } from 'lucide-react';
+import { SkeletonLearningStreak } from '@/components/skeletons';
 import { cn } from '@/lib/utils';
 
 export interface LearningStreakData {
@@ -48,11 +49,7 @@ function buildCalendarDays() {
 
 export function LearningStreak({ streak, loading = false, className }: Readonly<LearningStreakProps>) {
   if (loading) {
-    return (
-      <div className={cn('rounded-lg border border-slate-200 bg-white p-5', className)}>
-        <p className="text-sm text-slate-500">Loading streak...</p>
-      </div>
-    );
+    return <SkeletonLearningStreak />;
   }
 
   if (!streak) {

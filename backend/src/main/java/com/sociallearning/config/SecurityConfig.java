@@ -1,7 +1,10 @@
 package com.sociallearning.config;
 
 import com.sociallearning.security.JwtAuthenticationFilter;
+import com.sociallearning.security.RateLimitingFilter;
+import com.sociallearning.security.RequestLoggingFilter;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -38,6 +41,11 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final RequestLoggingFilter requestLoggingFilter;
+    private final RateLimitingFilter rateLimitingFilter;
+
+    @Value("${app.cors.allowed-origins}")
+    private String allowedOrigins;
 
     /**
      * Configure the security filter chain.
@@ -79,7 +87,11 @@ public class SecurityConfig {
             )
             
             // Add JWT authentication filter before UsernamePasswordAuthenticationFilter
-            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+            // Log requests with status and latency
+            .addFilterAfter(requestLoggingFilter, JwtAuthenticationFilter.class)
+            // Apply endpoint-based rate limiting after authentication is established
+            .addFilterAfter(rateLimitingFilter, RequestLoggingFilter.class);
 
         return http.build();
     }
@@ -93,12 +105,12 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         
-        // Allow requests from frontend (adjust URL for production)
-        configuration.setAllowedOrigins(Arrays.asList(
-            "http://localhost:5173",    // Vite dev server
-            "http://localhost:3000",    // Alternative frontend port
-            "http://localhost:4173"     // Vite preview
-        ));
+        configuration.setAllowedOrigins(
+            Arrays.stream(allowedOrigins.split(","))
+                .map(String::trim)
+                .filter(origin -> !origin.isEmpty())
+                .toList()
+        );
         
         // Allow these HTTP methods
         configuration.setAllowedMethods(Arrays.asList(

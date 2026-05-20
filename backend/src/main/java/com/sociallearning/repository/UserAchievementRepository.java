@@ -1,6 +1,7 @@
 package com.sociallearning.repository;
 
 import com.sociallearning.entity.UserAchievement;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -15,6 +16,7 @@ public interface UserAchievementRepository extends JpaRepository<UserAchievement
 
     Optional<UserAchievement> findByUserIdAndAchievementId(Long userId, Long achievementId);
 
+    @EntityGraph(attributePaths = "achievement")
     List<UserAchievement> findByUserIdOrderByCreatedAtDesc(Long userId);
 
     long countByUserIdAndIsUnlockedTrue(Long userId);
