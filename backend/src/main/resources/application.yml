@@ -4,9 +4,9 @@ spring:
   
   # Database Configuration
   datasource:
-    url: jdbc:postgresql://localhost:5433/sociallearning
-    username: postgres
-    password: 1234
+    url: ${DB_URL:jdbc:postgresql://localhost:5433/sociallearning}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:1234}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 10
@@ -14,7 +14,8 @@ spring:
       connection-timeout: 30000
 
   output:
-    ansi: enabled
+    ansi:
+      enabled: ALWAYS
 
   
   # JPA Configuration
@@ -33,7 +34,7 @@ spring:
   graphql:
     path: /graphql
     graphiql:
-      enabled: true
+      enabled: ${GRAPHIQL_ENABLED:true}
       path: /graphiql
     schema:
       locations: classpath:graphql/
@@ -46,27 +47,86 @@ spring:
   # Security
   security:
     user:
-      name: admin
-      password: admin
+      name: ${SPRING_SECURITY_USER_NAME:admin}
+      password: ${SPRING_SECURITY_USER_PASSWORD:}
 
 # JWT Configuration
 jwt:
-  secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
-  expiration: 86400000  # 24 hours in milliseconds (1 day)
-  refresh-expiration: 604800000  # 7 days in milliseconds
+  secret: ${JWT_SECRET:dev-only-change-me-at-least-32-characters}
+  expiration: ${JWT_EXPIRATION_MS:86400000}  # 24 hours in milliseconds (1 day)
+  refresh-expiration: ${JWT_REFRESH_EXPIRATION_MS:604800000}  # 7 days in milliseconds
 
 # Server Configuration
 server:
-  port: 8080
+  port: ${SERVER_PORT:8080}
   error:
     include-message: always
     include-binding-errors: always
 
 # Logging
 logging:
+  file:
+    name: logs/social-learning-platform.log
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} [requestId=%X{requestId:-N/A}] - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} [requestId=%X{requestId:-N/A}] - %msg%n"
   level:
     root: INFO
-    com.sociallearning: DEBUG
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
-    org.springframework.graphql: DEBUG
+    com.sociallearning: INFO
+    org.springframework.graphql: INFO
+    org.springframework.security: WARN
+    org.hibernate.SQL: WARN
+    org.hibernate.type.descriptor.sql.BasicBinder: WARN
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: always
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+
+info:
+  app:
+    name: Social Learning Platform
+    description: Backend API health and monitoring metadata
+
+app:
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:3000,http://localhost:4173}
+  seed:
+    demo-data:
+      enabled: ${DEMO_DATA_ENABLED:true}
+  rate-limit:
+    enabled: true
+    cleanup-interval: 500
+    rules:
+      - name: graphql-anonymous
+        path: /graphql
+        method: POST
+        max-requests: 120
+        window-seconds: 60
+        anonymous-only: true
+      - name: graphql-authenticated
+        path: /graphql
+        method: POST
+        max-requests: 300
+        window-seconds: 60
+        authenticated-only: true
+      - name: graphiql-ui
+        path: /graphiql/**
+        method: GET
+        max-requests: 240
+        window-seconds: 60
+      - name: graphql-websocket
+        path: /graphql-ws
+        max-requests: 60
+        window-seconds: 60

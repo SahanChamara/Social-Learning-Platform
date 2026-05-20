@@ -1,77 +1,169 @@
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-import Home from '@/pages/Home';
-import Login from '@/pages/auth/Login';
-import Register from '@/pages/auth/Register';
-import Discover from '@/pages/Discover';
-import NotFound from '@/pages/NotFound';
-import ComponentsDemo from '@/pages/ComponentsDemo';
-import AuthDemo from '@/pages/AuthDemo';
-import Dashboard from '@/pages/Dashboard';
-import LearnerDashboard from '@/pages/LearnerDashboard';
-import LessonPage from '@/pages/LessonPage';
-import Profile from '@/pages/Profile';
-import CoursesPage from '@/pages/CoursesPage';
-import CourseDetailPage from '@/pages/CourseDetailPage';
-import CreateCoursePage from '@/pages/CreateCoursePage';
+import { Suspense, lazy } from 'react';
+import { createBrowserRouter, RouterProvider, type RouteObject } from 'react-router-dom';
+const Home = lazy(() => import('@/pages/Home'));
+const Login = lazy(() => import('@/pages/auth/Login'));
+const Register = lazy(() => import('@/pages/auth/Register'));
+const Discover = lazy(() => import('@/pages/Discover'));
+const NotFound = lazy(() => import('@/pages/NotFound'));
+const Dashboard = lazy(() => import('@/pages/Dashboard'));
+const LearnerDashboard = lazy(() => import('@/pages/LearnerDashboard'));
+const LessonPage = lazy(() => import('@/pages/LessonPage'));
+const Profile = lazy(() => import('@/pages/Profile'));
+const CoursesPage = lazy(() => import('@/pages/CoursesPage'));
+const SearchPage = lazy(() => import('@/pages/SearchPage'));
+const CourseDetailPage = lazy(() => import('@/pages/CourseDetailPage'));
+const CreateCoursePage = lazy(() => import('@/pages/CreateCoursePage'));
+const CreatorDashboard = lazy(() => import('@/pages/CreatorDashboard'));
 import { ProtectedRoute } from '@/components/auth';
+import { ErrorBoundary } from '@/components';
 import { UserRole } from '@/types/auth';
+import AppShell from '@/components/layout/AppShell';
 
-// Router configuration
+const developmentRoutes: RouteObject[] = import.meta.env.DEV
+  ? [
+      {
+        path: 'components-demo',
+        lazy: async () => {
+          const { default: ComponentsDemo } = await import('@/pages/ComponentsDemo');
+          return {
+            element: (
+              <ErrorBoundary>
+                <ComponentsDemo />
+              </ErrorBoundary>
+            ),
+          };
+        },
+      },
+      {
+        path: 'auth-demo',
+        lazy: async () => {
+          const { default: AuthDemo } = await import('@/pages/AuthDemo');
+          return {
+            element: (
+              <ErrorBoundary>
+                <AuthDemo />
+              </ErrorBoundary>
+            ),
+          };
+        },
+      },
+    ]
+  : [];
+
 const router = createBrowserRouter([
   {
     path: '/',
+    element: <AppShell />,
     errorElement: <NotFound />,
     children: [
       {
         index: true,
-        element: <Home />,
+        element: (
+          <ErrorBoundary>
+            <Suspense fallback={<div className="p-8">Loading...</div>}>
+              <Home />
+            </Suspense>
+          </ErrorBoundary>
+        ),
       },
       {
         path: 'discover',
-        element: <Discover />,
+        element: (
+          <ErrorBoundary>
+            <Suspense fallback={<div className="p-8">Loading...</div>}>
+              <Discover />
+            </Suspense>
+          </ErrorBoundary>
+        ),
       },
       {
         path: 'courses',
-        element: <CoursesPage />,
+        element: (
+          <ErrorBoundary>
+            <Suspense fallback={<div className="p-8">Loading...</div>}>
+              <CoursesPage />
+            </Suspense>
+          </ErrorBoundary>
+        ),
+      },
+      {
+        path: 'search',
+        element: (
+          <ErrorBoundary>
+            <Suspense fallback={<div className="p-8">Loading...</div>}>
+              <SearchPage />
+            </Suspense>
+          </ErrorBoundary>
+        ),
+      },
+      {
+        path: 'creator',
+        element: (
+          <ErrorBoundary>
+            <Suspense fallback={<div className="p-8">Loading...</div>}>
+              <ProtectedRoute allowedRoles={[UserRole.CREATOR, UserRole.ADMIN]}>
+                <CreatorDashboard />
+              </ProtectedRoute>
+            </Suspense>
+          </ErrorBoundary>
+        ),
       },
       {
         path: 'courses/create',
         element: (
-          <ProtectedRoute allowedRoles={[UserRole.CREATOR, UserRole.ADMIN]}>
-            <CreateCoursePage />
-          </ProtectedRoute>
+          <ErrorBoundary>
+            <Suspense fallback={<div className="p-8">Loading...</div>}>
+              <ProtectedRoute allowedRoles={[UserRole.CREATOR, UserRole.ADMIN]}>
+                <CreateCoursePage />
+              </ProtectedRoute>
+            </Suspense>
+          </ErrorBoundary>
         ),
       },
       {
         path: 'courses/:slug',
-        element: <CourseDetailPage />,
+        element: (
+          <ErrorBoundary>
+            <Suspense fallback={<div className="p-8">Loading...</div>}>
+              <CourseDetailPage />
+            </Suspense>
+          </ErrorBoundary>
+        ),
       },
       {
         path: 'courses/:slug/learn/:lessonId',
         element: (
-          <ProtectedRoute>
-            <LessonPage />
-          </ProtectedRoute>
+          <ErrorBoundary>
+            <Suspense fallback={<div className="p-8">Loading...</div>}>
+              <ProtectedRoute>
+                <LessonPage />
+              </ProtectedRoute>
+            </Suspense>
+          </ErrorBoundary>
         ),
-      },
-      {
-        path: 'components-demo',
-        element: <ComponentsDemo />,
-      },
-      {
-        path: 'auth-demo',
-        element: <AuthDemo />,
       },
       {
         path: 'auth',
         children: [
           {
             path: 'login',
-            element: <Login />,
+            element: (
+              <ErrorBoundary>
+                <Suspense fallback={<div className="p-8">Loading...</div>}>
+                  <Login />
+                </Suspense>
+              </ErrorBoundary>
+            ),
           },
           {
             path: 'register',
-            element: <Register />,
+            element: (
+              <ErrorBoundary>
+                <Suspense fallback={<div className="p-8">Loading...</div>}>
+                  <Register />
+                </Suspense>
+              </ErrorBoundary>
+            ),
           },
         ],
       },
@@ -79,32 +171,49 @@ const router = createBrowserRouter([
       {
         path: 'dashboard',
         element: (
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
+          <ErrorBoundary>
+            <Suspense fallback={<div className="p-8">Loading...</div>}>
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            </Suspense>
+          </ErrorBoundary>
         ),
       },
       {
         path: 'my-learning',
         element: (
-          <ProtectedRoute>
-            <LearnerDashboard />
-          </ProtectedRoute>
+          <ErrorBoundary>
+            <Suspense fallback={<div className="p-8">Loading...</div>}>
+              <ProtectedRoute>
+                <LearnerDashboard />
+              </ProtectedRoute>
+            </Suspense>
+          </ErrorBoundary>
         ),
       },
       {
         path: 'profile',
         element: (
-          <ProtectedRoute>
-            <Profile />
-          </ProtectedRoute>
+          <ErrorBoundary>
+            <Suspense fallback={<div className="p-8">Loading...</div>}>
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            </Suspense>
+          </ErrorBoundary>
         ),
       },
+      ...developmentRoutes,
     ],
   },
   {
     path: '*',
-    element: <NotFound />,
+    element: (
+      <Suspense fallback={<div className="p-8">Loading...</div>}>
+        <NotFound />
+      </Suspense>
+    ),
   },
 ]);
 

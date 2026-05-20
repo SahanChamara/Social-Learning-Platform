@@ -4,6 +4,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { ChevronDown, ChevronRight, MessageSquare } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { COMMENT_ADDED_SUBSCRIPTION, COMMENTS_QUERY } from '@/graphql';
+import { SkeletonCommentList } from '@/components/skeletons';
 import { CommentForm } from './CommentForm';
 import { LikeButton } from './LikeButton';
 import type { CommentNode, CommentableType, CommentsQueryResponse, CommentsQueryVariables } from './commentCache';
@@ -248,10 +249,7 @@ export function CommentList({
   if (loading && !data) {
     return (
       <section className={className}>
-        <div className="space-y-3">
-          <div className="h-24 animate-pulse rounded-lg border border-slate-200 bg-slate-100" />
-          <div className="h-24 animate-pulse rounded-lg border border-slate-200 bg-slate-100" />
-        </div>
+        <SkeletonCommentList />
       </section>
     );
   }

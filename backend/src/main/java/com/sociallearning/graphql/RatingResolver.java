@@ -1,10 +1,19 @@
 package com.sociallearning.graphql;
 
 import com.sociallearning.entity.Rating;
+import com.sociallearning.security.InputSanitizer;
 import com.sociallearning.security.SecurityUtils;
 import com.sociallearning.service.RatingService;
 import com.sociallearning.service.RatingService.RatingStats;
 import com.sociallearning.service.SubscriptionPublisher;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -14,6 +23,7 @@ import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
 import org.springframework.stereotype.Controller;
+import org.springframework.validation.annotation.Validated;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -31,11 +41,13 @@ import java.util.Optional;
  */
 @Slf4j
 @Controller
+@Validated
 @RequiredArgsConstructor
 public class RatingResolver {
 
     private final RatingService ratingService;
     private final SubscriptionPublisher subscriptionPublisher;
+    private final InputSanitizer inputSanitizer;
 
     // ============================================
     // Mutations
@@ -59,7 +71,7 @@ public class RatingResolver {
      * }
      */
     @MutationMapping
-    public Rating rateCourse(@Argument("input") RateCourseInput input) {
+    public Rating rateCourse(@Argument("input") @Valid RateCourseInput input) {
         Long userId = requireAuthentication();
         Long courseId = Long.parseLong(input.courseId());
         
@@ -73,8 +85,8 @@ public class RatingResolver {
                 userId,
                 courseId,
                 input.ratingValue(),
-                input.reviewTitle(),
-                input.reviewContent()
+                inputSanitizer.sanitizeNullable(input.reviewTitle()),
+                inputSanitizer.sanitizeNullable(input.reviewContent())
         );
         
         // Publish subscription event
@@ -101,7 +113,9 @@ public class RatingResolver {
      * }
      */
     @MutationMapping
-    public Rating updateRating(@Argument Long id, @Argument("input") UpdateRatingInput input) {
+    public Rating updateRating(
+            @Argument @NotNull @Positive Long id,
+            @Argument("input") @Valid UpdateRatingInput input) {
         Long userId = requireAuthentication();
         
         log.info("GraphQL updateRating mutation: userId={}, ratingId={}", userId, id);
@@ -115,7 +129,12 @@ public class RatingResolver {
         
         // Update review if provided
         if (input.reviewTitle() != null || input.reviewContent() != null) {
-            rating = ratingService.updateReview(userId, id, input.reviewTitle(), input.reviewContent());
+            rating = ratingService.updateReview(
+                    userId,
+                    id,
+                    inputSanitizer.sanitizeNullable(input.reviewTitle()),
+                    inputSanitizer.sanitizeNullable(input.reviewContent())
+            );
         }
         
         if (rating == null) {
@@ -140,7 +159,7 @@ public class RatingResolver {
      * }
      */
     @MutationMapping
-    public boolean deleteRating(@Argument Long id) {
+    public boolean deleteRating(@Argument @NotNull @Positive Long id) {
         Long userId = requireAuthentication();
         
         log.info("GraphQL deleteRating mutation: userId={}, ratingId={}", userId, id);
@@ -161,7 +180,7 @@ public class RatingResolver {
      * }
      */
     @MutationMapping
-    public Rating markReviewHelpful(@Argument Long id) {
+    public Rating markReviewHelpful(@Argument @NotNull @Positive Long id) {
         requireAuthentication();
         
         log.info("GraphQL markReviewHelpful mutation: ratingId={}", id);
@@ -201,9 +220,9 @@ public class RatingResolver {
      */
     @QueryMapping
     public Map<String, Object> courseRatings(
-            @Argument Long courseId,
-            @Argument Integer page,
-            @Argument Integer size) {
+            @Argument @NotNull @Positive Long courseId,
+            @Argument @Min(0) Integer page,
+            @Argument @Min(1) @Max(50) Integer size) {
         
         log.info("GraphQL courseRatings query: courseId={}, page={}, size={}", courseId, page, size);
         
@@ -235,9 +254,9 @@ public class RatingResolver {
      */
     @QueryMapping
     public Map<String, Object> courseReviews(
-            @Argument Long courseId,
-            @Argument Integer page,
-            @Argument Integer size) {
+            @Argument @NotNull @Positive Long courseId,
+            @Argument @Min(0) Integer page,
+            @Argument @Min(1) @Max(50) Integer size) {
         
         log.info("GraphQL courseReviews query: courseId={}, page={}, size={}", courseId, page, size);
         
@@ -267,7 +286,7 @@ public class RatingResolver {
      * }
      */
     @QueryMapping
-    public Map<String, Object> courseRatingStats(@Argument Long courseId) {
+    public Map<String, Object> courseRatingStats(@Argument @NotNull @Positive Long courseId) {
         log.info("GraphQL courseRatingStats query: courseId={}", courseId);
         
         RatingStats stats = ratingService.getRatingStats(courseId);
@@ -298,7 +317,7 @@ public class RatingResolver {
      * }
      */
     @QueryMapping
-    public Rating myRating(@Argument Long courseId) {
+    public Rating myRating(@Argument @NotNull @Positive Long courseId) {
         Long userId = SecurityUtils.getCurrentUserId();
         if (userId == null) {
             return null;
@@ -339,15 +358,25 @@ public class RatingResolver {
     // ============================================
 
     public record RateCourseInput(
+        @NotBlank(message = "Course ID is required")
+        @Pattern(regexp = "^\\d+$", message = "Course ID must be a numeric value")
         String courseId,
+        @Min(value = 1, message = "Rating must be at least 1")
+        @Max(value = 5, message = "Rating must be at most 5")
         int ratingValue,
+        @Size(max = 200, message = "Review title must not exceed 200 characters")
         String reviewTitle,
+        @Size(max = 5000, message = "Review content must not exceed 5000 characters")
         String reviewContent
     ) {}
 
     public record UpdateRatingInput(
+        @Min(value = 1, message = "Rating must be at least 1")
+        @Max(value = 5, message = "Rating must be at most 5")
         Integer ratingValue,
+        @Size(max = 200, message = "Review title must not exceed 200 characters")
         String reviewTitle,
+        @Size(max = 5000, message = "Review content must not exceed 5000 characters")
         String reviewContent
     ) {}
 }

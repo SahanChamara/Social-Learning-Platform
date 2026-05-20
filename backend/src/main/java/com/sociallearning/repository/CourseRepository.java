@@ -72,6 +72,14 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
      */
     List<Course> findByCreatorId(Long creatorId);
 
+    @Query("SELECT c FROM Course c WHERE c.published = true AND c.archived = false " +
+           "AND c.creator.id IN :creatorIds " +
+           "AND c.id NOT IN :excludedCourseIds " +
+           "ORDER BY c.averageRating DESC, c.enrollmentCount DESC")
+    List<Course> findRecommendedByCreatorIds(@Param("creatorIds") List<Long> creatorIds,
+                                             @Param("excludedCourseIds") List<Long> excludedCourseIds,
+                                             Pageable pageable);
+
     /**
      * Find published courses by creator ID
      * @param creatorId The creator's user ID
@@ -85,6 +93,8 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
      * @return List of published courses
      */
     List<Course> findByPublishedTrue();
+
+    List<Course> findByPublishedTrueAndArchivedFalseOrderByEnrollmentCountDescAverageRatingDesc(Pageable pageable);
 
     /**
      * Find all published courses with pagination
@@ -108,6 +118,14 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
      */
     @Query("SELECT c FROM Course c WHERE c.category.id = :categoryId AND c.published = true ORDER BY c.createdAt DESC")
     Page<Course> findPublishedCoursesByCategoryId(@Param("categoryId") Long categoryId, Pageable pageable);
+
+    @Query("SELECT c FROM Course c WHERE c.published = true AND c.archived = false " +
+           "AND c.category.id IN :categoryIds " +
+           "AND c.id NOT IN :excludedCourseIds " +
+           "ORDER BY c.averageRating DESC, c.enrollmentCount DESC")
+    List<Course> findRecommendedByCategoryIds(@Param("categoryIds") List<Long> categoryIds,
+                                              @Param("excludedCourseIds") List<Long> excludedCourseIds,
+                                              Pageable pageable);
 
     /**
      * Find courses by difficulty level
@@ -138,6 +156,87 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
            "LOWER(c.description) LIKE LOWER(CONCAT('%', :searchTerm, '%'))) " +
            "ORDER BY c.averageRating DESC, c.enrollmentCount DESC")
     Page<Course> searchCourses(@Param("searchTerm") String searchTerm, Pageable pageable);
+
+    /**
+     * PostgreSQL full-text course search with optional filters and dynamic sorting.
+     *
+     * Supported sortBy values: RELEVANCE, RATING, ENROLLMENT, DATE
+     * Supported sortDirection values: ASC, DESC
+     */
+    @Query(value = """
+            SELECT c.*,
+                   CASE
+                       WHEN :searchTerm IS NULL OR :searchTerm = '' THEN 0
+                       ELSE ts_rank(
+                           to_tsvector('english', COALESCE(c.title, '') || ' ' || COALESCE(c.description, '')),
+                           plainto_tsquery('english', :searchTerm)
+                       )
+                   END AS relevance_score
+            FROM courses c
+            WHERE c.published = true
+              AND (:categoryId IS NULL OR c.category_id = :categoryId)
+              AND (:difficulty IS NULL OR c.difficulty = :difficulty)
+              AND (:language IS NULL OR LOWER(c.language) = LOWER(:language))
+              AND c.average_rating >= :minRating
+              AND (
+                :searchTerm IS NULL
+                OR :searchTerm = ''
+                OR to_tsvector('english', COALESCE(c.title, '') || ' ' || COALESCE(c.description, ''))
+                   @@ plainto_tsquery('english', :searchTerm)
+              )
+            ORDER BY
+              CASE WHEN :sortBy = 'RATING' AND :sortDirection = 'ASC' THEN c.average_rating END ASC,
+              CASE WHEN :sortBy = 'RATING' AND :sortDirection = 'DESC' THEN c.average_rating END DESC,
+              CASE WHEN :sortBy = 'ENROLLMENT' AND :sortDirection = 'ASC' THEN c.enrollment_count END ASC,
+              CASE WHEN :sortBy = 'ENROLLMENT' AND :sortDirection = 'DESC' THEN c.enrollment_count END DESC,
+              CASE WHEN :sortBy = 'DATE' AND :sortDirection = 'ASC' THEN c.created_at END ASC,
+              CASE WHEN :sortBy = 'DATE' AND :sortDirection = 'DESC' THEN c.created_at END DESC,
+              CASE
+                WHEN :sortBy = 'RELEVANCE' AND :sortDirection = 'ASC' AND (:searchTerm IS NULL OR :searchTerm = '')
+                THEN 0
+                WHEN :sortBy = 'RELEVANCE' AND :sortDirection = 'ASC'
+                THEN ts_rank(
+                    to_tsvector('english', COALESCE(c.title, '') || ' ' || COALESCE(c.description, '')),
+                    plainto_tsquery('english', :searchTerm)
+                )
+              END ASC,
+              CASE
+                WHEN :sortBy = 'RELEVANCE' AND :sortDirection = 'DESC' AND (:searchTerm IS NULL OR :searchTerm = '')
+                THEN 0
+                WHEN :sortBy = 'RELEVANCE' AND :sortDirection = 'DESC'
+                THEN ts_rank(
+                    to_tsvector('english', COALESCE(c.title, '') || ' ' || COALESCE(c.description, '')),
+                    plainto_tsquery('english', :searchTerm)
+                )
+              END DESC,
+              c.created_at DESC
+            """,
+            countQuery = """
+            SELECT COUNT(*)
+            FROM courses c
+            WHERE c.published = true
+              AND (:categoryId IS NULL OR c.category_id = :categoryId)
+              AND (:difficulty IS NULL OR c.difficulty = :difficulty)
+              AND (:language IS NULL OR LOWER(c.language) = LOWER(:language))
+              AND c.average_rating >= :minRating
+              AND (
+                :searchTerm IS NULL
+                OR :searchTerm = ''
+                OR to_tsvector('english', COALESCE(c.title, '') || ' ' || COALESCE(c.description, ''))
+                   @@ plainto_tsquery('english', :searchTerm)
+              )
+            """,
+            nativeQuery = true)
+    Page<Course> searchPublishedCoursesFullText(
+            @Param("searchTerm") String searchTerm,
+            @Param("categoryId") Long categoryId,
+            @Param("difficulty") String difficulty,
+            @Param("language") String language,
+            @Param("minRating") Double minRating,
+            @Param("sortBy") String sortBy,
+            @Param("sortDirection") String sortDirection,
+            Pageable pageable
+    );
 
     /**
      * Find courses by multiple filters
@@ -227,6 +326,8 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
         @Param("excludeCourseId") Long excludeCourseId,
         @Param("limit") int limit
     );
+
+    List<Course> findByIdInAndPublishedTrueAndArchivedFalse(List<Long> ids);
 
     /**
      * Count total published courses

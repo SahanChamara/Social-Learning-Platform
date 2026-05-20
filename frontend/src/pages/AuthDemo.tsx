@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../contexts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, Button, Input, Label } from '../components/ui';
+import { SkeletonAuthDemo } from '../components/skeletons';
 import { toast } from '../hooks/useToast';
 import { Loader2, LogIn, LogOut, UserPlus, RefreshCw } from 'lucide-react';
 
@@ -104,14 +105,7 @@ export default function AuthDemo() {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-600" />
-          <p className="text-gray-600">Loading authentication...</p>
-        </div>
-      </div>
-    );
+    return <SkeletonAuthDemo />;
   }
 
   return (

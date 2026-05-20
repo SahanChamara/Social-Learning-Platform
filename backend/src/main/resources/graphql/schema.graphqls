@@ -172,6 +172,103 @@ type ToggleLikeResult {
     likeCount: Int!
 }
 
+"""
+Achievement definition
+"""
+type Achievement {
+    id: ID!
+    name: String!
+    slug: String!
+    description: String
+    category: String
+    iconUrl: String
+    badgeColor: String
+    criteriaJson: String!
+    points: Int!
+    isActive: Boolean!
+    isHidden: Boolean!
+    isSecret: Boolean!
+    createdAt: String!
+    updatedAt: String!
+}
+
+"""
+User achievement progress/unlock state
+"""
+type UserAchievement {
+    id: ID!
+    achievement: Achievement!
+    progressPercentage: Float!
+    progressJson: String
+    isUnlocked: Boolean!
+    earnedAt: String
+    notifiedAt: String
+    createdAt: String!
+    updatedAt: String!
+}
+
+"""
+Learning streak summary for a user
+"""
+type LearningStreak {
+    id: ID!
+    currentStreakDays: Int!
+    longestStreakDays: Int!
+    totalActiveDays: Int!
+    lastActivityDate: String
+    streakStartDate: String
+    lastResetAt: String
+    createdAt: String!
+    updatedAt: String!
+}
+
+"""
+Common pagination metadata for cursor-based connections
+"""
+type PageInfo {
+    hasNextPage: Boolean!
+    endCursor: String
+}
+
+"""
+Union of searchable entities
+"""
+union SearchResult = Course | Category | Tag
+
+"""
+Search edge for cursor-based pagination
+"""
+type SearchEdge {
+    cursor: String!
+    node: SearchResult!
+}
+
+"""
+Cursor-based search result page
+"""
+type SearchResultPage {
+    edges: [SearchEdge!]!
+    pageInfo: PageInfo!
+    totalCount: Int!
+}
+
+"""
+Course edge for cursor-based pagination
+"""
+type CourseEdge {
+    cursor: String!
+    node: Course!
+}
+
+"""
+Cursor-based course connection
+"""
+type CourseConnection {
+    edges: [CourseEdge!]!
+    pageInfo: PageInfo!
+    totalCount: Int!
+}
+
 # ============================================
 # Engagement Input Types
 # ============================================
@@ -306,6 +403,8 @@ type User {
     createdAt: String!
     """Last update timestamp"""
     updatedAt: String!
+    """Achievement progress for this user"""
+    achievements: [UserAchievement!]!
 }
 
 """
@@ -375,6 +474,24 @@ enum CourseDifficulty {
 }
 
 """
+Course search sort options
+"""
+enum CourseSortBy {
+    RELEVANCE
+    RATING
+    ENROLLMENT
+    DATE
+}
+
+"""
+Sort direction
+"""
+enum SortDirection {
+    ASC
+    DESC
+}
+
+"""
 Lesson content type
 """
 enum LessonType {
@@ -383,6 +500,15 @@ enum LessonType {
     QUIZ
     ASSIGNMENT
     RESOURCE
+}
+
+"""
+Learner enrollment status for a course
+"""
+enum EnrollmentStatus {
+    ENROLLED
+    COMPLETED
+    DROPPED
 }
 
 """
@@ -539,6 +665,68 @@ type CoursePage {
     hasNext: Boolean!
     """Whether there is a previous page"""
     hasPrevious: Boolean!
+}
+
+"""
+Learner enrollment in a course with denormalized progress totals
+"""
+type Enrollment {
+    """Unique enrollment identifier"""
+    id: ID!
+    """Current enrollment status"""
+    status: EnrollmentStatus!
+    """Completion percentage from 0 to 100"""
+    progressPercentage: Float!
+    """Number of completed lessons"""
+    completedLessons: Int!
+    """Total tracked lessons"""
+    totalLessons: Int!
+    """Enrollment timestamp"""
+    enrolledAt: String!
+    """First learning activity timestamp"""
+    startedAt: String
+    """Completion timestamp"""
+    completedAt: String
+    """Most recent activity timestamp"""
+    lastAccessedAt: String
+    """Total tracked study time in minutes"""
+    timeSpentMinutes: Int!
+    """Enrolled course"""
+    course: Course!
+    """Lesson-level progress records"""
+    progressRecords: [Progress!]!
+    """Creation timestamp"""
+    createdAt: String!
+    """Update timestamp"""
+    updatedAt: String!
+}
+
+"""
+Lesson-level progress for a learner enrollment
+"""
+type Progress {
+    """Unique progress identifier"""
+    id: ID!
+    """Whether the lesson is completed"""
+    completed: Boolean!
+    """First access timestamp"""
+    startedAt: String
+    """Completion timestamp"""
+    completedAt: String
+    """Most recent access timestamp"""
+    lastAccessedAt: String
+    """Tracked watch/study time in seconds"""
+    watchTimeSeconds: Int!
+    """Attempt count for quiz/assignment style lessons"""
+    attemptCount: Int!
+    """Optional score percentage"""
+    scorePercentage: Float
+    """Related lesson"""
+    lesson: Lesson!
+    """Creation timestamp"""
+    createdAt: String!
+    """Update timestamp"""
+    updatedAt: String!
 }
 
 # ============================================
@@ -815,6 +1003,22 @@ type Mutation {
     Mark a review as helpful
     """
     markReviewHelpful(id: ID!): Rating!
+
+    # Enrollment & Progress
+    """
+    Enroll the current user in a course
+    """
+    enrollCourse(courseId: ID!): Enrollment!
+
+    """
+    Remove the current user's enrollment from a course
+    """
+    unenrollCourse(courseId: ID!): Boolean!
+
+    """
+    Mark a lesson complete for the current user
+    """
+    markLessonComplete(lessonId: ID!): Progress!
 }
 
 # ============================================
@@ -832,6 +1036,21 @@ type Query {
     Get user by ID
     """
     user(id: ID!): User
+
+    """
+    Get all active achievements available in the platform
+    """
+    achievements: [Achievement!]!
+
+    """
+    Get current authenticated user's achievement progress
+    """
+    myAchievements: [UserAchievement!]!
+
+    """
+    Get current authenticated user's learning streak
+    """
+    learningStreak: LearningStreak!
     
     # Course Queries
     """
@@ -853,6 +1072,8 @@ type Query {
         difficulty: CourseDifficulty
         language: String
         minRating: Float
+        sortBy: CourseSortBy
+        sortDirection: SortDirection
         page: Int
         size: Int
     ): CoursePage!
@@ -886,6 +1107,32 @@ type Query {
     Get recommended courses based on a course
     """
     recommendedCourses(courseId: ID!, limit: Int): [Course!]!
+
+    """
+    Search across courses, categories, and tags with cursor-based pagination.
+    """
+    search(
+        query: String!
+        first: Int
+        after: String
+    ): SearchResultPage!
+
+    """
+    Cursor-based trending courses feed.
+    """
+    trendingCoursesConnection(
+        first: Int
+        after: String
+    ): CourseConnection!
+
+    """
+    Cursor-based recommended courses for a reference course.
+    """
+    recommendedCoursesConnection(
+        courseId: ID!
+        first: Int
+        after: String
+    ): CourseConnection!
     
     # Category & Tag Queries
     """
@@ -907,6 +1154,22 @@ type Query {
     Get a tag by ID
     """
     tag(id: ID!): Tag
+
+    # Enrollment & Progress Queries
+    """
+    Get the current user's enrollments, optionally filtered by status
+    """
+    myEnrollments(status: EnrollmentStatus): [Enrollment!]!
+
+    """
+    Get lightweight current-user enrollment status for a course
+    """
+    enrollmentStatus(courseId: ID!): Enrollment
+
+    """
+    Get the current user's enrollment with progress records for a course
+    """
+    courseEnrollment(courseId: ID!): Enrollment
     
     # ============================================
     # Engagement Queries

@@ -124,16 +124,7 @@ export default function Login() {
 
               {/* Password Field */}
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Password</Label>
-                  <Link
-                    to="/auth/forgot-password"
-                    className="text-sm text-blue-600 hover:text-blue-700 transition-colors"
-                    tabIndex={-1}
-                  >
-                    Forgot password?
-                  </Link>
-                </div>
+                <Label htmlFor="password">Password</Label>
                 <Input
                   id="password"
                   type="password"
