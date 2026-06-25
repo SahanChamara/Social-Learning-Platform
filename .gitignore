@@ -6,3 +6,5 @@ backend/target
 postman/social-learning-frontend-backend.postman_collection.json
 backend/logs/social-learning-platform.log
 backend/logs/social-learning-platform.log.2026-05-18.0.gz
+backend/logs/social-learning-platform.log.2026-05-20.0.gz
+postman/social-learning-full-feature-testing.postman_collection.json

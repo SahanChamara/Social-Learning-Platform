@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Clock3, Star, Users } from 'lucide-react';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle, StatusBadge } from '@/components/ui';
 import { cn } from '@/lib/utils';
 import type { Course } from '@/types/courses';
 
@@ -64,11 +64,11 @@ function CourseCardContent({ course, className }: { course: Course; className?: 
   return (
     <Card
       className={cn(
-        'group h-full overflow-hidden border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl',
+        'group h-full overflow-hidden border-slate-800/80 bg-slate-950/65 transition-all duration-300 hover:-translate-y-1 hover:border-cyan-300/40 hover:shadow-cyan-500/10',
         className,
       )}
     >
-      <div className="relative aspect-video overflow-hidden bg-linear-to-br from-sky-100 via-cyan-50 to-blue-100">
+      <div className="relative aspect-video overflow-hidden bg-linear-to-br from-cyan-300/20 via-blue-500/15 to-violet-500/20">
         {course.thumbnailUrl ? (
           <img
             src={course.thumbnailUrl}
@@ -76,37 +76,31 @@ function CourseCardContent({ course, className }: { course: Course; className?: 
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center text-4xl font-bold text-blue-700/60">
+          <div className="flex h-full w-full items-center justify-center text-4xl font-bold text-cyan-200/80">
             {course.category.name.slice(0, 1).toUpperCase()}
           </div>
         )}
 
         {course.isFeatured && (
-          <span className="absolute left-3 top-3 rounded-full bg-blue-600 px-3 py-1 text-xs font-semibold text-white">
-            Featured
-          </span>
+          <StatusBadge tone="gold" className="absolute left-3 top-3">Featured</StatusBadge>
         )}
       </div>
 
       <CardHeader className="space-y-2 p-4 pb-0">
         <div className="flex items-center justify-between gap-2">
-          <span className="inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700">
-            {course.category.name}
-          </span>
-          <span className="text-xs font-medium uppercase tracking-wide text-slate-500">
-            {course.difficulty}
-          </span>
+          <StatusBadge tone="cyan">{course.category.name}</StatusBadge>
+          <span className="text-xs font-medium uppercase tracking-wide text-slate-500">{course.difficulty}</span>
         </div>
 
-        <CardTitle className="line-clamp-2 text-lg leading-tight text-slate-900">
+        <CardTitle className="line-clamp-2 text-lg leading-tight text-slate-50">
           {course.title}
         </CardTitle>
       </CardHeader>
 
       <CardContent className="space-y-3 p-4">
-        <p className="line-clamp-2 text-sm text-slate-600">{course.description ?? 'No description yet.'}</p>
+        <p className="line-clamp-2 text-sm text-slate-400">{course.description ?? 'No description yet.'}</p>
 
-        <div className="flex flex-wrap items-center gap-3 text-xs text-slate-600">
+        <div className="flex flex-wrap items-center gap-3 text-xs text-slate-400">
           <span className="inline-flex items-center gap-1">
             <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
             {course.averageRating.toFixed(1)} ({course.ratingCount})
@@ -124,15 +118,15 @@ function CourseCardContent({ course, className }: { course: Course; className?: 
         </div>
       </CardContent>
 
-      <CardFooter className="mt-auto flex items-center justify-between border-t border-slate-100 p-4 pt-3">
+      <CardFooter className="mt-auto flex items-center justify-between border-t border-slate-800 p-4 pt-3">
         <div className="inline-flex items-center gap-2">
-          <div className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-slate-900 text-xs font-semibold text-white">
+          <div className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-linear-to-br from-cyan-300 to-violet-500 text-xs font-semibold text-white">
             {creatorInitials}
           </div>
-          <p className="text-sm text-slate-700">{course.creator.fullName}</p>
+          <p className="text-sm text-slate-300">{course.creator.fullName}</p>
         </div>
 
-        <p className="text-base font-semibold text-blue-700">{formatPrice(course.priceInCents)}</p>
+        <p className="text-base font-semibold text-cyan-200">{formatPrice(course.priceInCents)}</p>
       </CardFooter>
     </Card>
   );
@@ -144,7 +138,7 @@ export function CourseCard({ course, className, href }: CourseCardProps) {
   }
 
   return (
-    <Link to={href} className="block h-full focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 rounded-lg">
+    <Link to={href} className="block h-full rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950">
       <CourseCardContent course={course} className={className} />
     </Link>
   );

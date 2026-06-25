@@ -1,32 +1,16 @@
 import { useState } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Loader2, ArrowLeft } from 'lucide-react';
+import { ArrowLeft, BookOpen, Loader2, Sparkles, Trophy } from 'lucide-react';
 import { useAuth } from '../../hooks';
 import { useToast } from '../../hooks/useToast';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '../../components/ui/Card';
-import { Button } from '../../components/ui/Button';
-import { Input } from '../../components/ui/Input';
-import { Label } from '../../components/ui/Label';
+import { AnimatedPage, Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input, Label, StatusBadge } from '../../components/ui';
 
-// Zod validation schema for login form
 const loginSchema = z.object({
-  emailOrUsername: z
-    .string()
-    .min(1, 'Email or username is required')
-    .trim(),
-  password: z
-    .string()
-    .min(1, 'Password is required')
-    .min(6, 'Password must be at least 6 characters'),
+  emailOrUsername: z.string().min(1, 'Email or username is required').trim(),
+  password: z.string().min(1, 'Password is required').min(6, 'Password must be at least 6 characters'),
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
@@ -37,8 +21,6 @@ export default function Login() {
   const { login, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Get the redirect path from location state (for protected routes)
   const from = (location.state as { from?: string })?.from || '/dashboard';
 
   const {
@@ -47,36 +29,19 @@ export default function Login() {
     formState: { errors },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
-    defaultValues: {
-      emailOrUsername: '',
-      password: '',
-    },
+    defaultValues: { emailOrUsername: '', password: '' },
   });
 
   const onSubmit = async (data: LoginFormData) => {
     setIsSubmitting(true);
     try {
-      await login({
-        emailOrUsername: data.emailOrUsername,
-        password: data.password,
-      });
-
-      toast({
-        title: 'Login successful!',
-        description: 'Welcome back to Social Learning Platform.',
-      });
-
-      // Redirect to the intended page or home
+      await login({ emailOrUsername: data.emailOrUsername, password: data.password });
+      toast({ title: 'Login successful!', description: 'Welcome back to your learning workspace.' });
       navigate(from, { replace: true });
     } catch (error) {
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : 'Failed to log in. Please check your credentials.';
-
       toast({
         title: 'Login failed',
-        description: errorMessage,
+        description: error instanceof Error ? error.message : 'Failed to log in. Please check your credentials.',
         variant: 'destructive',
       });
     } finally {
@@ -87,103 +52,83 @@ export default function Login() {
   const isLoading = authLoading || isSubmitting;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center px-4 py-12">
-      <div className="max-w-md w-full">
-        {/* Back to Home Link */}
-        <Link
-          to="/"
-          className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-8 transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to Home
-        </Link>
+    <AnimatedPage>
+      <div className="app-container grid min-h-[calc(100vh-4rem)] gap-10 py-10 lg:grid-cols-[1fr_28rem] lg:items-center">
+        <section className="hidden max-w-3xl lg:block">
+          <StatusBadge tone="violet">
+            <Sparkles className="h-3.5 w-3.5" />
+            Return to your learning orbit
+          </StatusBadge>
+          <h1 className="mt-6 text-5xl font-black tracking-tight text-slate-50">
+            Continue courses, discussions, streaks, and creator updates from one premium workspace.
+          </h1>
+          <div className="mt-8 grid gap-4 sm:grid-cols-2">
+            <div className="glass-panel rounded-xl p-5">
+              <BookOpen className="h-6 w-6 text-cyan-200" />
+              <p className="mt-4 font-semibold text-slate-50">Resume active paths</p>
+              <p className="mt-2 text-sm leading-6 text-slate-400">Jump back into the next lesson without losing context.</p>
+            </div>
+            <div className="glass-panel rounded-xl p-5">
+              <Trophy className="h-6 w-6 text-amber-200" />
+              <p className="mt-4 font-semibold text-slate-50">Keep progress visible</p>
+              <p className="mt-2 text-sm leading-6 text-slate-400">Streaks, badges, and completed lessons stay close.</p>
+            </div>
+          </div>
+        </section>
 
-        <Card>
-          <CardHeader className="space-y-1 text-center">
-            <CardTitle className="text-3xl font-bold">Welcome Back</CardTitle>
-            <CardDescription className="text-base">
-              Sign in to your account to continue learning
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              {/* Email or Username Field */}
-              <div className="space-y-2">
-                <Label htmlFor="emailOrUsername">
-                  Email or Username
-                </Label>
-                <Input
-                  id="emailOrUsername"
-                  type="text"
-                  placeholder="Enter your email or username"
-                  error={errors.emailOrUsername?.message}
-                  disabled={isLoading}
-                  {...register('emailOrUsername')}
-                />
-              </div>
+        <div>
+          <Link to="/" className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-slate-400 transition hover:text-cyan-200">
+            <ArrowLeft className="h-4 w-4" />
+            Back to Home
+          </Link>
 
-              {/* Password Field */}
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="Enter your password"
-                  error={errors.password?.message}
-                  disabled={isLoading}
-                  {...register('password')}
-                />
-              </div>
+          <Card className="aurora-border">
+            <CardHeader className="space-y-2 text-center">
+              <CardTitle className="text-3xl font-bold">Welcome back</CardTitle>
+              <CardDescription>Sign in to continue your learning momentum.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="emailOrUsername">Email or username</Label>
+                  <Input id="emailOrUsername" type="text" placeholder="you@example.com" error={errors.emailOrUsername?.message} disabled={isLoading} {...register('emailOrUsername')} />
+                </div>
 
-              {/* Submit Button */}
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Signing in...
-                  </>
-                ) : (
-                  'Sign In'
-                )}
-              </Button>
-            </form>
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <Input id="password" type="password" placeholder="Enter your password" error={errors.password?.message} disabled={isLoading} {...register('password')} />
+                </div>
 
-            {/* Register Link */}
-            <div className="mt-6 text-center">
-              <p className="text-sm text-gray-600">
-                Don't have an account?{' '}
-                <Link
-                  to="/auth/register"
-                  className="font-semibold text-blue-600 hover:text-blue-700 transition-colors"
-                >
+                <Button type="submit" variant="premium" className="w-full" disabled={isLoading}>
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Signing in...
+                    </>
+                  ) : (
+                    'Sign In'
+                  )}
+                </Button>
+              </form>
+
+              <p className="mt-6 text-center text-sm text-slate-400">
+                Don&apos;t have an account?{' '}
+                <Link to="/auth/register" className="font-semibold text-cyan-200 transition hover:text-cyan-100">
                   Create an account
                 </Link>
               </p>
-            </div>
 
-            {/* Demo Credentials (Development only) */}
-            {import.meta.env.DEV && (
-              <div className="mt-6 pt-6 border-t border-gray-200">
-                <p className="text-xs text-center text-gray-500 mb-2">
-                  Demo Credentials (Development)
-                </p>
-                <div className="text-xs text-gray-600 bg-gray-50 rounded-md p-3 space-y-1">
-                  <p>
-                    <strong>Email:</strong> demo@example.com
-                  </p>
-                  <p>
-                    <strong>Password:</strong> password123
-                  </p>
+              {import.meta.env.DEV && (
+                <div className="mt-6 rounded-lg border border-slate-800 bg-slate-900/70 p-3 text-xs text-slate-400">
+                  <p className="font-semibold text-slate-300">Demo Credentials</p>
+                  <p className="mt-1">Email: demo@example.com</p>
+                  <p>Password: password123</p>
                 </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
-    </div>
+    </AnimatedPage>
   );
 }

@@ -11,7 +11,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.dataloader.DataLoader;
 import org.springframework.graphql.data.method.annotation.SchemaMapping;
-import org.springframework.graphql.execution.BatchLoaderRegistry;
 import org.springframework.stereotype.Controller;
 
 import java.util.List;
@@ -30,6 +29,46 @@ public class CourseFieldResolver {
 
     private final ModuleService moduleService;
     private final LessonService lessonService;
+
+    @SchemaMapping(typeName = "Course", field = "durationMinutes")
+    public Integer courseDurationMinutes(Course course) {
+        return course.getTotalDurationMinutes() != null ? course.getTotalDurationMinutes() : 0;
+    }
+
+    @SchemaMapping(typeName = "Course", field = "isPublished")
+    public boolean courseIsPublished(Course course) {
+        return Boolean.TRUE.equals(course.getPublished());
+    }
+
+    @SchemaMapping(typeName = "Course", field = "isDraft")
+    public boolean courseIsDraft(Course course) {
+        return Boolean.TRUE.equals(course.getDraft());
+    }
+
+    @SchemaMapping(typeName = "Course", field = "isArchived")
+    public boolean courseIsArchived(Course course) {
+        return Boolean.TRUE.equals(course.getArchived());
+    }
+
+    @SchemaMapping(typeName = "Course", field = "isFeatured")
+    public boolean courseIsFeatured(Course course) {
+        return Boolean.TRUE.equals(course.getFeatured());
+    }
+
+    @SchemaMapping(typeName = "Module", field = "isPublished")
+    public boolean moduleIsPublished(Module module) {
+        return Boolean.TRUE.equals(module.getPublished());
+    }
+
+    @SchemaMapping(typeName = "Lesson", field = "isPublished")
+    public boolean lessonIsPublished(Lesson lesson) {
+        return Boolean.TRUE.equals(lesson.getPublished());
+    }
+
+    @SchemaMapping(typeName = "Category", field = "isActive")
+    public boolean categoryIsActive(Category category) {
+        return Boolean.TRUE.equals(category.getActive());
+    }
 
     /**
      * Resolve the creator field for a Course using DataLoader.

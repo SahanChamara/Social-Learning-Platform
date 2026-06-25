@@ -1,4 +1,4 @@
-export { Button, buttonVariants } from "./Button";
+export { Button } from "./Button";
 export type { ButtonProps } from "./Button";
 
 export { Input } from "./Input";
@@ -32,3 +32,4 @@ export type { ToastProps, ToastActionElement } from "./Toast";
 export { ThemeToggle } from './ThemeToggle';
 export { PageHeader } from './PageHeader';
 export { EmptyState } from './EmptyState';
+export { AnimatedPage, CourseSurface, MetricCard, SectionHeader, StatusBadge } from './Cinematic';
