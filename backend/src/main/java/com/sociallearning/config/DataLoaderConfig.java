@@ -4,13 +4,10 @@ import com.sociallearning.entity.Category;
 import com.sociallearning.entity.User;
 import com.sociallearning.repository.CategoryRepository;
 import com.sociallearning.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.dataloader.DataLoader;
-import org.dataloader.DataLoaderRegistry;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.graphql.execution.DataLoaderRegistrar;
+import org.springframework.graphql.execution.BatchLoaderRegistry;
+import reactor.core.publisher.Mono;
 
 import java.util.List;
 import java.util.Map;
@@ -21,7 +18,6 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Configuration
-@RequiredArgsConstructor
 public class DataLoaderConfig {
 
     private final UserRepository userRepository;
@@ -32,64 +28,62 @@ public class DataLoaderConfig {
      * Registers all DataLoaders with the GraphQL execution context.
      * DataLoaders are created per-request to ensure data consistency.
      */
-    @Bean
-    public DataLoaderRegistrar dataLoaderRegistrar() {
-        return (registry, context) -> {
-            registry.register("userDataLoader", createUserDataLoader());
-            registry.register("categoryDataLoader", createCategoryDataLoader());
-            log.debug("DataLoaders registered: userDataLoader, categoryDataLoader");
-        };
+    public DataLoaderConfig(
+            UserRepository userRepository,
+            CategoryRepository categoryRepository,
+            Executor executor,
+            BatchLoaderRegistry batchLoaderRegistry) {
+        this.userRepository = userRepository;
+        this.categoryRepository = categoryRepository;
+        this.executor = executor;
+        batchLoaderRegistry.forTypePair(Long.class, User.class)
+                .withName("userDataLoader")
+                .registerMappedBatchLoader((userIds, environment) -> loadUsers(userIds));
+        batchLoaderRegistry.forTypePair(Long.class, Category.class)
+                .withName("categoryDataLoader")
+                .registerMappedBatchLoader((categoryIds, environment) -> loadCategories(categoryIds));
+        log.debug("DataLoaders registered: userDataLoader, categoryDataLoader");
     }
 
     /**
-     * Creates a DataLoader for batch-loading User entities.
+     * Batch-load User entities.
      * 
      * This prevents N+1 queries when resolving course creators.
      * Multiple creator ID loads are batched into a single query.
      * 
-     * @return DataLoader for User entities
+     * @return map of users by ID
      */
-    private DataLoader<Long, User> createUserDataLoader() {
-        return DataLoader.newMappedDataLoader((Set<Long> userIds) -> 
-            CompletableFuture.supplyAsync(() -> {
-                log.debug("Batch loading {} users", userIds.size());
-                
-                // Fetch all users in a single query
-                List<User> users = userRepository.findAllById(userIds);
-                
-                // Convert to Map<Long, User> for DataLoader
-                Map<Long, User> userMap = users.stream()
-                    .collect(Collectors.toMap(User::getId, user -> user));
-                
-                log.debug("Loaded {} users from database", users.size());
-                return userMap;
-            }, executor)
+    private Mono<Map<Long, User>> loadUsers(Set<Long> userIds) {
+        return Mono.fromFuture(() ->
+                CompletableFuture.supplyAsync(() -> {
+                    log.debug("Batch loading {} users", userIds.size());
+                    List<User> users = userRepository.findAllById(userIds);
+                    Map<Long, User> userMap = users.stream()
+                            .collect(Collectors.toMap(User::getId, user -> user));
+                    log.debug("Loaded {} users from database", users.size());
+                    return userMap;
+                }, executor)
         );
     }
 
     /**
-     * Creates a DataLoader for batch-loading Category entities.
+     * Batch-load Category entities.
      * 
      * This prevents N+1 queries when resolving course categories.
      * Multiple category ID loads are batched into a single query.
      * 
-     * @return DataLoader for Category entities
+     * @return map of categories by ID
      */
-    private DataLoader<Long, Category> createCategoryDataLoader() {
-        return DataLoader.newMappedDataLoader((Set<Long> categoryIds) -> 
-            CompletableFuture.supplyAsync(() -> {
-                log.debug("Batch loading {} categories", categoryIds.size());
-                
-                // Fetch all categories in a single query
-                List<Category> categories = categoryRepository.findAllById(categoryIds);
-                
-                // Convert to Map<Long, Category> for DataLoader
-                Map<Long, Category> categoryMap = categories.stream()
-                    .collect(Collectors.toMap(Category::getId, category -> category));
-                
-                log.debug("Loaded {} categories from database", categories.size());
-                return categoryMap;
-            }, executor)
+    private Mono<Map<Long, Category>> loadCategories(Set<Long> categoryIds) {
+        return Mono.fromFuture(() ->
+                CompletableFuture.supplyAsync(() -> {
+                    log.debug("Batch loading {} categories", categoryIds.size());
+                    List<Category> categories = categoryRepository.findAllById(categoryIds);
+                    Map<Long, Category> categoryMap = categories.stream()
+                            .collect(Collectors.toMap(Category::getId, category -> category));
+                    log.debug("Loaded {} categories from database", categories.size());
+                    return categoryMap;
+                }, executor)
         );
     }
 }

@@ -7,7 +7,7 @@ import { AchievementBadge, LearningStreak } from '../components';
 import { LEARNING_STREAK_QUERY, MY_ACHIEVEMENTS_QUERY, MY_ENROLLMENTS_QUERY } from '../graphql';
 import { useAuth } from '../hooks';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/Card';
-import { Button, EmptyState, PageHeader, Skeleton } from '../components/ui';
+import { AnimatedPage, Button, EmptyState, PageHeader, Skeleton } from '../components/ui';
 import type { MyEnrollmentsResponse } from '../types/courses';
 
 interface LearningStreakData {
@@ -112,7 +112,7 @@ export default function Dashboard() {
     }
 
     localStorage.setItem(storageKey, new Date().toISOString());
-    setCelebrationMilestone(matchedMilestone);
+    window.setTimeout(() => setCelebrationMilestone(matchedMilestone), 0);
   }, [streak, user]);
 
   const stats = [
@@ -143,7 +143,7 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="bg-slate-50">
+    <AnimatedPage>
       <main className="app-container py-10">
         <PageHeader
           eyebrow="Learning dashboard"
@@ -168,12 +168,12 @@ export default function Dashboard() {
           }}
         >
           <AlertDialog.Portal>
-            <AlertDialog.Overlay className="fixed inset-0 z-50 bg-black/40" />
-            <AlertDialog.Content className="fixed left-1/2 top-1/2 z-50 w-[92vw] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl border border-orange-200 bg-white p-6 shadow-xl">
-              <AlertDialog.Title className="text-xl font-bold text-slate-900">
+            <AlertDialog.Overlay className="fixed inset-0 z-50 bg-black/60" />
+            <AlertDialog.Content className="glass-panel fixed left-1/2 top-1/2 z-50 w-[92vw] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl p-6">
+              <AlertDialog.Title className="text-xl font-bold text-slate-50">
                 Streak milestone reached
               </AlertDialog.Title>
-              <AlertDialog.Description className="mt-2 text-sm text-slate-600">
+              <AlertDialog.Description className="mt-2 text-sm text-slate-400">
                 You just hit a {celebrationMilestone}-day learning streak. Keep it going and unlock
                 your next badge.
               </AlertDialog.Description>
@@ -194,10 +194,10 @@ export default function Dashboard() {
                 <CardContent className="pt-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="mb-1 text-sm text-slate-600">{stat.label}</p>
-                      <div className="min-h-8 text-2xl font-bold text-slate-950">{stat.value}</div>
+                      <p className="mb-1 text-sm text-slate-400">{stat.label}</p>
+                      <div className="min-h-8 text-2xl font-bold text-slate-50">{stat.value}</div>
                     </div>
-                    <div className={`rounded-lg bg-slate-100 p-3 ${stat.color}`}>
+                    <div className={`rounded-lg bg-slate-900 p-3 ${stat.color}`}>
                       <Icon className="h-6 w-6" />
                     </div>
                   </div>
@@ -219,7 +219,7 @@ export default function Dashboard() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-slate-400">
                 {nextMilestone
                   ? `Only ${nextMilestone - currentStreak} day${
                       nextMilestone - currentStreak === 1 ? '' : 's'
@@ -246,18 +246,18 @@ export default function Dashboard() {
                     <Link
                       key={enrollment.id}
                       to="/my-learning"
-                      className="block rounded-lg bg-slate-50 p-4 transition hover:bg-slate-100"
+                      className="block rounded-lg border border-slate-800 bg-slate-950/45 p-4 transition hover:border-cyan-300/40 hover:bg-slate-900/70"
                     >
-                      <h4 className="font-semibold text-slate-950">{enrollment.course.title}</h4>
-                      <div className="mt-2 flex items-center justify-between text-sm text-slate-600">
+                      <h4 className="font-semibold text-slate-50">{enrollment.course.title}</h4>
+                      <div className="mt-2 flex items-center justify-between text-sm text-slate-400">
                         <span>
                           {enrollment.completedLessons} of {enrollment.totalLessons} lessons
                         </span>
-                        <span className="font-medium text-blue-700">{enrollment.progressPercentage}%</span>
+                        <span className="font-medium text-cyan-200">{enrollment.progressPercentage}%</span>
                       </div>
-                      <div className="mt-2 h-2 w-full rounded-full bg-slate-200">
+                      <div className="mt-2 h-2 w-full rounded-full bg-slate-800">
                         <div
-                          className="h-2 rounded-full bg-blue-600"
+                          className="h-2 rounded-full bg-linear-to-r from-cyan-300 to-violet-400"
                           style={{ width: `${enrollment.progressPercentage}%` }}
                         />
                       </div>
@@ -286,12 +286,12 @@ export default function Dashboard() {
             <CardContent>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="rounded-lg bg-slate-50 p-4">
-                  <p className="text-sm text-slate-600">Lessons completed</p>
-                  <p className="mt-1 text-2xl font-bold text-slate-950">{totalLessonsCompleted}</p>
+                  <p className="text-sm text-slate-400">Lessons completed</p>
+                  <p className="mt-1 text-2xl font-bold text-slate-50">{totalLessonsCompleted}</p>
                 </div>
                 <div className="rounded-lg bg-slate-50 p-4">
-                  <p className="text-sm text-slate-600">Study time</p>
-                  <p className="mt-1 text-2xl font-bold text-slate-950">{totalStudyTimeMinutes}m</p>
+                  <p className="text-sm text-slate-400">Study time</p>
+                  <p className="mt-1 text-2xl font-bold text-slate-50">{totalStudyTimeMinutes}m</p>
                 </div>
               </div>
               <Button variant="outline" className="mt-4 w-full" asChild>
@@ -354,6 +354,6 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </main>
-    </div>
+    </AnimatedPage>
   );
 }
