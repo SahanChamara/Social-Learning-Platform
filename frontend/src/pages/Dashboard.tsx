@@ -2,12 +2,12 @@ import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@apollo/client/react';
 import * as AlertDialog from '@radix-ui/react-alert-dialog';
 import { Link } from 'react-router-dom';
-import { Award, BookOpen, Clock, Flame, GraduationCap, Trophy } from 'lucide-react';
+import { Award, BookOpen, Clock, Flame, GraduationCap, MessageSquare, Sparkles, Trophy } from 'lucide-react';
 import { AchievementBadge, LearningStreak } from '../components';
 import { LEARNING_STREAK_QUERY, MY_ACHIEVEMENTS_QUERY, MY_ENROLLMENTS_QUERY } from '../graphql';
 import { useAuth } from '../hooks';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/Card';
-import { AnimatedPage, Button, EmptyState, PageHeader, Skeleton } from '../components/ui';
+import { AnimatedPage, Button, EmptyState, PageHeader, Skeleton, StatusBadge } from '../components/ui';
 import type { MyEnrollmentsResponse } from '../types/courses';
 
 interface LearningStreakData {
@@ -144,7 +144,7 @@ export default function Dashboard() {
 
   return (
     <AnimatedPage>
-      <main className="app-container py-10">
+      <main className="app-container min-h-[calc(100vh-4.5rem)] py-10">
         <PageHeader
           eyebrow="Learning dashboard"
           title={`Welcome back, ${user?.fullName || user?.username || 'learner'}`}
@@ -158,6 +158,40 @@ export default function Dashboard() {
             </Button>
           }
         />
+
+        <section className="cinematic-section mb-8 rounded-3xl p-6 sm:p-8">
+          <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+            <div>
+              <StatusBadge tone="cyan">
+                <Sparkles className="h-3.5 w-3.5" />
+                today&apos;s learning mission
+              </StatusBadge>
+              <h2 className="mt-5 text-4xl font-black tracking-tight text-slate-50">
+                Keep the streak alive with one focused lesson.
+              </h2>
+              <p className="mt-4 max-w-2xl text-base leading-7 text-slate-400">
+                Continue a course, answer a discussion, and move your achievement progress forward from the same workspace.
+              </p>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-3">
+              <div className="rounded-3xl border border-white/10 bg-white/6 p-4">
+                <Flame className="h-5 w-5 text-amber-200" />
+                <p className="mt-5 text-2xl font-black text-slate-50">{currentStreak}</p>
+                <p className="text-xs text-slate-400">day streak</p>
+              </div>
+              <div className="rounded-3xl border border-white/10 bg-white/6 p-4">
+                <Trophy className="h-5 w-5 text-violet-200" />
+                <p className="mt-5 text-2xl font-black text-slate-50">{unlockedAchievements.length}</p>
+                <p className="text-xs text-slate-400">unlocked</p>
+              </div>
+              <div className="rounded-3xl border border-white/10 bg-white/6 p-4">
+                <MessageSquare className="h-5 w-5 text-cyan-200" />
+                <p className="mt-5 text-2xl font-black text-slate-50">{inProgressEnrollments.length}</p>
+                <p className="text-xs text-slate-400">active paths</p>
+              </div>
+            </div>
+          </div>
+        </section>
 
         <AlertDialog.Root
           open={celebrationMilestone !== null}
@@ -285,11 +319,11 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="grid gap-4 sm:grid-cols-2">
-                <div className="rounded-lg bg-slate-50 p-4">
+                <div className="rounded-2xl border border-white/10 bg-white/6 p-4">
                   <p className="text-sm text-slate-400">Lessons completed</p>
                   <p className="mt-1 text-2xl font-bold text-slate-50">{totalLessonsCompleted}</p>
                 </div>
-                <div className="rounded-lg bg-slate-50 p-4">
+                <div className="rounded-2xl border border-white/10 bg-white/6 p-4">
                   <p className="text-sm text-slate-400">Study time</p>
                   <p className="mt-1 text-2xl font-bold text-slate-50">{totalStudyTimeMinutes}m</p>
                 </div>

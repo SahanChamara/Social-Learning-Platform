@@ -22,10 +22,10 @@ const learnerLinks = [
 
 function navClass({ isActive }: { isActive: boolean }) {
   return [
-    'inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition',
+    'inline-flex items-center gap-2 rounded-full px-3.5 py-2 text-sm font-semibold transition',
     isActive
-      ? 'border border-cyan-300/25 bg-cyan-300/10 text-cyan-100 shadow-lg shadow-cyan-500/10'
-      : 'text-slate-400 hover:bg-white/10 hover:text-slate-50',
+      ? 'border border-cyan-300/25 bg-cyan-300/12 text-cyan-100 shadow-lg shadow-cyan-500/10'
+      : 'text-slate-400 hover:bg-white/8 hover:text-slate-50',
   ].join(' ');
 }
 
@@ -38,14 +38,14 @@ export default function AppShell() {
   const closeMenu = () => setMenuOpen(false);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-50">
-      <header className="sticky top-0 z-40 border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-xl">
-        <div className="app-container flex h-16 items-center justify-between gap-4">
+    <div className="min-h-screen text-slate-50">
+      <header className="sticky top-0 z-40 border-b border-white/8 bg-[#070B14]/72 backdrop-blur-2xl">
+        <div className="app-container flex h-18 items-center justify-between gap-4">
           <Link to="/" className="inline-flex items-center gap-2 font-semibold text-slate-50" onClick={closeMenu}>
-            <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-linear-to-br from-cyan-300 via-blue-500 to-violet-500 text-white shadow-lg shadow-cyan-500/20">
+            <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-linear-to-br from-cyan-300 via-sky-500 to-violet-500 text-white shadow-lg shadow-cyan-500/20">
               <GraduationCap className="h-5 w-5" />
             </span>
-            <span className="hidden sm:inline">LearnVerse</span>
+            <span className="hidden text-base tracking-tight sm:inline">LearnVerse</span>
           </Link>
 
           <nav className="hidden items-center gap-1 md:flex">
@@ -94,7 +94,7 @@ export default function AppShell() {
 
           <button
             type="button"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-slate-700 bg-slate-900/80 text-slate-100 md:hidden"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-white/7 text-slate-100 backdrop-blur-xl md:hidden"
             onClick={() => setMenuOpen((open) => !open)}
             aria-label="Toggle navigation"
             aria-expanded={menuOpen}
@@ -104,7 +104,7 @@ export default function AppShell() {
         </div>
 
         {menuOpen ? (
-          <div className="border-t border-slate-800 bg-slate-950/95 backdrop-blur-xl md:hidden">
+          <div className="border-t border-white/8 bg-[#070B14]/95 backdrop-blur-2xl md:hidden">
             <nav className="app-container space-y-1 py-3">
               {navLinks.map((link) => {
                 const Icon = link.icon;
@@ -121,7 +121,7 @@ export default function AppShell() {
                   Creator
                 </NavLink>
               ) : null}
-              <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-slate-800 pt-3">
+              <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-white/8 pt-3">
                 <ThemeToggle />
                 {isAuthenticated ? <NotificationBell /> : null}
                 {isAuthenticated ? (

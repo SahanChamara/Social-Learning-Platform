@@ -64,7 +64,7 @@ function CourseCardContent({ course, className }: { course: Course; className?: 
   return (
     <Card
       className={cn(
-        'group h-full overflow-hidden border-slate-800/80 bg-slate-950/65 transition-all duration-300 hover:-translate-y-1 hover:border-cyan-300/40 hover:shadow-cyan-500/10',
+        'group h-full overflow-hidden transition-all duration-300 hover:-translate-y-1.5 hover:border-cyan-300/40 hover:shadow-cyan-500/10',
         className,
       )}
     >
@@ -118,7 +118,7 @@ function CourseCardContent({ course, className }: { course: Course; className?: 
         </div>
       </CardContent>
 
-      <CardFooter className="mt-auto flex items-center justify-between border-t border-slate-800 p-4 pt-3">
+      <CardFooter className="mt-auto flex items-center justify-between border-t border-white/8 p-4 pt-3">
         <div className="inline-flex items-center gap-2">
           <div className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-linear-to-br from-cyan-300 to-violet-500 text-xs font-semibold text-white">
             {creatorInitials}
@@ -138,7 +138,7 @@ export function CourseCard({ course, className, href }: CourseCardProps) {
   }
 
   return (
-    <Link to={href} className="block h-full rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950">
+    <Link to={href} className="block h-full rounded-3xl focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950">
       <CourseCardContent course={course} className={className} />
     </Link>
   );

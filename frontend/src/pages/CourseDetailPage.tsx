@@ -191,7 +191,7 @@ export default function CourseDetailPage() {
 
   return (
     <AnimatedPage>
-      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+      <div className="app-container min-h-[calc(100vh-4.5rem)] py-10">
         <Link
           to="/courses"
           className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-slate-400 transition hover:text-cyan-200"
@@ -199,10 +199,10 @@ export default function CourseDetailPage() {
           <ArrowLeft className="h-4 w-4" /> Back to Courses
         </Link>
 
-        <section className="cinematic-section overflow-hidden rounded-2xl">
-          <div className="grid lg:grid-cols-[2fr_1fr]">
-            <div className="p-6 sm:p-8">
-              <div className="mb-6 aspect-video overflow-hidden rounded-xl bg-linear-to-br from-cyan-300/20 via-blue-500/15 to-violet-500/20">
+        <section className="cinematic-section overflow-hidden rounded-3xl">
+          <div className="grid min-h-[68vh] lg:grid-cols-[minmax(0,2.1fr)_minmax(24rem,0.9fr)]">
+            <div className="p-6 sm:p-8 2xl:p-10">
+              <div className="mb-6 aspect-video max-h-[54vh] overflow-hidden rounded-3xl bg-linear-to-br from-cyan-300/20 via-blue-500/15 to-violet-500/20">
                 {course.thumbnailUrl ? (
                   <img
                     src={course.thumbnailUrl}
@@ -222,12 +222,12 @@ export default function CourseDetailPage() {
                 <StatusBadge tone="slate">{course.language}</StatusBadge>
               </div>
 
-              <h1 className="text-3xl font-bold tracking-tight text-slate-50 sm:text-4xl">{course.title}</h1>
-              <p className="mt-4 text-base leading-relaxed text-slate-400">
+              <h1 className="max-w-6xl text-4xl font-black tracking-tight text-slate-50 sm:text-5xl 2xl:text-6xl">{course.title}</h1>
+              <p className="mt-4 max-w-5xl text-base leading-relaxed text-slate-400 sm:text-lg">
                 {course.description ?? 'No course description is available yet.'}
               </p>
 
-              <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                 <div className="rounded-lg border border-slate-800 bg-slate-950/45 p-3">
                   <p className="text-xs text-slate-500">Rating</p>
                   <p className="mt-1 inline-flex items-center gap-1 text-sm font-semibold text-slate-100">
@@ -259,7 +259,7 @@ export default function CourseDetailPage() {
               </div>
             </div>
 
-            <aside className="border-t border-slate-800 p-6 sm:p-8 lg:border-l lg:border-t-0">
+            <aside className="border-t border-slate-800 p-6 sm:p-8 lg:border-l lg:border-t-0 2xl:p-10">
               <p className="text-3xl font-bold text-slate-50">{formatPrice(course.priceInCents)}</p>
               <p className="mt-2 text-sm text-slate-400">
                 Created by <span className="font-medium text-slate-100">{course.creator.fullName}</span>
@@ -403,7 +403,7 @@ export default function CourseDetailPage() {
             )}
           </Tabs.Content>
 
-          <Tabs.Content value="engagement" className="mt-5 space-y-6">
+          <Tabs.Content value="engagement" className="mt-5 grid gap-6 2xl:grid-cols-2">
             <section className="cinematic-section rounded-2xl p-6 sm:p-8">
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>

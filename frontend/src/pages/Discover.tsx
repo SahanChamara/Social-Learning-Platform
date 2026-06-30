@@ -4,7 +4,7 @@ import * as Tabs from '@radix-ui/react-tabs';
 import { BookOpen, Compass, Sparkles, TrendingUp } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { CourseCard, SkeletonCourseCard } from '@/components';
-import { Button, EmptyState, PageHeader } from '@/components/ui';
+import { AnimatedPage, Button, CourseSurface, EmptyState, PageHeader, StatusBadge } from '@/components/ui';
 import {
   CATEGORIES_QUERY,
   MY_ENROLLMENTS_QUERY,
@@ -79,8 +79,8 @@ export default function Discover() {
   const categories = categoriesData?.categories ?? [];
 
   return (
-    <div>
-      <div className="app-container py-10">
+    <AnimatedPage>
+      <div className="app-container min-h-[calc(100vh-4.5rem)] py-10">
         <PageHeader
           eyebrow="Discover"
           title="Find your next learning path"
@@ -92,25 +92,50 @@ export default function Discover() {
           }
         />
 
+        <section className="cinematic-section mb-8 rounded-3xl p-6 sm:p-8">
+          <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
+            <div>
+              <StatusBadge tone="violet">Streaming shelves for skills</StatusBadge>
+              <h2 className="mt-4 max-w-3xl text-3xl font-black tracking-tight text-slate-50 sm:text-4xl">
+                Trending cohorts, recommended paths, and categories in one discovery space.
+              </h2>
+            </div>
+            <div className="grid grid-cols-3 gap-3 text-center">
+              <div className="rounded-2xl bg-white/6 p-4">
+                <p className="text-2xl font-black text-slate-50">{trendingCourses.length}</p>
+                <p className="text-xs text-slate-400">trending</p>
+              </div>
+              <div className="rounded-2xl bg-white/6 p-4">
+                <p className="text-2xl font-black text-slate-50">{recommendedCourses.length}</p>
+                <p className="text-xs text-slate-400">matched</p>
+              </div>
+              <div className="rounded-2xl bg-white/6 p-4">
+                <p className="text-2xl font-black text-slate-50">{categories.length}</p>
+                <p className="text-xs text-slate-400">categories</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <Tabs.Root defaultValue="trending" className="space-y-6">
-          <Tabs.List className="flex w-full gap-1 overflow-x-auto rounded-lg border border-slate-200 bg-white p-1 sm:inline-flex sm:w-auto">
+          <Tabs.List className="flex w-full gap-1 overflow-x-auto rounded-2xl border border-white/10 bg-white/6 p-1 backdrop-blur-xl sm:inline-flex sm:w-auto">
             <Tabs.Trigger
               value="trending"
-              className="inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold text-slate-600 data-[state=active]:bg-blue-600 data-[state=active]:text-white"
+              className="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold text-slate-400 data-[state=active]:bg-cyan-300 data-[state=active]:text-slate-950"
             >
               <TrendingUp className="h-4 w-4" />
               Trending
             </Tabs.Trigger>
             <Tabs.Trigger
               value="recommended"
-              className="inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold text-slate-600 data-[state=active]:bg-blue-600 data-[state=active]:text-white"
+              className="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold text-slate-400 data-[state=active]:bg-cyan-300 data-[state=active]:text-slate-950"
             >
               <Sparkles className="h-4 w-4" />
               Recommended
             </Tabs.Trigger>
             <Tabs.Trigger
               value="categories"
-              className="inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold text-slate-600 data-[state=active]:bg-blue-600 data-[state=active]:text-white"
+              className="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold text-slate-400 data-[state=active]:bg-cyan-300 data-[state=active]:text-slate-950"
             >
               <Compass className="h-4 w-4" />
               Categories
@@ -119,8 +144,8 @@ export default function Discover() {
 
           <Tabs.Content value="trending">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-2xl font-semibold text-slate-900">Trending Courses</h2>
-              <Link to="/courses" className="text-sm font-semibold text-blue-700 hover:text-blue-800">
+              <h2 className="text-2xl font-semibold text-slate-50">Trending Courses</h2>
+              <Link to="/courses" className="text-sm font-semibold text-cyan-200 hover:text-cyan-100">
                 View all courses
               </Link>
             </div>
@@ -128,7 +153,7 @@ export default function Discover() {
             {trendingLoading && !trendingData ? (
               <SectionSkeleton />
             ) : trendingCourses.length > 0 ? (
-              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
                 {trendingCourses.map((course) => (
                   <CourseCard key={course.id} course={course} href={`/courses/${course.slug}`} />
                 ))}
@@ -145,9 +170,9 @@ export default function Discover() {
 
           <Tabs.Content value="recommended">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-2xl font-semibold text-slate-900">Recommended for You</h2>
+              <h2 className="text-2xl font-semibold text-slate-50">Recommended for You</h2>
               {!user ? (
-                <Link to="/auth/login" className="text-sm font-semibold text-blue-700 hover:text-blue-800">
+                <Link to="/auth/login" className="text-sm font-semibold text-cyan-200 hover:text-cyan-100">
                   Sign in for personalized picks
                 </Link>
               ) : null}
@@ -156,7 +181,7 @@ export default function Discover() {
             {recommendedLoading && referenceCourseId ? (
               <SectionSkeleton />
             ) : recommendedCourses.length > 0 ? (
-              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
                 {recommendedCourses.map((course) => (
                   <CourseCard key={course.id} course={course} href={`/courses/${course.slug}`} />
                 ))}
@@ -173,8 +198,8 @@ export default function Discover() {
 
           <Tabs.Content value="categories">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-2xl font-semibold text-slate-900">Explore by Category</h2>
-              <Link to="/search" className="text-sm font-semibold text-blue-700 hover:text-blue-800">
+              <h2 className="text-2xl font-semibold text-slate-50">Explore by Category</h2>
+              <Link to="/search" className="text-sm font-semibold text-cyan-200 hover:text-cyan-100">
                 Open advanced search
               </Link>
             </div>
@@ -182,21 +207,22 @@ export default function Discover() {
             {categoriesLoading && !categoriesData ? (
               <SectionSkeleton />
             ) : categories.length > 0 ? (
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
                 {categories.map((category) => (
-                  <Link
+                  <CourseSurface
                     key={category.id}
-                    to={`/search?q=${encodeURIComponent(category.name)}`}
-                    className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                    className="block"
                   >
-                    <h3 className="text-lg font-semibold text-slate-900">{category.name}</h3>
+                    <Link to={`/search?q=${encodeURIComponent(category.name)}`} className="block">
+                    <h3 className="text-lg font-semibold text-slate-50">{category.name}</h3>
                     <p className="mt-2 line-clamp-2 text-sm text-slate-600">
                       {category.description ?? 'Explore top learning content in this category.'}
                     </p>
-                    <p className="mt-3 text-sm font-medium text-blue-700">
+                    <p className="mt-3 text-sm font-medium text-cyan-200">
                       {category.courseCount} course{category.courseCount === 1 ? '' : 's'}
                     </p>
-                  </Link>
+                    </Link>
+                  </CourseSurface>
                 ))}
               </div>
             ) : (
@@ -210,6 +236,6 @@ export default function Discover() {
           </Tabs.Content>
         </Tabs.Root>
       </div>
-    </div>
+    </AnimatedPage>
   );
 }

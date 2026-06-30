@@ -4,18 +4,18 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "../../lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 disabled:pointer-events-none disabled:opacity-50",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-2xl text-sm font-semibold transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {
       variant: {
         default:
-          "bg-cyan-400 text-slate-950 shadow-lg shadow-cyan-500/20 hover:-translate-y-0.5 hover:bg-cyan-300",
+          "bg-cyan-300 text-slate-950 shadow-lg shadow-cyan-500/20 hover:-translate-y-0.5 hover:bg-cyan-200 hover:shadow-cyan-400/30",
         premium:
-          "bg-linear-to-r from-cyan-300 via-blue-500 to-violet-500 text-white shadow-xl shadow-cyan-500/20 hover:-translate-y-0.5 hover:shadow-violet-500/25",
+          "bg-linear-to-r from-cyan-300 via-sky-500 to-violet-500 text-white shadow-xl shadow-cyan-500/20 hover:-translate-y-0.5 hover:shadow-violet-500/25",
         destructive:
           "bg-red-500 text-white hover:bg-red-400 focus-visible:ring-red-400",
         outline:
-          "border border-slate-700/80 bg-slate-950/35 text-slate-100 hover:-translate-y-0.5 hover:border-cyan-300/60 hover:bg-slate-900/80",
+          "border border-white/10 bg-white/6 text-slate-100 backdrop-blur-xl hover:-translate-y-0.5 hover:border-cyan-300/45 hover:bg-white/10",
         secondary:
           "border border-slate-700/70 bg-slate-800/80 text-slate-100 hover:bg-slate-700/90",
         ghost:

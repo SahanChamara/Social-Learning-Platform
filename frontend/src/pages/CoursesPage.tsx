@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@apollo/client/react';
-import { AlertCircle, Loader2, Plus } from 'lucide-react';
+import { AlertCircle, Loader2, Plus, Sparkles, TrendingUp, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { CourseCard, SearchBar, SkeletonCourseCard } from '@/components';
 import { AnimatedPage, Button, EmptyState, PageHeader, StatusBadge } from '@/components/ui';
@@ -104,7 +104,7 @@ export default function CoursesPage() {
 
   return (
     <AnimatedPage>
-      <div className="app-container py-10">
+      <div className="app-container min-h-[calc(100vh-4.5rem)] py-10">
         <PageHeader
           eyebrow="Course catalog"
           title="Explore practical courses"
@@ -121,7 +121,36 @@ export default function CoursesPage() {
           }
         />
 
-        <section className="cinematic-section mb-8 rounded-2xl p-4 sm:p-5">
+        <section className="cinematic-section mb-8 overflow-hidden rounded-3xl p-6 sm:p-8">
+          <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
+            <div>
+              <StatusBadge tone="violet">
+                <Sparkles className="h-3.5 w-3.5" />
+                premium course theater
+              </StatusBadge>
+              <h2 className="mt-5 max-w-4xl text-4xl font-black tracking-tight text-slate-50">
+                Browse learning paths like a curated streaming library.
+              </h2>
+              <p className="mt-4 max-w-2xl text-base leading-7 text-slate-400">
+                Featured creator courses, smart filters, and immersive cards help learners choose the next skill path with confidence.
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="rounded-3xl border border-white/10 bg-white/6 p-5">
+                <TrendingUp className="h-5 w-5 text-cyan-200" />
+                <p className="mt-6 text-3xl font-black text-slate-50">{totalElements}</p>
+                <p className="text-sm text-slate-400">available courses</p>
+              </div>
+              <div className="rounded-3xl border border-white/10 bg-white/6 p-5">
+                <Users className="h-5 w-5 text-violet-200" />
+                <p className="mt-6 text-3xl font-black text-slate-50">Live</p>
+                <p className="text-sm text-slate-400">creator catalog</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="cinematic-section mb-8 rounded-3xl p-4 sm:p-5">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <SearchBar
               value={searchInput}
@@ -171,7 +200,7 @@ export default function CoursesPage() {
         </section>
 
         {courses.length > 0 ? (
-          <section className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <section className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
             {courses.map((course) => (
               <CourseCard key={course.id} course={course} href={`/courses/${course.slug}`} className="h-full" />
             ))}

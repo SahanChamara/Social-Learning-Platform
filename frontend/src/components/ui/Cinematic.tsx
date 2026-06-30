@@ -11,7 +11,7 @@ export function AnimatedPage({
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.45, ease: 'easeOut' }}
-      className={cn('cinematic-page', className)}
+      className={cn('cinematic-page noise-layer', className)}
     >
       {children}
     </motion.div>
@@ -25,9 +25,9 @@ export function SectionHeader({
   className,
 }: Readonly<{ eyebrow?: string; title: string; description?: string; className?: string }>) {
   return (
-    <div className={cn('max-w-3xl', className)}>
+    <div className={cn('max-w-5xl', className)}>
       {eyebrow ? <p className="text-sm font-semibold uppercase tracking-wide text-cyan-300">{eyebrow}</p> : null}
-      <h2 className="mt-3 text-2xl font-bold tracking-tight text-slate-50 sm:text-3xl">{title}</h2>
+      <h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-50 sm:text-4xl">{title}</h2>
       {description ? <p className="mt-3 text-sm leading-6 text-slate-400 sm:text-base">{description}</p> : null}
     </div>
   );
@@ -47,7 +47,7 @@ export function StatusBadge({
   };
 
   return (
-    <span className={cn('inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold', tones[tone], className)}>
+    <span className={cn('inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold backdrop-blur-md', tones[tone], className)}>
       {children}
     </span>
   );
@@ -67,7 +67,7 @@ export function MetricCard({
   };
 
   return (
-    <div className="glass-panel rounded-xl p-5">
+    <div className="glass-panel rounded-3xl p-5">
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-sm text-slate-400">{label}</p>
@@ -85,5 +85,5 @@ export function CourseSurface({
   children,
   className,
 }: Readonly<{ children: ReactNode; className?: string }>) {
-  return <div className={cn('glass-panel rounded-xl p-5 transition duration-300 hover:-translate-y-1 hover:border-cyan-300/35', className)}>{children}</div>;
+  return <div className={cn('glass-panel rounded-3xl p-5 transition duration-300 hover:-translate-y-1 hover:border-cyan-300/35 hover:shadow-cyan-500/10', className)}>{children}</div>;
 }

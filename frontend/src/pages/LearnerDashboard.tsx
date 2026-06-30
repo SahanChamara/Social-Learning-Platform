@@ -22,6 +22,7 @@ import {
   EmptyState as UIEmptyState,
   PageHeader,
   Progress,
+  StatusBadge,
 } from '@/components/ui';
 import { SkeletonEnrollmentCard } from '@/components/skeletons';
 import { MY_ENROLLMENTS_QUERY } from '@/graphql';
@@ -77,42 +78,42 @@ function EnrollmentCard({ enrollment }: Readonly<EnrollmentCardProps>) {
   return (
     <Link
       to={getNextLessonPath(enrollment)}
-      className="group block rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-blue-300 hover:shadow-md"
+      className="group block min-w-[20rem] rounded-3xl border border-white/10 bg-white/6 p-4 shadow-2xl shadow-black/10 backdrop-blur-xl transition hover:-translate-y-1 hover:border-cyan-300/35 sm:min-w-[26rem]"
     >
       <div className="flex gap-4">
         {course.thumbnailUrl ? (
           <img
             src={course.thumbnailUrl}
             alt={course.title}
-            className="h-24 w-32 flex-shrink-0 rounded-lg object-cover"
+            className="h-24 w-32 flex-shrink-0 rounded-2xl object-cover"
           />
         ) : (
-          <div className="flex h-24 w-32 flex-shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-blue-100 to-purple-100">
-            <BookOpen className="h-8 w-8 text-blue-600" />
+          <div className="flex h-24 w-32 flex-shrink-0 items-center justify-center rounded-2xl bg-linear-to-br from-cyan-300/20 to-violet-500/25">
+            <BookOpen className="h-8 w-8 text-cyan-200" />
           </div>
         )}
 
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
-            <h3 className="truncate font-semibold text-slate-900 group-hover:text-blue-600">
+            <h3 className="truncate font-semibold text-slate-50 group-hover:text-cyan-200">
               {course.title}
             </h3>
             {isCompleted && (
-              <span className="inline-flex flex-shrink-0 items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
+              <span className="inline-flex flex-shrink-0 items-center gap-1 rounded-full border border-emerald-300/25 bg-emerald-300/10 px-2 py-0.5 text-xs font-medium text-emerald-200">
                 <CheckCircle2 className="h-3 w-3" />
                 Completed
               </span>
             )}
           </div>
 
-          <p className="mt-1 text-sm text-slate-600">{course.creator.fullName}</p>
+          <p className="mt-1 text-sm text-slate-400">{course.creator.fullName}</p>
 
           <div className="mt-3 space-y-2">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-slate-600">
+              <span className="text-slate-400">
                 {completedLessons} of {totalLessons} lessons
               </span>
-              <span className="font-medium text-blue-600">{progressPercentage}%</span>
+              <span className="font-medium text-cyan-200">{progressPercentage}%</span>
             </div>
             <Progress
               value={progressPercentage}
@@ -153,11 +154,11 @@ function StatsCard({ label, value, icon: Icon, color, bgColor }: Readonly<StatsC
       <CardContent className="pt-6">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm text-slate-600">{label}</p>
-            <p className="mt-1 text-2xl font-bold text-slate-900">{value}</p>
+            <p className="text-sm text-slate-400">{label}</p>
+            <p className="mt-1 text-2xl font-bold text-slate-50">{value}</p>
           </div>
-          <div className={`rounded-lg p-3 ${bgColor}`}>
-            <Icon className={`h-6 w-6 ${color}`} />
+          <div className={`rounded-2xl p-3 ${bgColor} bg-opacity-10`}>
+            <Icon className={`h-6 w-6 ${color.replace('600', '200')}`} />
           </div>
         </div>
       </CardContent>
@@ -292,8 +293,8 @@ export default function LearnerDashboard() {
   }
 
   return (
-    <div>
-      <main className="app-container py-8">
+    <div className="cinematic-page">
+      <main className="app-container min-h-[calc(100vh-4.5rem)] py-10">
         <PageHeader
           eyebrow="Learner workspace"
           title="My Learning"
@@ -307,6 +308,41 @@ export default function LearnerDashboard() {
             </Button>
           }
         />
+
+        <section className="cinematic-section mb-8 overflow-hidden rounded-3xl">
+          <div className="grid gap-6 p-6 sm:p-8 lg:grid-cols-[1.25fr_0.75fr] lg:items-center">
+            <div>
+              <StatusBadge tone="emerald">Netflix-style learning shelf</StatusBadge>
+              <h2 className="mt-5 max-w-3xl text-4xl font-black tracking-tight text-slate-50">
+                {inProgressEnrollments[0]?.course.title ?? 'Build your next skill streak'}
+              </h2>
+              <p className="mt-4 max-w-2xl text-base leading-7 text-slate-400">
+                {inProgressEnrollments[0]
+                  ? `${inProgressEnrollments[0].completedLessons} of ${inProgressEnrollments[0].totalLessons} lessons complete. Jump back into the next mission.`
+                  : 'Enroll in a course to unlock your featured banner, progress shelves, completed courses, and achievement timeline.'}
+              </p>
+              <Button className="mt-7" variant="premium" asChild>
+                <Link to={inProgressEnrollments[0] ? getNextLessonPath(inProgressEnrollments[0]) : '/courses'}>
+                  <PlayCircle className="h-4 w-4" />
+                  {inProgressEnrollments[0] ? 'Resume course' : 'Find a course'}
+                </Link>
+              </Button>
+            </div>
+            <div className="rounded-3xl bg-linear-to-br from-cyan-300/18 via-sky-500/12 to-violet-500/22 p-5">
+              <p className="text-sm font-semibold uppercase tracking-wide text-cyan-200">Learning timeline</p>
+              <div className="mt-6 space-y-4">
+                {['Continue lesson', 'Join discussion', 'Unlock milestone'].map((item, index) => (
+                  <div key={item} className="flex items-center gap-3">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full border border-cyan-300/30 bg-cyan-300/10 text-sm font-bold text-cyan-100">
+                      {index + 1}
+                    </div>
+                    <p className="font-semibold text-slate-100">{item}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
 
         <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {stats.map((stat) => (
@@ -324,7 +360,7 @@ export default function LearnerDashboard() {
               <CardDescription>Pick up where you left off</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
+              <div className="-mx-1 flex gap-4 overflow-x-auto px-1 pb-2">
                 {inProgressEnrollments.slice(0, 3).map((enrollment) => (
                   <EnrollmentCard key={enrollment.id} enrollment={enrollment} />
                 ))}
@@ -342,22 +378,22 @@ export default function LearnerDashboard() {
           </CardHeader>
           <CardContent>
             <Tabs.Root defaultValue="all">
-              <Tabs.List className="mb-6 flex gap-2 border-b border-slate-200">
+              <Tabs.List className="mb-6 flex flex-wrap gap-2 border-b border-white/8 pb-3">
                 <Tabs.Trigger
                   value="all"
-                  className="border-b-2 border-transparent px-4 py-2 text-sm font-medium text-slate-600 transition hover:text-slate-900 data-[state=active]:border-blue-600 data-[state=active]:text-blue-600"
+                  className="rounded-full border border-transparent px-4 py-2 text-sm font-medium text-slate-400 transition hover:text-slate-50 data-[state=active]:border-cyan-300/30 data-[state=active]:bg-cyan-300/10 data-[state=active]:text-cyan-100"
                 >
                   All ({enrollments.length})
                 </Tabs.Trigger>
                 <Tabs.Trigger
                   value="in_progress"
-                  className="border-b-2 border-transparent px-4 py-2 text-sm font-medium text-slate-600 transition hover:text-slate-900 data-[state=active]:border-blue-600 data-[state=active]:text-blue-600"
+                  className="rounded-full border border-transparent px-4 py-2 text-sm font-medium text-slate-400 transition hover:text-slate-50 data-[state=active]:border-cyan-300/30 data-[state=active]:bg-cyan-300/10 data-[state=active]:text-cyan-100"
                 >
                   In Progress ({inProgressEnrollments.length})
                 </Tabs.Trigger>
                 <Tabs.Trigger
                   value="completed"
-                  className="border-b-2 border-transparent px-4 py-2 text-sm font-medium text-slate-600 transition hover:text-slate-900 data-[state=active]:border-blue-600 data-[state=active]:text-blue-600"
+                  className="rounded-full border border-transparent px-4 py-2 text-sm font-medium text-slate-400 transition hover:text-slate-50 data-[state=active]:border-cyan-300/30 data-[state=active]:bg-cyan-300/10 data-[state=active]:text-cyan-100"
                 >
                   Completed ({completedEnrollments.length})
                 </Tabs.Trigger>
@@ -403,7 +439,7 @@ export default function LearnerDashboard() {
         </Card>
 
         {totalLessonsCompleted > 0 && (
-          <Card className="mt-8 bg-gradient-to-r from-blue-50 to-purple-50">
+          <Card className="mt-8 bg-linear-to-r from-cyan-300/10 to-violet-500/10">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Award className="h-5 w-5 text-purple-600" />
@@ -413,18 +449,18 @@ export default function LearnerDashboard() {
             <CardContent>
               <div className="flex flex-wrap gap-6">
                 <div className="text-center">
-                  <p className="text-3xl font-bold text-purple-600">{totalLessonsCompleted}</p>
-                  <p className="text-sm text-slate-600">Lessons Completed</p>
+                  <p className="text-3xl font-bold text-violet-200">{totalLessonsCompleted}</p>
+                  <p className="text-sm text-slate-400">Lessons Completed</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-3xl font-bold text-blue-600">{completedEnrollments.length}</p>
-                  <p className="text-sm text-slate-600">Courses Finished</p>
+                  <p className="text-3xl font-bold text-cyan-200">{completedEnrollments.length}</p>
+                  <p className="text-sm text-slate-400">Courses Finished</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-3xl font-bold text-green-600">
+                  <p className="text-3xl font-bold text-emerald-200">
                     {formatTimeSpent(totalTimeSpent)}
                   </p>
-                  <p className="text-sm text-slate-600">Total Learning Time</p>
+                  <p className="text-sm text-slate-400">Total Learning Time</p>
                 </div>
               </div>
             </CardContent>
