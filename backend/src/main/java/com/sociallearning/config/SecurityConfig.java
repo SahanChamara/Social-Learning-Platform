@@ -71,6 +71,8 @@ public class SecurityConfig {
                     "/graphql/**",        // GraphQL resources
                     "/graphiql",          // GraphiQL UI
                     "/graphiql/**",       // GraphiQL resources
+                    "/graphiql/assets/**", // GraphiQL static assets
+                    "/esm/**",            // Proxied ESM assets
                     "/graphql-ws",        // WebSocket endpoint
                     "/graphql-ws/**",     // WebSocket resources
                     "/actuator/**",       // Health check endpoints

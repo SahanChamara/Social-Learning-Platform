@@ -34,7 +34,7 @@ spring:
   graphql:
     path: /graphql
     graphiql:
-      enabled: ${GRAPHIQL_ENABLED:true}
+      enabled: ${GRAPHIQL_ENABLED:false}
       path: /graphiql
     schema:
       locations: classpath:graphql/
